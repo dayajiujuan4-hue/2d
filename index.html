@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>武林夜市 - 杭州探索録</title>
-
+  <title>杭州探索録 - 武林夜市</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -14,19 +12,16 @@
 <main class="game-shell">
 
   <header class="game-header">
-
     <div>
-      <p class="eyebrow">杭州探索録 · HANGZHOU</p>
-      <h1>武林夜市</h1>
+      <p class="eyebrow">杭州探索録 · HANGZHOU EXPLORER</p>
+      <h1 id="gameTitle">武林夜市</h1>
     </div>
 
     <div class="header-right">
-      <div id="areaHeader">夜市入口</div>
-      <div id="clock">19:42</div>
+      <span id="areaHeader">武林夜市・小吃街</span>
+      <span id="clock">19:42</span>
     </div>
-
   </header>
-
 
   <section class="game-frame">
 
@@ -34,21 +29,18 @@
       id="gameCanvas"
       width="960"
       height="576"
-      aria-label="武林夜市を探索する2Dゲーム"
     ></canvas>
 
-
     <div id="areaBanner" class="area-banner hidden">
-      <span>AREA</span>
-      <strong id="areaBannerName">夜市入口</strong>
+      <small>AREA</small>
+      <strong id="areaBannerName">武林夜市・小吃街</strong>
+      <span id="areaBannerSub">杭州 · 武林</span>
     </div>
-
 
     <div id="interactionHint" class="interaction-hint hidden">
       <span class="key">E</span>
       <span id="interactionText">話す</span>
     </div>
-
 
     <div id="dialogueBox" class="dialogue-box hidden">
 
@@ -57,26 +49,18 @@
       </div>
 
       <div class="dialogue-content">
-
-        <div id="speakerName" class="speaker-name">
-          杭州の人
-        </div>
-
+        <div id="speakerName" class="speaker-name"></div>
         <div id="dialogueText" class="dialogue-text"></div>
-
-        <div class="dialogue-footer">
-          E / ENTER
-        </div>
-
+        <div class="dialogue-footer">E / ENTER</div>
       </div>
 
     </div>
 
+    <div id="fadeLayer" class="fade-layer"></div>
+
   </section>
 
-
   <footer class="game-footer">
-
     <div>
       <span class="key">WASD</span>
       <span class="key">↑↓←→</span>
@@ -85,17 +69,15 @@
 
     <div>
       <span class="key">E</span>
-      話す
+      話す・入る
     </div>
 
     <div class="footer-location">
       中国 · 浙江省 · 杭州市
     </div>
-
   </footer>
 
 </main>
-
 
 <script src="map.js"></script>
 <script src="dialogue.js"></script>
