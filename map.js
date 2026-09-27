@@ -2,63 +2,46 @@
 
 const TILE = 32;
 
-const MAP_WIDTH = 52;
-const MAP_HEIGHT = 38;
+const T = {
+  FLOOR: 0,
+  ROAD: 1,
+  BUILDING: 2,
+  WALL: 3,
+  TREE: 4,
+  LANTERN: 5,
+  DARK: 6,
+  PLAZA: 7,
+  DOOR: 8,
+  WATER: 9,
+  GRASS: 10,
+  INDOOR: 11,
+  COUNTER: 12
+};
 
 
-/*
-0 = 石畳
-1 = 大通り
-2 = 建物
-3 = 屋台
-4 = 木
-5 = 提灯柱
-6 = 暗い路地
-7 = 広場
-8 = 店舗入口
-9 = 装飾
-*/
+function createGrid(width, height, base = T.FLOOR) {
 
+  return Array.from(
+    { length: height },
+    () => Array(width).fill(base)
+  );
 
-const gameMap = [];
-
-for (let y = 0; y < MAP_HEIGHT; y++) {
-
-  const row = [];
-
-  for (let x = 0; x < MAP_WIDTH; x++) {
-
-    let tile = 0;
-
-    if (
-      x === 0 ||
-      y === 0 ||
-      x === MAP_WIDTH - 1 ||
-      y === MAP_HEIGHT - 1
-    ) {
-      tile = 2;
-    }
-
-    row.push(tile);
-  }
-
-  gameMap.push(row);
 }
 
 
-function fillRect(x, y, w, h, tile) {
+function fill(grid, x, y, w, h, tile) {
 
   for (let yy = y; yy < y + h; yy++) {
 
     for (let xx = x; xx < x + w; xx++) {
 
       if (
-        xx >= 0 &&
         yy >= 0 &&
-        xx < MAP_WIDTH &&
-        yy < MAP_HEIGHT
+        xx >= 0 &&
+        yy < grid.length &&
+        xx < grid[0].length
       ) {
-        gameMap[yy][xx] = tile;
+        grid[yy][xx] = tile;
       }
 
     }
@@ -68,440 +51,478 @@ function fillRect(x, y, w, h, tile) {
 }
 
 
-// ==========================================
-// 大通り
-// ==========================================
+function border(grid, tile = T.BUILDING) {
 
-fillRect(20, 1, 12, 36, 1);
+  const h = grid.length;
+  const w = grid[0].length;
 
-
-// 横方向の道
-
-fillRect(6, 8, 40, 4, 1);
-fillRect(5, 19, 42, 4, 1);
-fillRect(7, 30, 38, 4, 1);
-
-
-// ==========================================
-// 中央広場
-// ==========================================
-
-fillRect(16, 14, 20, 5, 7);
-
-
-// ==========================================
-// 左側建物
-// ==========================================
-
-fillRect(2, 2, 8, 5, 2);
-fillRect(12, 2, 6, 5, 2);
-
-fillRect(2, 12, 7, 6, 2);
-fillRect(11, 13, 5, 5, 2);
-
-fillRect(2, 24, 8, 5, 2);
-fillRect(12, 25, 6, 4, 2);
-
-fillRect(2, 34, 9, 3, 2);
-fillRect(13, 34, 5, 3, 2);
-
-
-// ==========================================
-// 右側建物
-// ==========================================
-
-fillRect(34, 2, 7, 5, 2);
-fillRect(43, 2, 7, 5, 2);
-
-fillRect(37, 12, 6, 6, 2);
-fillRect(45, 13, 5, 5, 2);
-
-fillRect(36, 24, 7, 5, 2);
-fillRect(45, 24, 5, 5, 2);
-
-fillRect(35, 34, 6, 3, 2);
-fillRect(43, 34, 7, 3, 2);
-
-
-// ==========================================
-// 裏路地
-// ==========================================
-
-fillRect(10, 12, 1, 6, 6);
-fillRect(43, 12, 2, 6, 6);
-
-fillRect(10, 24, 2, 5, 6);
-fillRect(43, 24, 2, 5, 6);
-
-
-// ==========================================
-// 店舗入口
-// ==========================================
-
-const entrances = [
-
-  [7,6],
-  [14,6],
-  [36,6],
-  [47,6],
-
-  [6,17],
-  [14,17],
-  [39,17],
-  [47,17],
-
-  [7,28],
-  [15,28],
-  [39,28],
-  [47,28]
-
-];
-
-for (const [x,y] of entrances) {
-  gameMap[y][x] = 8;
-}
-
-
-// ==========================================
-// 屋台
-// ==========================================
-
-const stalls = [
-
-  {
-    x: 17,
-    y: 9,
-    type: "shaokao",
-    sign: "烧烤"
-  },
-
-  {
-    x: 15,
-    y: 10,
-    type: "choudoufu",
-    sign: "臭豆腐"
-  },
-
-  {
-    x: 34,
-    y: 9,
-    type: "xiaolongbao",
-    sign: "小笼包"
-  },
-
-  {
-    x: 36,
-    y: 10,
-    type: "milkTea",
-    sign: "奶茶"
-  },
-
-
-  {
-    x: 13,
-    y: 20,
-    type: "fruit",
-    sign: "鲜果"
-  },
-
-  {
-    x: 15,
-    y: 22,
-    type: "shaokao",
-    sign: "烤串"
-  },
-
-  {
-    x: 36,
-    y: 20,
-    type: "snack",
-    sign: "杭州小吃"
-  },
-
-  {
-    x: 38,
-    y: 22,
-    type: "jewelry",
-    sign: "饰品"
-  },
-
-
-  {
-    x: 16,
-    y: 31,
-    type: "milkTea",
-    sign: "茶饮"
-  },
-
-  {
-    x: 34,
-    y: 31,
-    type: "fruit",
-    sign: "水果"
+  for (let x = 0; x < w; x++) {
+    grid[0][x] = tile;
+    grid[h - 1][x] = tile;
   }
 
-];
-
-
-for (const stall of stalls) {
-
-  gameMap[stall.y][stall.x] = 3;
+  for (let y = 0; y < h; y++) {
+    grid[y][0] = tile;
+    grid[y][w - 1] = tile;
+  }
 
 }
 
 
-// ==========================================
-// 木
-// ==========================================
+// ========================================================
+// 01 武林夜市・小吃街
+// ========================================================
 
-const trees = [
+const foodMap = createGrid(46, 32, T.FLOOR);
 
-  [11,4],
-  [19,5],
-  [32,5],
-  [42,5],
+border(foodMap);
 
-  [10,20],
-  [42,20],
+fill(foodMap, 17, 1, 12, 30, T.ROAD);
+fill(foodMap, 2, 6, 42, 5, T.ROAD);
+fill(foodMap, 2, 20, 42, 5, T.ROAD);
 
-  [11,31],
-  [41,31],
+fill(foodMap, 2, 2, 10, 4, T.BUILDING);
+fill(foodMap, 13, 2, 4, 4, T.BUILDING);
 
-  [19,35],
-  [32,35]
+fill(foodMap, 29, 2, 6, 4, T.BUILDING);
+fill(foodMap, 36, 2, 8, 4, T.BUILDING);
 
-];
+fill(foodMap, 2, 12, 10, 7, T.BUILDING);
+fill(foodMap, 34, 12, 10, 7, T.BUILDING);
 
-for (const [x,y] of trees) {
+fill(foodMap, 2, 26, 10, 5, T.BUILDING);
+fill(foodMap, 34, 26, 10, 5, T.BUILDING);
 
-  gameMap[y][x] = 4;
-
-}
-
-
-// ==========================================
-// 提灯
-// ==========================================
-
-const lanternPosts = [
-
-  [19,7],
-  [32,7],
-
-  [19,12],
-  [32,12],
-
-  [19,18],
-  [32,18],
-
-  [19,23],
-  [32,23],
-
-  [19,29],
-  [32,29],
-
-  [19,34],
-  [32,34]
-
-];
-
-for (const [x,y] of lanternPosts) {
-
-  gameMap[y][x] = 5;
-
-}
+// 茶館のドア
+foodMap[5][7] = T.DOOR;
 
 
-// ==========================================
-// 横断提灯
-// ==========================================
+// ========================================================
+// 02 雑貨街
+// ========================================================
 
-const lanternStrings = [
+const marketMap = createGrid(46, 32, T.FLOOR);
 
-  { y: 8, x1: 20, x2: 31 },
+border(marketMap);
 
-  { y: 14, x1: 20, x2: 31 },
+fill(marketMap, 17, 1, 12, 30, T.ROAD);
+fill(marketMap, 2, 8, 42, 5, T.ROAD);
+fill(marketMap, 2, 21, 42, 5, T.ROAD);
 
-  { y: 19, x1: 20, x2: 31 },
+fill(marketMap, 2, 2, 12, 6, T.BUILDING);
+fill(marketMap, 32, 2, 12, 6, T.BUILDING);
 
-  { y: 25, x1: 20, x2: 31 },
+fill(marketMap, 2, 14, 9, 6, T.BUILDING);
+fill(marketMap, 35, 14, 9, 6, T.BUILDING);
 
-  { y: 31, x1: 20, x2: 31 }
+fill(marketMap, 2, 27, 12, 4, T.BUILDING);
+fill(marketMap, 32, 27, 12, 4, T.BUILDING);
 
-];
+
+// ========================================================
+// 03 ホテル街
+// ========================================================
+
+const hotelMap = createGrid(46, 32, T.ROAD);
+
+border(hotelMap);
+
+fill(hotelMap, 2, 2, 13, 11, T.BUILDING);
+fill(hotelMap, 31, 2, 13, 11, T.BUILDING);
+
+fill(hotelMap, 2, 19, 13, 11, T.BUILDING);
+fill(hotelMap, 31, 19, 13, 11, T.BUILDING);
+
+fill(hotelMap, 19, 1, 8, 30, T.PLAZA);
+
+hotelMap[12][8] = T.DOOR;
+hotelMap[12][37] = T.DOOR;
 
 
-// ==========================================
-// 建物看板
-// ==========================================
+// ========================================================
+// 04 西湖方面
+// ========================================================
 
-const buildingSigns = [
+const westLakeMap = createGrid(46, 32, T.ROAD);
 
-  {
-    x: 3,
-    y: 5,
-    text: "杭州小吃",
-    color: "#b64135"
+border(westLakeMap);
+
+fill(westLakeMap, 1, 1, 13, 30, T.WATER);
+fill(westLakeMap, 14, 1, 5, 30, T.GRASS);
+fill(westLakeMap, 19, 1, 12, 30, T.PLAZA);
+
+fill(westLakeMap, 33, 2, 11, 7, T.BUILDING);
+fill(westLakeMap, 34, 20, 10, 10, T.BUILDING);
+
+
+// ========================================================
+// 05 茶館内部
+// ========================================================
+
+const teaHouseMap = createGrid(24, 18, T.INDOOR);
+
+border(teaHouseMap, T.WALL);
+
+fill(teaHouseMap, 3, 3, 18, 1, T.WALL);
+
+fill(teaHouseMap, 4, 5, 6, 2, T.COUNTER);
+
+fill(teaHouseMap, 14, 5, 5, 2, T.COUNTER);
+
+teaHouseMap[17][12] = T.DOOR;
+
+
+// ========================================================
+// MAP DATA
+// ========================================================
+
+const MAPS = {
+
+  food: {
+
+    id: "food",
+
+    name: "武林夜市・小吃街",
+    subtitle: "烧烤 · 小笼包 · 杭州小吃",
+
+    grid: foodMap,
+
+    ambient: "night",
+
+    spawn: {
+      x: 23 * TILE,
+      y: 27 * TILE
+    },
+
+    stalls: [
+
+      {
+        x: 13,
+        y: 8,
+        w: 2,
+        sign: "烧烤",
+        type: "shaokao"
+      },
+
+      {
+        x: 31,
+        y: 8,
+        w: 2,
+        sign: "小笼包",
+        type: "xiaolongbao"
+      },
+
+      {
+        x: 13,
+        y: 22,
+        w: 2,
+        sign: "臭豆腐",
+        type: "choudoufu"
+      },
+
+      {
+        x: 31,
+        y: 22,
+        w: 2,
+        sign: "杭州小吃",
+        type: "snack"
+      }
+
+    ],
+
+    signs: [
+
+      {
+        x: 3,
+        y: 4,
+        text: "茶馆"
+      },
+
+      {
+        x: 36,
+        y: 4,
+        text: "老杭州"
+      },
+
+      {
+        x: 3,
+        y: 17,
+        text: "面馆"
+      },
+
+      {
+        x: 35,
+        y: 17,
+        text: "夜市食堂"
+      }
+
+    ],
+
+    portals: [
+
+      {
+        x: 7,
+        y: 5,
+        target: "tea",
+        targetX: 12,
+        targetY: 15,
+        label: "茶館に入る"
+      },
+
+      {
+        edge: "bottom",
+        target: "market",
+        targetX: 23,
+        targetY: 2
+      }
+
+    ]
+
   },
 
-  {
-    x: 12,
-    y: 5,
-    text: "便利店",
-    color: "#34625b"
+
+  market: {
+
+    id: "market",
+
+    name: "武林夜市・雑貨街",
+    subtitle: "饰品 · 茶饮 · 夜市杂货",
+
+    grid: marketMap,
+
+    ambient: "night",
+
+    spawn: {
+      x: 23 * TILE,
+      y: 3 * TILE
+    },
+
+    stalls: [
+
+      {
+        x: 13,
+        y: 10,
+        w: 2,
+        sign: "奶茶",
+        type: "milkTea"
+      },
+
+      {
+        x: 31,
+        y: 10,
+        w: 2,
+        sign: "饰品",
+        type: "jewelry"
+      },
+
+      {
+        x: 13,
+        y: 23,
+        w: 2,
+        sign: "鲜果",
+        type: "fruit"
+      },
+
+      {
+        x: 31,
+        y: 23,
+        w: 2,
+        sign: "文创",
+        type: "souvenir"
+      }
+
+    ],
+
+    signs: [
+
+      {
+        x: 3,
+        y: 6,
+        text: "武林百货"
+      },
+
+      {
+        x: 33,
+        y: 6,
+        text: "杭州文创"
+      }
+
+    ],
+
+    portals: [
+
+      {
+        edge: "top",
+        target: "food",
+        targetX: 23,
+        targetY: 29
+      },
+
+      {
+        edge: "bottom",
+        target: "hotel",
+        targetX: 23,
+        targetY: 2
+      }
+
+    ]
+
   },
 
-  {
-    x: 34,
-    y: 5,
-    text: "茶馆",
-    color: "#87682f"
+
+  hotel: {
+
+    id: "hotel",
+
+    name: "武林・ホテル街",
+    subtitle: "城市夜景 · 酒店 · 街道",
+
+    grid: hotelMap,
+
+    ambient: "city",
+
+    spawn: {
+      x: 23 * TILE,
+      y: 3 * TILE
+    },
+
+    stalls: [],
+
+    signs: [
+
+      {
+        x: 4,
+        y: 10,
+        text: "武林酒店"
+      },
+
+      {
+        x: 33,
+        y: 10,
+        text: "杭州宾馆"
+      }
+
+    ],
+
+    portals: [
+
+      {
+        edge: "top",
+        target: "market",
+        targetX: 23,
+        targetY: 29
+      },
+
+      {
+        edge: "bottom",
+        target: "lake",
+        targetX: 24,
+        targetY: 2
+      }
+
+    ]
+
   },
 
-  {
-    x: 44,
-    y: 5,
-    text: "武林百货",
-    color: "#8f343f"
+
+  lake: {
+
+    id: "lake",
+
+    name: "西湖・湖滨",
+    subtitle: "西湖夜色 · 湖滨步道",
+
+    grid: westLakeMap,
+
+    ambient: "lake",
+
+    spawn: {
+      x: 24 * TILE,
+      y: 3 * TILE
+    },
+
+    stalls: [],
+
+    signs: [
+
+      {
+        x: 34,
+        y: 7,
+        text: "湖滨"
+      }
+
+    ],
+
+    portals: [
+
+      {
+        edge: "top",
+        target: "hotel",
+        targetX: 23,
+        targetY: 29
+      }
+
+    ]
+
   },
 
-  {
-    x: 2,
-    y: 16,
-    text: "老杭州",
-    color: "#79492f"
-  },
 
-  {
-    x: 37,
-    y: 16,
-    text: "夜市食堂",
-    color: "#9b3f34"
-  },
+  tea: {
 
-  {
-    x: 2,
-    y: 27,
-    text: "面馆",
-    color: "#8c6330"
-  },
+    id: "tea",
 
-  {
-    x: 45,
-    y: 27,
-    text: "文创商店",
-    color: "#3c5971"
+    name: "老杭州茶館",
+    subtitle: "一杯茶，一座城",
+
+    grid: teaHouseMap,
+
+    ambient: "indoor",
+
+    spawn: {
+      x: 12 * TILE,
+      y: 15 * TILE
+    },
+
+    stalls: [],
+
+    signs: [],
+
+    portals: [
+
+      {
+        x: 12,
+        y: 17,
+        target: "food",
+        targetX: 7,
+        targetY: 7,
+        label: "外へ出る"
+      }
+
+    ]
+
   }
 
-];
+};
 
 
-// ==========================================
-// 小物
-// ==========================================
-
-const decorations = [
-
-  {
-    type: "bike",
-    x: 9 * TILE,
-    y: 9 * TILE
-  },
-
-  {
-    type: "bike",
-    x: 42 * TILE,
-    y: 10 * TILE
-  },
-
-  {
-    type: "scooter",
-    x: 12 * TILE,
-    y: 21 * TILE
-  },
-
-  {
-    type: "trash",
-    x: 18 * TILE,
-    y: 16 * TILE
-  },
-
-  {
-    type: "trash",
-    x: 33 * TILE,
-    y: 16 * TILE
-  },
-
-  {
-    type: "table",
-    x: 23 * TILE,
-    y: 16 * TILE
-  },
-
-  {
-    type: "table",
-    x: 28 * TILE,
-    y: 16 * TILE
-  }
-
-];
-
-
-// ==========================================
-// エリア
-// ==========================================
-
-const AREAS = [
-
-  {
-    name: "夜市入口",
-    minY: 29 * TILE
-  },
-
-  {
-    name: "雑貨・茶飲エリア",
-    minY: 23 * TILE
-  },
-
-  {
-    name: "武林夜市 中央広場",
-    minY: 13 * TILE
-  },
-
-  {
-    name: "杭州小吃街",
-    minY: 0
-  }
-
-];
-
-
-function getAreaName(y) {
-
-  for (const area of AREAS) {
-
-    if (y >= area.minY) {
-      return area.name;
-    }
-
-  }
-
-  return "武林夜市";
-
-}
-
-
-// ==========================================
+// ========================================================
 // COLLISION
-// ==========================================
+// ========================================================
+
+function getCurrentMap() {
+  return MAPS[currentMapId];
+}
+
 
 function isSolidTile(tile) {
 
   return (
-    tile === 2 ||
-    tile === 3 ||
-    tile === 4 ||
-    tile === 5
+    tile === T.BUILDING ||
+    tile === T.WALL ||
+    tile === T.TREE ||
+    tile === T.LANTERN ||
+    tile === T.WATER ||
+    tile === T.COUNTER
   );
 
 }
@@ -509,25 +530,22 @@ function isSolidTile(tile) {
 
 function isSolidAtPixel(px, py) {
 
-  const tx =
-    Math.floor(px / TILE);
+  const map = getCurrentMap();
 
-  const ty =
-    Math.floor(py / TILE);
-
+  const tx = Math.floor(px / TILE);
+  const ty = Math.floor(py / TILE);
 
   if (
     tx < 0 ||
     ty < 0 ||
-    tx >= MAP_WIDTH ||
-    ty >= MAP_HEIGHT
+    ty >= map.grid.length ||
+    tx >= map.grid[0].length
   ) {
     return true;
   }
 
-
   return isSolidTile(
-    gameMap[ty][tx]
+    map.grid[ty][tx]
   );
 
 }
