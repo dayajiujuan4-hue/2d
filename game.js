@@ -6,12 +6,15 @@
 // ======================================================
 
 const canvas =
-  document.getElementById("gameCanvas");
+  document.getElementById(
+    "gameCanvas"
+  );
 
 const ctx =
   canvas.getContext("2d");
 
-ctx.imageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled =
+  false;
 
 
 // ======================================================
@@ -19,53 +22,81 @@ ctx.imageSmoothingEnabled = false;
 // ======================================================
 
 const areaHeader =
-  document.getElementById("areaHeader");
+  document.getElementById(
+    "areaHeader"
+  );
 
 const clockElement =
-  document.getElementById("clock");
+  document.getElementById(
+    "clock"
+  );
 
 const areaBanner =
-  document.getElementById("areaBanner");
+  document.getElementById(
+    "areaBanner"
+  );
 
 const areaBannerName =
-  document.getElementById("areaBannerName");
+  document.getElementById(
+    "areaBannerName"
+  );
 
 const areaBannerSub =
-  document.getElementById("areaBannerSub");
+  document.getElementById(
+    "areaBannerSub"
+  );
 
 const interactionHint =
-  document.getElementById("interactionHint");
+  document.getElementById(
+    "interactionHint"
+  );
 
 const interactionText =
-  document.getElementById("interactionText");
+  document.getElementById(
+    "interactionText"
+  );
 
 const dialogueBox =
-  document.getElementById("dialogueBox");
+  document.getElementById(
+    "dialogueBox"
+  );
 
 const speakerName =
-  document.getElementById("speakerName");
+  document.getElementById(
+    "speakerName"
+  );
 
 const dialogueText =
-  document.getElementById("dialogueText");
+  document.getElementById(
+    "dialogueText"
+  );
 
 const portraitFace =
-  document.getElementById("portraitFace");
+  document.getElementById(
+    "portraitFace"
+  );
 
 const fadeLayer =
-  document.getElementById("fadeLayer");
+  document.getElementById(
+    "fadeLayer"
+  );
 
 
 // ======================================================
 // WORLD
 // ======================================================
 
-let currentMapId = "food";
+let currentMapId =
+  "food";
 
-let transitionLock = false;
+let transitionLock =
+  false;
 
-let exitCooldown = 0;
+let exitCooldown =
+  0;
 
-let bannerTimer = 0;
+let bannerTimer =
+  0;
 
 
 // ======================================================
@@ -74,19 +105,23 @@ let bannerTimer = 0;
 
 const player = {
 
-  x: MAPS.food.spawn.x * TILE,
+  x:
+    MAPS.food.spawn.x *
+    TILE,
 
-  y: MAPS.food.spawn.y * TILE,
+  y:
+    MAPS.food.spawn.y *
+    TILE,
 
-  width: 20,
+  width:20,
 
-  height: 26,
+  height:26,
 
-  speed: 150,
+  speed:150,
 
-  direction: "up",
+  direction:"up",
 
-  moving: false
+  moving:false
 
 };
 
@@ -96,8 +131,8 @@ const player = {
 // ======================================================
 
 const camera = {
-  x: 0,
-  y: 0
+  x:0,
+  y:0
 };
 
 
@@ -142,7 +177,9 @@ window.addEventListener(
       )
     ) {
 
-      if (dialogue.active) {
+      if (
+        dialogue.active
+      ) {
 
         advanceDialogue();
 
@@ -177,22 +214,25 @@ window.addEventListener(
 
 const dialogue = {
 
-  active: false,
+  active:false,
 
-  npc: null,
+  npc:null,
 
-  index: 0
+  index:0
 
 };
 
 
 function startDialogue(npc) {
 
-  dialogue.active = true;
+  dialogue.active =
+    true;
 
-  dialogue.npc = npc;
+  dialogue.npc =
+    npc;
 
-  dialogue.index = 0;
+  dialogue.index =
+    0;
 
 
   speakerName.textContent =
@@ -250,9 +290,11 @@ function advanceDialogue() {
 
 function closeDialogue() {
 
-  dialogue.active = false;
+  dialogue.active =
+    false;
 
-  dialogue.npc = null;
+  dialogue.npc =
+    null;
 
 
   dialogueBox.classList.add(
@@ -266,31 +308,39 @@ function closeDialogue() {
 // NPC SETUP
 // ======================================================
 
-for (const npc of NPCS) {
+for (
+  const npc
+  of NPCS
+) {
 
-  npc.homeX = npc.x;
+  npc.homeX =
+    npc.x;
 
-  npc.homeY = npc.y;
+  npc.homeY =
+    npc.y;
 
   npc.moveTimer =
-    Math.random() * 2;
+    Math.random()*2;
 
-  npc.moveX = 0;
+  npc.moveX =
+    0;
 
-  npc.moveY = 0;
+  npc.moveY =
+    0;
 
 }
 
 
 // ======================================================
-// NPC HELPERS
+// NPC
 // ======================================================
 
 function getCurrentNPCs() {
 
   return NPCS.filter(
     npc =>
-      npc.map === currentMapId
+      npc.map ===
+      currentMapId
   );
 
 }
@@ -300,17 +350,19 @@ function getNearbyNPC() {
 
   const px =
     player.x +
-    player.width / 2;
+    player.width/2;
 
 
   const py =
     player.y +
-    player.height / 2;
+    player.height/2;
 
 
-  let nearest = null;
+  let nearest =
+    null;
 
-  let bestDistance = 55;
+  let bestDistance =
+    55;
 
 
   for (
@@ -319,17 +371,16 @@ function getNearbyNPC() {
   ) {
 
     const nx =
-      npc.x + 11;
-
+      npc.x+11;
 
     const ny =
-      npc.y + 14;
+      npc.y+14;
 
 
     const distance =
       Math.hypot(
-        nx - px,
-        ny - py
+        nx-px,
+        ny-py
       );
 
 
@@ -380,7 +431,8 @@ function updateNPCs(dt) {
     }
 
 
-    npc.moveTimer -= dt;
+    npc.moveTimer -=
+      dt;
 
 
     if (
@@ -389,12 +441,12 @@ function updateNPCs(dt) {
 
       npc.moveTimer =
         1 +
-        Math.random() * 2.5;
+        Math.random()*2.5;
 
 
       const choice =
         Math.floor(
-          Math.random() * 5
+          Math.random()*5
         );
 
 
@@ -402,58 +454,71 @@ function updateNPCs(dt) {
       npc.moveY = 0;
 
 
-      if (choice === 0) {
+      if (
+        choice === 0
+      ) {
 
         npc.moveX = 1;
 
-        npc.direction = "right";
+        npc.direction =
+          "right";
 
       }
 
 
-      else if (choice === 1) {
+      else if (
+        choice === 1
+      ) {
 
         npc.moveX = -1;
 
-        npc.direction = "left";
+        npc.direction =
+          "left";
 
       }
 
 
-      else if (choice === 2) {
+      else if (
+        choice === 2
+      ) {
 
         npc.moveY = 1;
 
-        npc.direction = "down";
+        npc.direction =
+          "down";
 
       }
 
 
-      else if (choice === 3) {
+      else if (
+        choice === 3
+      ) {
 
         npc.moveY = -1;
 
-        npc.direction = "up";
+        npc.direction =
+          "up";
 
       }
 
     }
 
 
-    const speed = 18;
+    const speed =
+      18;
 
 
     const nx =
       npc.x +
-      npc.moveX *
-      speed *
+      npc.moveX*
+      speed*
       dt;
 
 
     const ny =
       npc.y +
-      npc.moveY *
-      speed *
+      npc.moveY*
+      speed*
       dt;
 
 
@@ -461,14 +526,12 @@ function updateNPCs(dt) {
       npc.range || 60;
 
 
-    const tooFar =
+    if (
       Math.hypot(
-        nx - npc.homeX,
-        ny - npc.homeY
-      ) > range;
-
-
-    if (tooFar) {
+        nx-npc.homeX,
+        ny-npc.homeY
+      ) > range
+    ) {
 
       npc.moveX = 0;
       npc.moveY = 0;
@@ -478,23 +541,18 @@ function updateNPCs(dt) {
     }
 
 
-    const centerX =
-      nx + 11;
-
-
-    const centerY =
-      ny + 14;
-
-
     if (
       !isSolidAtPixel(
-        centerX,
-        centerY
+        nx+11,
+        ny+14
       )
     ) {
 
-      npc.x = nx;
-      npc.y = ny;
+      npc.x =
+        nx;
+
+      npc.y =
+        ny;
 
     }
     else {
@@ -510,63 +568,85 @@ function updateNPCs(dt) {
 
 
 // ======================================================
-// DOORS
+// BUILDING ENTRANCES
 // ======================================================
 
-function getNearbyDoor() {
+function getNearbyBuilding() {
 
   const map =
     getCurrentMap();
 
 
+  if (
+    !map.buildings ||
+    map.buildings.length === 0
+  ) {
+
+    return null;
+
+  }
+
+
   const px =
     player.x +
-    player.width / 2;
+    player.width/2;
 
 
   const py =
     player.y +
-    player.height / 2;
+    player.height/2;
+
+
+  let nearest =
+    null;
+
+  let bestDistance =
+    58;
 
 
   for (
-    const door
-    of map.doors
+    const building
+    of map.buildings
   ) {
 
-    const centerX =
+    const bx =
       (
-        door.x +
-        door.width / 2
+        building.doorX +
+        .5
       ) * TILE;
 
 
-    const centerY =
+    const by =
       (
-        door.y +
-        .5
+        building.y +
+        building.h
       ) * TILE;
 
 
     const distance =
       Math.hypot(
-        centerX - px,
-        centerY - py
+        bx-px,
+        by-py
       );
 
 
     if (
-      distance < 55
+      distance <
+      bestDistance
     ) {
 
-      return door;
+      bestDistance =
+        distance;
+
+      nearest =
+        building;
 
     }
 
   }
 
 
-  return null;
+  return nearest;
 
 }
 
@@ -590,16 +670,20 @@ function interact() {
   }
 
 
-  const door =
-    getNearbyDoor();
+  const building =
+    getNearbyBuilding();
 
 
-  if (door) {
+  if (building) {
 
     changeMap(
-      door.target,
-      door.targetX,
-      door.targetY
+      building.target,
+      MAPS[
+        building.target
+      ].spawn.x,
+      MAPS[
+        building.target
+      ].spawn.y
     );
 
   }
@@ -628,12 +712,12 @@ function getActiveExit() {
 
   const px =
     player.x +
-    player.width / 2;
+    player.width/2;
 
 
   const py =
     player.y +
-    player.height / 2;
+    player.height/2;
 
 
   for (
@@ -693,7 +777,7 @@ function checkExitZones() {
 
 
 // ======================================================
-// MAP CHANGE
+// CHANGE MAP
 // ======================================================
 
 function changeMap(
@@ -702,12 +786,17 @@ function changeMap(
   targetY
 ) {
 
-  if (transitionLock) {
+  if (
+    transitionLock
+  ) {
+
     return;
+
   }
 
 
-  transitionLock = true;
+  transitionLock =
+    true;
 
 
   fadeLayer.classList.add(
@@ -723,11 +812,11 @@ function changeMap(
 
 
       player.x =
-        targetX * TILE;
+        targetX*TILE;
 
 
       player.y =
-        targetY * TILE;
+        targetY*TILE;
 
 
       player.moving =
@@ -740,12 +829,12 @@ function changeMap(
 
       camera.x =
         player.x -
-        canvas.width / 2;
+        canvas.width/2;
 
 
       camera.y =
         player.y -
-        canvas.height / 2;
+        canvas.height/2;
 
 
       clampCamera();
@@ -792,28 +881,40 @@ function playerCollides(
 ) {
 
   const left =
-    x + 4;
-
+    x+4;
 
   const right =
-    x +
-    player.width - 4;
-
+    x+
+    player.width-4;
 
   const top =
-    y + 7;
-
+    y+7;
 
   const bottom =
-    y +
-    player.height - 2;
+    y+
+    player.height-2;
 
 
   if (
-    isSolidAtPixel(left, top) ||
-    isSolidAtPixel(right, top) ||
-    isSolidAtPixel(left, bottom) ||
-    isSolidAtPixel(right, bottom)
+    isSolidAtPixel(
+      left,
+      top
+    ) ||
+
+    isSolidAtPixel(
+      right,
+      top
+    ) ||
+
+    isSolidAtPixel(
+      left,
+      bottom
+    ) ||
+
+    isSolidAtPixel(
+      right,
+      bottom
+    )
   ) {
 
     return true;
@@ -827,19 +928,16 @@ function playerCollides(
   ) {
 
     const nl =
-      npc.x + 4;
-
+      npc.x+4;
 
     const nr =
-      npc.x + 27;
-
+      npc.x+27;
 
     const nt =
-      npc.y + 5;
-
+      npc.y+5;
 
     const nb =
-      npc.y + 29;
+      npc.y+29;
 
 
     if (
@@ -862,7 +960,7 @@ function playerCollides(
 
 
 // ======================================================
-// PLAYER
+// PLAYER UPDATE
 // ======================================================
 
 function updatePlayer(dt) {
@@ -871,7 +969,8 @@ function updatePlayer(dt) {
     exitCooldown > 0
   ) {
 
-    exitCooldown -= dt;
+    exitCooldown -=
+      dt;
 
   }
 
@@ -881,7 +980,8 @@ function updatePlayer(dt) {
     transitionLock
   ) {
 
-    player.moving = false;
+    player.moving =
+      false;
 
     return;
 
@@ -889,7 +989,6 @@ function updatePlayer(dt) {
 
 
   let dx = 0;
-
   let dy = 0;
 
 
@@ -950,38 +1049,42 @@ function updatePlayer(dt) {
     dy !== 0
   ) {
 
-    player.moving = true;
+    player.moving =
+      true;
 
 
     const length =
-      Math.hypot(dx, dy);
+      Math.hypot(
+        dx,
+        dy
+      );
 
 
     dx /= length;
-
     dy /= length;
 
 
     const mx =
-      dx *
-      player.speed *
+      dx*
+      player.speed*
       dt;
 
 
     const my =
-      dy *
-      player.speed *
+      dy*
+      player.speed*
       dt;
 
 
     if (
       !playerCollides(
-        player.x + mx,
+        player.x+mx,
         player.y
       )
     ) {
 
-      player.x += mx;
+      player.x +=
+        mx;
 
     }
 
@@ -989,18 +1092,20 @@ function updatePlayer(dt) {
     if (
       !playerCollides(
         player.x,
-        player.y + my
+        player.y+my
       )
     ) {
 
-      player.y += my;
+      player.y +=
+        my;
 
     }
 
   }
   else {
 
-    player.moving = false;
+    player.moving =
+      false;
 
   }
 
@@ -1021,12 +1126,12 @@ function clampCamera() {
 
 
   const width =
-    map.grid[0].length *
+    map.grid[0].length*
     TILE;
 
 
   const height =
-    map.grid.length *
+    map.grid.length*
     TILE;
 
 
@@ -1037,7 +1142,7 @@ function clampCamera() {
         camera.x,
         Math.max(
           0,
-          width -
+          width-
           canvas.width
         )
       )
@@ -1051,7 +1156,7 @@ function clampCamera() {
         camera.y,
         Math.max(
           0,
-          height -
+          height-
           canvas.height
         )
       )
@@ -1063,27 +1168,27 @@ function clampCamera() {
 function updateCamera() {
 
   const targetX =
-    player.x -
-    canvas.width / 2;
+    player.x-
+    canvas.width/2;
 
 
   const targetY =
-    player.y -
-    canvas.height / 2;
+    player.y-
+    canvas.height/2;
 
 
   camera.x +=
     (
-      targetX -
+      targetX-
       camera.x
-    ) * .09;
+    )*.09;
 
 
   camera.y +=
     (
-      targetY -
+      targetY-
       camera.y
-    ) * .09;
+    )*.09;
 
 
   clampCamera();
@@ -1092,50 +1197,50 @@ function updateCamera() {
 
 
 // ======================================================
-// FLOOR
+// BASE TILE DRAWING
 // ======================================================
 
-function drawFloor(x, y) {
+function drawFloor(
+  x,
+  y
+) {
 
   ctx.fillStyle =
-    "#39343c";
+    "#37323a";
 
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
   ctx.fillStyle =
-    "#454048";
+    "#413b43";
 
 
   ctx.fillRect(
-    x + 2,
-    y + 3,
+    x+2,
+    y+3,
     13,
     11
   );
 
 
   ctx.fillRect(
-    x + 17,
-    y + 17,
+    x+17,
+    y+17,
     13,
     12
   );
 
 
   ctx.fillStyle =
-    "#302c33";
+    "#2e2a31";
 
 
   ctx.fillRect(
     x,
-    y + 15,
+    y+15,
     TILE,
     1
   );
@@ -1143,35 +1248,35 @@ function drawFloor(x, y) {
 }
 
 
-function drawRoad(x, y) {
+function drawRoad(
+  x,
+  y
+) {
 
   ctx.fillStyle =
     "#302e35";
 
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
   ctx.fillStyle =
-    "#3c3941";
+    "#3b3840";
 
 
   ctx.fillRect(
-    x + 2,
-    y + 4,
+    x+2,
+    y+4,
     14,
     10
   );
 
 
   ctx.fillRect(
-    x + 18,
-    y + 18,
+    x+18,
+    y+18,
     12,
     10
   );
@@ -1179,17 +1284,17 @@ function drawRoad(x, y) {
 }
 
 
-function drawPlaza(x, y) {
+function drawPlaza(
+  x,
+  y
+) {
 
   ctx.fillStyle =
     "#4b464b";
 
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
@@ -1198,8 +1303,8 @@ function drawPlaza(x, y) {
 
 
   ctx.fillRect(
-    x + 2,
-    y + 2,
+    x+2,
+    y+2,
     28,
     13
   );
@@ -1211,111 +1316,13 @@ function drawPlaza(x, y) {
 
   ctx.fillRect(
     x,
-    y + 15,
+    y+15,
     TILE,
     2
   );
 
 }
 
-
-// ======================================================
-// BUILDING
-// ======================================================
-
-function drawBuilding(
-  x,
-  y,
-  mx,
-  my
-) {
-
-  let wallColor =
-    "#392931";
-
-
-  if (
-    currentMapId ===
-    "hotel"
-  ) {
-
-    wallColor =
-      "#252b35";
-
-  }
-
-
-  ctx.fillStyle =
-    "#18151b";
-
-
-  ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
-  );
-
-
-  ctx.fillStyle =
-    wallColor;
-
-
-  ctx.fillRect(
-    x + 1,
-    y + 1,
-    30,
-    30
-  );
-
-
-  // windows
-
-  if (
-    (mx + my) % 2 === 0
-  ) {
-
-    ctx.fillStyle =
-      currentMapId === "hotel"
-      ? "#d9a75d"
-      : "#c98548";
-
-
-    ctx.fillRect(
-      x + 7,
-      y + 6,
-      18,
-      11
-    );
-
-
-    ctx.fillStyle =
-      "#322a2b";
-
-
-    ctx.fillRect(
-      x + 15,
-      y + 6,
-      2,
-      11
-    );
-
-
-    ctx.fillRect(
-      x + 7,
-      y + 11,
-      18,
-      2
-    );
-
-  }
-
-}
-
-
-// ======================================================
-// WATER
-// ======================================================
 
 function drawWater(
   x,
@@ -1328,19 +1335,16 @@ function drawWater(
 
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
   const wave =
     Math.sin(
-      time * 2 +
-      x * .04 +
-      y * .03
-    ) * 3;
+      time*2+
+      x*.04+
+      y*.03
+    )*3;
 
 
   ctx.fillStyle =
@@ -1348,8 +1352,8 @@ function drawWater(
 
 
   ctx.fillRect(
-    x + 4 + wave,
-    y + 9,
+    x+4+wave,
+    y+9,
     15,
     2
   );
@@ -1360,8 +1364,8 @@ function drawWater(
 
 
   ctx.fillRect(
-    x + 13 - wave,
-    y + 22,
+    x+13-wave,
+    y+22,
     14,
     2
   );
@@ -1369,21 +1373,17 @@ function drawWater(
 }
 
 
-// ======================================================
-// GRASS
-// ======================================================
-
-function drawGrass(x, y) {
+function drawGrass(
+  x,
+  y
+) {
 
   ctx.fillStyle =
     "#263d31";
 
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
@@ -1392,26 +1392,22 @@ function drawGrass(x, y) {
 
 
   ctx.fillRect(
-    x + 6,
-    y + 7,
+    x+6,
+    y+7,
     2,
     6
   );
 
 
   ctx.fillRect(
-    x + 22,
-    y + 19,
+    x+22,
+    y+19,
     2,
     7
   );
 
 }
 
-
-// ======================================================
-// INDOOR
-// ======================================================
 
 function drawIndoor(
   x,
@@ -1421,52 +1417,49 @@ function drawIndoor(
 ) {
 
   ctx.fillStyle =
-    "#74533b";
+    "#6c4c37";
 
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
   ctx.fillStyle =
-    "#845f42";
+    "#7b573c";
 
 
   ctx.fillRect(
     x,
-    y + 2,
+    y+2,
     TILE,
     12
   );
 
 
   ctx.fillStyle =
-    "#5e422f";
+    "#563b2c";
 
 
   ctx.fillRect(
     x,
-    y + 15,
+    y+15,
     TILE,
     2
   );
 
 
   if (
-    (mx + my) % 2 === 0
+    (mx+my)%2===0
   ) {
 
     ctx.fillStyle =
-      "#916849";
+      "#865f42";
 
 
     ctx.fillRect(
-      x + 3,
-      y + 3,
+      x+3,
+      y+3,
       12,
       9
     );
@@ -1476,39 +1469,39 @@ function drawIndoor(
 }
 
 
-function drawWall(x, y) {
+function drawWall(
+  x,
+  y
+) {
 
   ctx.fillStyle =
-    "#37251f";
+    "#34241f";
 
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
   ctx.fillStyle =
-    "#57392a";
+    "#54372a";
 
 
   ctx.fillRect(
-    x + 1,
-    y + 2,
+    x+1,
+    y+2,
     30,
     28
   );
 
 
   ctx.fillStyle =
-    "#7a5133";
+    "#795034";
 
 
   ctx.fillRect(
     x,
-    y + 25,
+    y+25,
     TILE,
     5
   );
@@ -1516,7 +1509,10 @@ function drawWall(x, y) {
 }
 
 
-function drawCounter(x, y) {
+function drawCounter(
+  x,
+  y
+) {
 
   drawIndoor(
     x,
@@ -1531,8 +1527,8 @@ function drawCounter(x, y) {
 
 
   ctx.fillRect(
-    x + 2,
-    y + 7,
+    x+2,
+    y+7,
     28,
     21
   );
@@ -1544,7 +1540,7 @@ function drawCounter(x, y) {
 
   ctx.fillRect(
     x,
-    y + 5,
+    y+5,
     TILE,
     7
   );
@@ -1563,27 +1559,27 @@ function drawMap(time) {
 
 
   for (
-    let y = 0;
-    y < map.grid.length;
+    let y=0;
+    y<map.grid.length;
     y++
   ) {
 
     for (
-      let x = 0;
-      x < map.grid[0].length;
+      let x=0;
+      x<map.grid[0].length;
       x++
     ) {
 
       const sx =
         Math.floor(
-          x * TILE -
+          x*TILE-
           camera.x
         );
 
 
       const sy =
         Math.floor(
-          y * TILE -
+          y*TILE-
           camera.y
         );
 
@@ -1604,92 +1600,101 @@ function drawMap(time) {
         map.grid[y][x];
 
 
-      switch (tile) {
+      if (
+        tile === T.FLOOR
+      ) {
 
-        case T.FLOOR:
+        drawFloor(
+          sx,
+          sy
+        );
 
-          drawFloor(sx, sy);
-
-          break;
-
-
-        case T.ROAD:
-
-          drawRoad(sx, sy);
-
-          break;
+      }
 
 
-        case T.PLAZA:
+      else if (
+        tile === T.ROAD
+      ) {
 
-          drawPlaza(sx, sy);
+        drawRoad(
+          sx,
+          sy
+        );
 
-          break;
-
-
-        case T.BUILDING:
-
-          drawBuilding(
-            sx,
-            sy,
-            x,
-            y
-          );
-
-          break;
+      }
 
 
-        case T.WATER:
+      else if (
+        tile === T.PLAZA
+      ) {
 
-          drawWater(
-            sx,
-            sy,
-            time
-          );
+        drawPlaza(
+          sx,
+          sy
+        );
 
-          break;
-
-
-        case T.GRASS:
-
-          drawGrass(
-            sx,
-            sy
-          );
-
-          break;
+      }
 
 
-        case T.INDOOR:
+      else if (
+        tile === T.WATER
+      ) {
 
-          drawIndoor(
-            sx,
-            sy,
-            x,
-            y
-          );
+        drawWater(
+          sx,
+          sy,
+          time
+        );
 
-          break;
-
-
-        case T.WALL:
-
-          drawWall(
-            sx,
-            sy
-          );
-
-          break;
+      }
 
 
-        case T.COUNTER:
+      else if (
+        tile === T.GRASS
+      ) {
 
-          drawCounter(
-            sx,
-            sy
-          );
+        drawGrass(
+          sx,
+          sy
+        );
 
-          break;
+      }
+
+
+      else if (
+        tile === T.INDOOR
+      ) {
+
+        drawIndoor(
+          sx,
+          sy,
+          x,
+          y
+        );
+
+      }
+
+
+      else if (
+        tile === T.WALL
+      ) {
+
+        drawWall(
+          sx,
+          sy
+        );
+
+      }
+
+
+      else if (
+        tile === T.COUNTER
+      ) {
+
+        drawCounter(
+          sx,
+          sy
+        );
 
       }
 
@@ -1701,87 +1706,740 @@ function drawMap(time) {
 
 
 // ======================================================
-// DOORS
+// BUILDINGS
 // ======================================================
 
-function drawDoors() {
+function drawBuildings() {
 
   const map =
     getCurrentMap();
 
 
+  if (!map.buildings) {
+    return;
+  }
+
+
   for (
-    const door
-    of map.doors
+    const building
+    of map.buildings
   ) {
 
-    const x =
-      door.x * TILE -
-      camera.x;
+    drawBuildingObject(
+      building
+    );
+
+  }
+
+}
 
 
-    const y =
-      door.y * TILE -
-      camera.y;
+function drawBuildingObject(
+  b
+) {
+
+  const x =
+    b.x*TILE-
+    camera.x;
 
 
-    const width =
-      door.width * TILE;
+  const y =
+    b.y*TILE-
+    camera.y;
 
+
+  const w =
+    b.w*TILE;
+
+
+  const h =
+    b.h*TILE;
+
+
+  // shadow
+
+  ctx.fillStyle =
+    "rgba(0,0,0,.38)";
+
+
+  ctx.fillRect(
+    x+12,
+    y+18,
+    w,
+    h
+  );
+
+
+  // ====================================================
+  // TRADITIONAL
+  // ====================================================
+
+  if (
+    b.type ===
+    "traditional"
+  ) {
 
     ctx.fillStyle =
-      "#251719";
+      "#30231f";
 
 
     ctx.fillRect(
-      x - 3,
-      y - 9,
-      width + 6,
-      TILE + 10
+      x+10,
+      y+35,
+      w-20,
+      h-35
     );
 
 
     ctx.fillStyle =
-      "#75452d";
+      "#8a6449";
+
+
+    ctx.fillRect(
+      x+18,
+      y+50,
+      w-36,
+      h-55
+    );
+
+
+    // roof
+
+    ctx.fillStyle =
+      "#292a29";
+
+
+    ctx.fillRect(
+      x-10,
+      y+24,
+      w+20,
+      17
+    );
+
+
+    ctx.fillStyle =
+      "#41413c";
 
 
     ctx.fillRect(
       x,
-      y - 5,
-      width,
-      TILE + 5
+      y+14,
+      w,
+      14
     );
 
 
-    ctx.fillStyle =
-      "#3d2521";
+    // roof tips
+
+    ctx.fillRect(
+      x-17,
+      y+20,
+      20,
+      5
+    );
 
 
     ctx.fillRect(
-      x + 5,
+      x+w-3,
+      y+20,
+      20,
+      5
+    );
+
+
+    // beams
+
+    ctx.fillStyle =
+      "#4d2e26";
+
+
+    for (
+      let i=1;
+      i<5;
+      i++
+    ) {
+
+      ctx.fillRect(
+        x+
+        i*w/5,
+        y+51,
+        5,
+        h-55
+      );
+
+    }
+
+
+    drawBuildingWindows(
+      x,
       y,
-      width - 10,
-      13
+      w,
+      h,
+      "#e0a25b"
     );
 
 
+    drawBuildingLantern(
+      x+30,
+      y+63
+    );
+
+
+    drawBuildingLantern(
+      x+w-30,
+      y+63
+    );
+
+  }
+
+
+  // ====================================================
+  // NOODLE / RESTAURANT
+  // ====================================================
+
+  else if (
+    b.type === "noodle" ||
+    b.type === "restaurant"
+  ) {
+
+    ctx.fillStyle =
+      b.color;
+
+
     ctx.fillRect(
-      x + 5,
-      y + 17,
-      width - 10,
-      12
+      x+5,
+      y+26,
+      w-10,
+      h-26
     );
 
 
     ctx.fillStyle =
-      "#e3b45e";
+      "#dfd0b1";
 
 
     ctx.fillRect(
-      x + width - 8,
-      y + 15,
-      3,
-      3
+      x+14,
+      y+50,
+      w-28,
+      h-60
+    );
+
+
+    // red roof
+
+    ctx.fillStyle =
+      "#74322d";
+
+
+    ctx.fillRect(
+      x,
+      y+18,
+      w,
+      22
+    );
+
+
+    ctx.fillStyle =
+      "#a74b39";
+
+
+    for (
+      let i=0;
+      i<w;
+      i+=24
+    ) {
+
+      ctx.fillRect(
+        x+i,
+        y+38,
+        14,
+        9
+      );
+
+    }
+
+
+    drawBuildingWindows(
+      x,
+      y,
+      w,
+      h,
+      "#f0bb69"
+    );
+
+  }
+
+
+  // ====================================================
+  // CONVENIENCE
+  // ====================================================
+
+  else if (
+    b.type ===
+    "convenience"
+  ) {
+
+    ctx.fillStyle =
+      "#d7ddd7";
+
+
+    ctx.fillRect(
+      x+5,
+      y+28,
+      w-10,
+      h-28
+    );
+
+
+    ctx.fillStyle =
+      "#2e626d";
+
+
+    ctx.fillRect(
+      x,
+      y+19,
+      w,
+      24
+    );
+
+
+    ctx.fillStyle =
+      "#e6e7d7";
+
+
+    ctx.fillRect(
+      x+13,
+      y+55,
+      w-26,
+      h-68
+    );
+
+
+    // glass
+
+    ctx.fillStyle =
+      "#315363";
+
+
+    for (
+      let wx=20;
+      wx<w-20;
+      wx+=45
+    ) {
+
+      ctx.fillRect(
+        x+wx,
+        y+66,
+        31,
+        40
+      );
+
+
+      ctx.fillStyle =
+        "#d8ae63";
+
+
+      ctx.fillRect(
+        x+wx+3,
+        y+69,
+        25,
+        4
+      );
+
+
+      ctx.fillStyle =
+        "#315363";
+
+    }
+
+  }
+
+
+  // ====================================================
+  // CULTURE / ACCESSORY
+  // ====================================================
+
+  else if (
+    b.type === "culture" ||
+    b.type === "accessory"
+  ) {
+
+    ctx.fillStyle =
+      b.color;
+
+
+    ctx.fillRect(
+      x+6,
+      y+30,
+      w-12,
+      h-30
+    );
+
+
+    ctx.fillStyle =
+      "#34293c";
+
+
+    ctx.fillRect(
+      x,
+      y+18,
+      w,
+      25
+    );
+
+
+    ctx.fillStyle =
+      "#77516e";
+
+
+    ctx.fillRect(
+      x+13,
+      y+55,
+      w-26,
+      h-65
+    );
+
+
+    drawBuildingWindows(
+      x,
+      y,
+      w,
+      h,
+      "#e3a85e"
+    );
+
+  }
+
+
+  // ====================================================
+  // DEPARTMENT
+  // ====================================================
+
+  else if (
+    b.type === "department"
+  ) {
+
+    ctx.fillStyle =
+      "#514b56";
+
+
+    ctx.fillRect(
+      x,
+      y+20,
+      w,
+      h-20
+    );
+
+
+    ctx.fillStyle =
+      "#322f38";
+
+
+    ctx.fillRect(
+      x,
+      y+14,
+      w,
+      20
+    );
+
+
+    for (
+      let row=0;
+      row<2;
+      row++
+    ) {
+
+      for (
+        let col=0;
+        col<4;
+        col++
+      ) {
+
+        ctx.fillStyle =
+          "#c69051";
+
+
+        ctx.fillRect(
+          x+25+col*65,
+          y+60+row*50,
+          35,
+          24
+        );
+
+
+        ctx.fillStyle =
+          "#463b42";
+
+
+        ctx.fillRect(
+          x+28+col*65,
+          y+63+row*50,
+          29,
+          18
+        );
+
+      }
+
+    }
+
+  }
+
+
+  // ====================================================
+  // DRINK
+  // ====================================================
+
+  else if (
+    b.type === "drink"
+  ) {
+
+    ctx.fillStyle =
+      "#496b61";
+
+
+    ctx.fillRect(
+      x+5,
+      y+25,
+      w-10,
+      h-25
+    );
+
+
+    ctx.fillStyle =
+      "#29463f";
+
+
+    ctx.fillRect(
+      x,
+      y+18,
+      w,
+      22
+    );
+
+
+    drawBuildingWindows(
+      x,
+      y,
+      w,
+      h,
+      "#d5b477"
+    );
+
+  }
+
+
+  // ====================================================
+  // HOTEL
+  // ====================================================
+
+  else if (
+    b.type === "hotel"
+  ) {
+
+    ctx.fillStyle =
+      b.color;
+
+
+    ctx.fillRect(
+      x,
+      y,
+      w,
+      h
+    );
+
+
+    ctx.fillStyle =
+      "#202733";
+
+
+    ctx.fillRect(
+      x+12,
+      y+12,
+      w-24,
+      h-12
+    );
+
+
+    for (
+      let row=0;
+      row<5;
+      row++
+    ) {
+
+      for (
+        let col=0;
+        col<4;
+        col++
+      ) {
+
+        ctx.fillStyle =
+          (
+            row+col
+          )%3===0
+          ? "#4d5665"
+          : "#d1a05b";
+
+
+        ctx.fillRect(
+          x+30+col*78,
+          y+34+row*50,
+          35,
+          24
+        );
+
+      }
+
+    }
+
+
+    // entrance canopy
+
+    ctx.fillStyle =
+      "#b59a68";
+
+
+    ctx.fillRect(
+      x+w/2-65,
+      y+h-58,
+      130,
+      10
+    );
+
+
+    ctx.fillStyle =
+      "#293a4b";
+
+
+    ctx.fillRect(
+      x+w/2-45,
+      y+h-48,
+      90,
+      48
+    );
+
+  }
+
+
+  // ====================================================
+  // FALLBACK
+  // ====================================================
+
+  else {
+
+    ctx.fillStyle =
+      b.color ||
+      "#55424a";
+
+
+    ctx.fillRect(
+      x,
+      y+20,
+      w,
+      h-20
+    );
+
+  }
+
+
+  drawBuildingSign(
+    b,
+    x,
+    y,
+    w
+  );
+
+
+  drawBuildingDoor(
+    b,
+    y,
+    h
+  );
+
+}
+
+
+// ======================================================
+// WINDOWS
+// ======================================================
+
+function drawBuildingWindows(
+  x,
+  y,
+  w,
+  h,
+  glow
+) {
+
+  const count =
+    Math.max(
+      2,
+      Math.floor(
+        w/70
+      )
+    );
+
+
+  const gap =
+    w/
+    (
+      count+1
+    );
+
+
+  for (
+    let i=1;
+    i<=count;
+    i++
+  ) {
+
+    const wx =
+      x+
+      gap*i-
+      17;
+
+
+    ctx.fillStyle =
+      "#332c2d";
+
+
+    ctx.fillRect(
+      wx,
+      y+70,
+      34,
+      34
+    );
+
+
+    ctx.fillStyle =
+      glow;
+
+
+    ctx.fillRect(
+      wx+4,
+      y+74,
+      26,
+      26
+    );
+
+
+    ctx.fillStyle =
+      "#513f36";
+
+
+    ctx.fillRect(
+      wx+16,
+      y+74,
+      2,
+      26
+    );
+
+
+    ctx.fillRect(
+      wx+4,
+      y+86,
+      26,
+      2
     );
 
   }
@@ -1790,7 +2448,236 @@ function drawDoors() {
 
 
 // ======================================================
-// LANTERNS
+// BUILDING SIGN
+// ======================================================
+
+function drawBuildingSign(
+  b,
+  x,
+  y,
+  w
+) {
+
+  const signWidth =
+    Math.min(
+      w-35,
+      Math.max(
+        110,
+        b.name.length*23
+      )
+    );
+
+
+  const sx =
+    x+
+    w/2-
+    signWidth/2;
+
+
+  ctx.fillStyle =
+    "#261a18";
+
+
+  ctx.fillRect(
+    sx-4,
+    y+30,
+    signWidth+8,
+    33
+  );
+
+
+  ctx.fillStyle =
+    b.type === "hotel"
+    ? "#4b5668"
+    : "#833a31";
+
+
+  ctx.fillRect(
+    sx,
+    y+34,
+    signWidth,
+    25
+  );
+
+
+  ctx.fillStyle =
+    "#f6d38b";
+
+
+  ctx.font =
+    "bold 15px sans-serif";
+
+
+  ctx.textAlign =
+    "center";
+
+
+  ctx.fillText(
+    b.name,
+    sx+
+    signWidth/2,
+    y+52
+  );
+
+}
+
+
+// ======================================================
+// BUILDING DOOR
+// ======================================================
+
+function drawBuildingDoor(
+  b,
+  y,
+  h
+) {
+
+  const x =
+    b.doorX*TILE-
+    camera.x;
+
+
+  const bottom =
+    y+h;
+
+
+  ctx.fillStyle =
+    "#24191a";
+
+
+  ctx.fillRect(
+    x-5,
+    bottom-50,
+    TILE+10,
+    50
+  );
+
+
+  if (
+    b.type === "hotel" ||
+    b.type === "convenience"
+  ) {
+
+    ctx.fillStyle =
+      "#345463";
+
+
+    ctx.fillRect(
+      x,
+      bottom-45,
+      TILE,
+      45
+    );
+
+
+    ctx.fillStyle =
+      "#8db0b9";
+
+
+    ctx.fillRect(
+      x+4,
+      bottom-40,
+      TILE-8,
+      25
+    );
+
+  }
+  else {
+
+    ctx.fillStyle =
+      "#75452d";
+
+
+    ctx.fillRect(
+      x,
+      bottom-45,
+      TILE,
+      45
+    );
+
+
+    ctx.fillStyle =
+      "#4c2c24";
+
+
+    ctx.fillRect(
+      x+5,
+      bottom-39,
+      TILE-10,
+      14
+    );
+
+  }
+
+
+  ctx.fillStyle =
+    "#e3b45e";
+
+
+  ctx.fillRect(
+    x+23,
+    bottom-20,
+    3,
+    3
+  );
+
+}
+
+
+// ======================================================
+// BUILDING LANTERN
+// ======================================================
+
+function drawBuildingLantern(
+  x,
+  y
+) {
+
+  ctx.fillStyle =
+    "rgba(255,90,40,.15)";
+
+
+  ctx.beginPath();
+
+  ctx.arc(
+    x,
+    y+7,
+    15,
+    0,
+    Math.PI*2
+  );
+
+  ctx.fill();
+
+
+  ctx.fillStyle =
+    "#c73e2f";
+
+
+  ctx.fillRect(
+    x-5,
+    y,
+    10,
+    15
+  );
+
+
+  ctx.fillStyle =
+    "#ffb451";
+
+
+  ctx.fillRect(
+    x-2,
+    y+4,
+    4,
+    6
+  );
+
+}
+
+
+// ======================================================
+// LANTERN STRINGS
 // ======================================================
 
 function drawLanternStrings(time) {
@@ -1805,28 +2692,30 @@ function drawLanternStrings(time) {
   ) {
 
     const x1 =
-      string.x1 * TILE -
+      string.x1*TILE-
       camera.x;
 
 
     const x2 =
-      string.x2 * TILE -
+      string.x2*TILE-
       camera.x;
 
 
     const y =
-      string.y * TILE -
+      string.y*TILE-
       camera.y;
 
 
     ctx.strokeStyle =
-      "#241c1c";
+      "#21191a";
 
 
-    ctx.lineWidth = 2;
+    ctx.lineWidth =
+      2;
 
 
     ctx.beginPath();
+
 
     ctx.moveTo(
       x1,
@@ -1835,8 +2724,8 @@ function drawLanternStrings(time) {
 
 
     ctx.quadraticCurveTo(
-      (x1 + x2) / 2,
-      y + 13,
+      (x1+x2)/2,
+      y+14,
       x2,
       y
     );
@@ -1845,41 +2734,31 @@ function drawLanternStrings(time) {
     ctx.stroke();
 
 
-    const count = 7;
-
-
     for (
-      let i = 0;
-      i < count;
+      let i=0;
+      i<9;
       i++
     ) {
 
       const t =
-        i / (count - 1);
+        i/8;
 
 
       const lx =
-        x1 +
-        (x2 - x1) * t;
-
-
-      const curve =
-        Math.sin(
-          t * Math.PI
-        ) * 13;
-
-
-      const sway =
-        Math.sin(
-          time * 2 +
-          i
-        ) * 1.5;
+        x1+
+        (
+          x2-x1
+        )*t;
 
 
       const ly =
-        y +
-        curve +
-        sway;
+        y+
+        Math.sin(
+          t*Math.PI
+        )*14+
+        Math.sin(
+          time*2+i
+        )*1.5;
 
 
       drawLantern(
@@ -1900,18 +2779,20 @@ function drawLantern(
 ) {
 
   ctx.fillStyle =
-    "rgba(255,120,55,.10)";
+    "rgba(255,100,45,.10)";
 
 
   ctx.beginPath();
 
+
   ctx.arc(
     x,
-    y + 7,
+    y+7,
     13,
     0,
-    Math.PI * 2
+    Math.PI*2
   );
+
 
   ctx.fill();
 
@@ -1921,7 +2802,7 @@ function drawLantern(
 
 
   ctx.fillRect(
-    x - 4,
+    x-4,
     y,
     8,
     13
@@ -1933,8 +2814,8 @@ function drawLantern(
 
 
   ctx.fillRect(
-    x - 5,
-    y + 3,
+    x-5,
+    y+3,
     10,
     7
   );
@@ -1945,30 +2826,10 @@ function drawLantern(
 
 
   ctx.fillRect(
-    x - 2,
-    y + 4,
+    x-2,
+    y+4,
     4,
     5
-  );
-
-
-  ctx.fillStyle =
-    "#c99a45";
-
-
-  ctx.fillRect(
-    x - 3,
-    y - 2,
-    6,
-    2
-  );
-
-
-  ctx.fillRect(
-    x - 3,
-    y + 12,
-    6,
-    2
   );
 
 }
@@ -1990,17 +2851,17 @@ function drawStalls(time) {
   ) {
 
     const x =
-      stall.x * TILE -
+      stall.x*TILE-
       camera.x;
 
 
     const y =
-      stall.y * TILE -
+      stall.y*TILE-
       camera.y;
 
 
     const width =
-      stall.width * TILE;
+      stall.width*TILE;
 
 
     ctx.fillStyle =
@@ -2008,9 +2869,9 @@ function drawStalls(time) {
 
 
     ctx.fillRect(
-      x + 3,
-      y + 27,
-      width - 6,
+      x+3,
+      y+27,
+      width-6,
       8
     );
 
@@ -2020,16 +2881,16 @@ function drawStalls(time) {
 
 
     ctx.fillRect(
-      x + 4,
-      y + 13,
+      x+4,
+      y+13,
       5,
       22
     );
 
 
     ctx.fillRect(
-      x + width - 9,
-      y + 13,
+      x+width-9,
+      y+13,
       5,
       22
     );
@@ -2048,20 +2909,20 @@ function drawStalls(time) {
 
 
     for (
-      let i = 0;
-      i < width;
-      i += 16
+      let i=0;
+      i<width;
+      i+=16
     ) {
 
       ctx.fillStyle =
-        i % 32 === 0
+        i%32===0
         ? "#d25344"
         : "#e4b15e";
 
 
       ctx.fillRect(
-        x + i,
-        y + 13,
+        x+i,
+        y+13,
         16,
         6
       );
@@ -2074,9 +2935,9 @@ function drawStalls(time) {
 
 
     ctx.fillRect(
-      x + 10,
-      y + 2,
-      width - 20,
+      x+10,
+      y+2,
+      width-20,
       11
     );
 
@@ -2095,8 +2956,8 @@ function drawStalls(time) {
 
     ctx.fillText(
       stall.sign,
-      x + width / 2,
-      y + 12
+      x+width/2,
+      y+12
     );
 
 
@@ -2105,9 +2966,9 @@ function drawStalls(time) {
 
 
     ctx.fillRect(
-      x + 5,
-      y + 27,
-      width - 10,
+      x+5,
+      y+27,
+      width-10,
       10
     );
 
@@ -2147,17 +3008,17 @@ function drawStallContents(
 
 
     ctx.fillRect(
-      x + 15,
-      y + 21,
-      width - 30,
+      x+15,
+      y+21,
+      width-30,
       6
     );
 
 
     for (
-      let i = 18;
-      i < width - 18;
-      i += 10
+      let i=18;
+      i<width-18;
+      i+=10
     ) {
 
       ctx.fillStyle =
@@ -2165,8 +3026,8 @@ function drawStallContents(
 
 
       ctx.fillRect(
-        x + i,
-        y + 20,
+        x+i,
+        y+20,
         6,
         3
       );
@@ -2177,8 +3038,8 @@ function drawStallContents(
 
 
       ctx.fillRect(
-        x + i + 2,
-        y + 17,
+        x+i+2,
+        y+17,
         1,
         10
       );
@@ -2187,8 +3048,8 @@ function drawStallContents(
 
 
     drawSteam(
-      x + width / 2,
-      y + 19,
+      x+width/2,
+      y+19,
       time
     );
 
@@ -2205,9 +3066,9 @@ function drawStallContents(
 
 
     ctx.fillRect(
-      x + 14,
-      y + 20,
-      width - 28,
+      x+14,
+      y+20,
+      width-28,
       7
     );
 
@@ -2217,14 +3078,14 @@ function drawStallContents(
 
 
     for (
-      let i = 18;
-      i < width - 18;
-      i += 12
+      let i=18;
+      i<width-18;
+      i+=12
     ) {
 
       ctx.fillRect(
-        x + i,
-        y + 18,
+        x+i,
+        y+18,
         7,
         6
       );
@@ -2233,51 +3094,10 @@ function drawStallContents(
 
 
     drawSteam(
-      x + width / 2,
-      y + 18,
+      x+width/2,
+      y+18,
       time
     );
-
-  }
-
-
-  else if (
-    stall.type ===
-    "milkTea"
-  ) {
-
-    for (
-      let i = 0;
-      i < 5;
-      i++
-    ) {
-
-      ctx.fillStyle =
-        i % 2 === 0
-        ? "#d6aa73"
-        : "#b87f63";
-
-
-      ctx.fillRect(
-        x + 17 + i * 13,
-        y + 19,
-        8,
-        9
-      );
-
-
-      ctx.fillStyle =
-        "#f0dfc3";
-
-
-      ctx.fillRect(
-        x + 18 + i * 13,
-        y + 17,
-        6,
-        2
-      );
-
-    }
 
   }
 
@@ -2296,20 +3116,21 @@ function drawStallContents(
 
 
     for (
-      let i = 0;
-      i < 10;
+      let i=0;
+      i<10;
       i++
     ) {
 
       ctx.fillStyle =
         colors[
-          i % colors.length
+          i%colors.length
         ];
 
 
       ctx.fillRect(
-        x + 14 + i * 7,
-        y + 20 + (i % 2) * 3,
+        x+14+i*7,
+        y+20+
+        (i%2)*3,
         6,
         6
       );
@@ -2325,8 +3146,8 @@ function drawStallContents(
   ) {
 
     for (
-      let i = 0;
-      i < 8;
+      let i=0;
+      i<8;
       i++
     ) {
 
@@ -2336,14 +3157,58 @@ function drawStallContents(
           "#5b78a2",
           "#d5b052",
           "#725e91"
-        ][i % 4];
+        ][i%4];
 
 
       ctx.fillRect(
-        x + 13 + i * 9,
-        y + 18,
+        x+13+i*9,
+        y+18,
         6,
         10
+      );
+
+    }
+
+  }
+
+
+  else if (
+    stall.type ===
+    "flower"
+  ) {
+
+    for (
+      let i=0;
+      i<9;
+      i++
+    ) {
+
+      ctx.fillStyle =
+        [
+          "#d86477",
+          "#e0b453",
+          "#ad6aa4"
+        ][i%3];
+
+
+      ctx.fillRect(
+        x+15+i*8,
+        y+18+
+        (i%2)*4,
+        6,
+        6
+      );
+
+
+      ctx.fillStyle =
+        "#56804e";
+
+
+      ctx.fillRect(
+        x+17+i*8,
+        y+24,
+        2,
+        5
       );
 
     }
@@ -2354,20 +3219,20 @@ function drawStallContents(
   else {
 
     for (
-      let i = 0;
-      i < 8;
+      let i=0;
+      i<8;
       i++
     ) {
 
       ctx.fillStyle =
-        i % 2 === 0
+        i%2===0
         ? "#d8b15e"
         : "#b56a74";
 
 
       ctx.fillRect(
-        x + 15 + i * 9,
-        y + 21,
+        x+15+i*9,
+        y+21,
         5,
         5
       );
@@ -2386,7 +3251,9 @@ function drawSteam(
 ) {
 
   const offset =
-    (time * 12) % 14;
+    (
+      time*12
+    )%14;
 
 
   ctx.fillStyle =
@@ -2394,8 +3261,8 @@ function drawSteam(
 
 
   ctx.fillRect(
-    x - 10,
-    y - offset,
+    x-10,
+    y-offset,
     2,
     5
   );
@@ -2403,15 +3270,15 @@ function drawSteam(
 
   ctx.fillRect(
     x,
-    y - 6 - offset * .7,
+    y-6-offset*.7,
     2,
     5
   );
 
 
   ctx.fillRect(
-    x + 10,
-    y - 2 - offset * .9,
+    x+10,
+    y-2-offset*.9,
     2,
     4
   );
@@ -2420,91 +3287,10 @@ function drawSteam(
 
 
 // ======================================================
-// SIGNS
-// ======================================================
-
-function drawSigns() {
-
-  const map =
-    getCurrentMap();
-
-
-  for (
-    const sign
-    of map.signs
-  ) {
-
-    const x =
-      sign.x * TILE -
-      camera.x;
-
-
-    const y =
-      sign.y * TILE -
-      camera.y;
-
-
-    const width =
-      Math.max(
-        70,
-        sign.text.length * 20
-      );
-
-
-    ctx.fillStyle =
-      "#4c1d1d";
-
-
-    ctx.fillRect(
-      x - 3,
-      y - 3,
-      width + 6,
-      31
-    );
-
-
-    ctx.fillStyle =
-      currentMapId === "market"
-      ? "#63315f"
-      : "#9a372f";
-
-
-    ctx.fillRect(
-      x,
-      y,
-      width,
-      25
-    );
-
-
-    ctx.fillStyle =
-      "#ffe09a";
-
-
-    ctx.font =
-      "bold 14px sans-serif";
-
-
-    ctx.textAlign =
-      "center";
-
-
-    ctx.fillText(
-      sign.text,
-      x + width / 2,
-      y + 18
-    );
-
-  }
-
-}
-
-
-// ======================================================
 // PROPS
 // ======================================================
 
-function drawProps(time) {
+function drawProps() {
 
   const map =
     getCurrentMap();
@@ -2516,20 +3302,19 @@ function drawProps(time) {
   ) {
 
     const x =
-      prop.x * TILE -
+      prop.x*TILE-
       camera.x;
 
 
     const y =
-      prop.y * TILE -
+      prop.y*TILE-
       camera.y;
 
 
     drawProp(
       prop.type,
       x,
-      y,
-      time
+      y
     );
 
   }
@@ -2540,36 +3325,63 @@ function drawProps(time) {
 function drawProp(
   type,
   x,
-  y,
-  time
+  y
 ) {
 
   if (
-    type === "table"
+    type === "table" ||
+    type === "teaTable"
   ) {
 
     ctx.fillStyle =
-      "#70462e";
+      "#4d3024";
 
 
     ctx.fillRect(
-      x + 3,
-      y + 10,
-      26,
-      12
+      x+2,
+      y+10,
+      29,
+      11
     );
 
 
     ctx.fillStyle =
-      "#98613b";
+      "#855838";
 
 
     ctx.fillRect(
-      x + 1,
-      y + 8,
-      30,
-      7
+      x,
+      y+7,
+      32,
+      8
     );
+
+
+    if (
+      type ===
+      "teaTable"
+    ) {
+
+      ctx.fillStyle =
+        "#c8b26d";
+
+
+      ctx.fillRect(
+        x+13,
+        y+2,
+        8,
+        6
+      );
+
+
+      ctx.fillRect(
+        x+20,
+        y+4,
+        4,
+        2
+      );
+
+    }
 
   }
 
@@ -2583,172 +3395,26 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 9,
-      y + 9,
+      x+9,
+      y+9,
       14,
       13
     );
 
 
     ctx.fillRect(
-      x + 9,
-      y + 21,
+      x+9,
+      y+21,
       3,
       8
     );
 
 
     ctx.fillRect(
-      x + 20,
-      y + 21,
+      x+20,
+      y+21,
       3,
       8
-    );
-
-  }
-
-
-  else if (
-    type === "bike"
-  ) {
-
-    ctx.strokeStyle =
-      "#b8a58c";
-
-
-    ctx.lineWidth = 2;
-
-
-    ctx.beginPath();
-
-    ctx.arc(
-      x + 8,
-      y + 22,
-      6,
-      0,
-      Math.PI * 2
-    );
-
-
-    ctx.arc(
-      x + 24,
-      y + 22,
-      6,
-      0,
-      Math.PI * 2
-    );
-
-
-    ctx.moveTo(
-      x + 8,
-      y + 22
-    );
-
-
-    ctx.lineTo(
-      x + 15,
-      y + 12
-    );
-
-
-    ctx.lineTo(
-      x + 24,
-      y + 22
-    );
-
-
-    ctx.lineTo(
-      x + 12,
-      y + 21
-    );
-
-
-    ctx.lineTo(
-      x + 19,
-      y + 16
-    );
-
-
-    ctx.stroke();
-
-  }
-
-
-  else if (
-    type === "scooter"
-  ) {
-
-    ctx.fillStyle =
-      "#30333c";
-
-
-    ctx.fillRect(
-      x + 8,
-      y + 14,
-      17,
-      10
-    );
-
-
-    ctx.fillStyle =
-      "#8d3436";
-
-
-    ctx.fillRect(
-      x + 10,
-      y + 9,
-      11,
-      11
-    );
-
-
-    ctx.fillStyle =
-      "#16171b";
-
-
-    ctx.fillRect(
-      x + 7,
-      y + 23,
-      6,
-      5
-    );
-
-
-    ctx.fillRect(
-      x + 22,
-      y + 23,
-      6,
-      5
-    );
-
-  }
-
-
-  else if (
-    type === "trash"
-  ) {
-
-    ctx.fillStyle =
-      "#38494b";
-
-
-    ctx.fillRect(
-      x + 8,
-      y + 7,
-      16,
-      22
-    );
-
-
-    ctx.fillStyle =
-      "#657475";
-
-
-    ctx.fillRect(
-      x + 6,
-      y + 5,
-      20,
-      5
     );
 
   }
@@ -2763,8 +3429,8 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 10,
-      y + 20,
+      x+10,
+      y+20,
       13,
       10
     );
@@ -2775,24 +3441,24 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 14,
-      y + 7,
+      x+14,
+      y+7,
       5,
       15
     );
 
 
     ctx.fillRect(
-      x + 7,
-      y + 11,
+      x+7,
+      y+11,
       10,
       5
     );
 
 
     ctx.fillRect(
-      x + 17,
-      y + 12,
+      x+17,
+      y+12,
       10,
       5
     );
@@ -2801,100 +3467,228 @@ function drawProp(
 
 
   else if (
-    type === "ac"
+    type === "shelf"
   ) {
 
     ctx.fillStyle =
-      "#b5aaa0";
+      "#4d3024";
 
 
     ctx.fillRect(
-      x + 4,
-      y + 8,
-      25,
-      16
+      x+3,
+      y,
+      26,
+      31
     );
 
 
     ctx.fillStyle =
-      "#5d5b5b";
+      "#8a5b3a";
 
 
     ctx.fillRect(
-      x + 8,
-      y + 12,
-      10,
+      x+5,
+      y+3,
+      22,
+      4
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+14,
+      22,
+      4
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+25,
+      22,
+      4
+    );
+
+
+    ctx.fillStyle =
+      "#c6a55f";
+
+
+    ctx.fillRect(
+      x+8,
+      y+8,
+      5,
+      6
+    );
+
+
+    ctx.fillStyle =
+      "#6c8b6b";
+
+
+    ctx.fillRect(
+      x+17,
+      y+8,
+      6,
+      6
+    );
+
+
+    ctx.fillStyle =
+      "#b26063";
+
+
+    ctx.fillRect(
+      x+10,
+      y+19,
+      6,
+      6
+    );
+
+  }
+
+
+  else if (
+    type === "display"
+  ) {
+
+    ctx.fillStyle =
+      "#55382d";
+
+
+    ctx.fillRect(
+      x+3,
+      y+13,
+      26,
+      15
+    );
+
+
+    ctx.fillStyle =
+      "#8e6245";
+
+
+    ctx.fillRect(
+      x,
+      y+10,
+      32,
+      7
+    );
+
+
+    ctx.fillStyle =
+      "#d4b663";
+
+
+    ctx.fillRect(
+      x+5,
+      y+4,
+      6,
+      6
+    );
+
+
+    ctx.fillStyle =
+      "#648373";
+
+
+    ctx.fillRect(
+      x+14,
+      y+2,
+      7,
       8
     );
 
 
     ctx.fillStyle =
-      "#7b7470";
+      "#aa6372";
 
 
     ctx.fillRect(
-      x + 21,
-      y + 11,
-      4,
-      10
+      x+24,
+      y+5,
+      5,
+      5
     );
 
   }
 
 
   else if (
-    type === "menu"
+    type === "sofa"
   ) {
 
     ctx.fillStyle =
-      "#36231d";
+      "#493d4f";
 
 
     ctx.fillRect(
-      x + 7,
-      y + 3,
-      18,
-      28
+      x,
+      y+10,
+      45,
+      19
     );
 
 
     ctx.fillStyle =
-      "#e4c590";
+      "#6d5d73";
 
 
     ctx.fillRect(
-      x + 9,
-      y + 5,
-      14,
-      20
+      x+4,
+      y+5,
+      37,
+      13
     );
 
 
     ctx.fillStyle =
-      "#74322d";
+      "#28242c";
 
 
     ctx.fillRect(
-      x + 12,
-      y + 8,
-      8,
-      2
+      x+5,
+      y+28,
+      5,
+      4
     );
 
 
     ctx.fillRect(
-      x + 12,
-      y + 13,
-      8,
-      2
+      x+35,
+      y+28,
+      5,
+      4
     );
+
+  }
+
+
+  else if (
+    type === "steamPot"
+  ) {
+
+    ctx.fillStyle =
+      "#56585b";
 
 
     ctx.fillRect(
-      x + 12,
-      y + 18,
-      8,
-      2
+      x+6,
+      y+14,
+      20,
+      12
+    );
+
+
+    ctx.fillStyle =
+      "#929497";
+
+
+    ctx.fillRect(
+      x+4,
+      y+11,
+      24,
+      5
     );
 
   }
@@ -2909,16 +3703,16 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 3,
-      y + 10,
+      x+3,
+      y+10,
       27,
       5
     );
 
 
     ctx.fillRect(
-      x + 3,
-      y + 18,
+      x+3,
+      y+18,
       27,
       5
     );
@@ -2929,16 +3723,16 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 6,
-      y + 22,
+      x+6,
+      y+22,
       3,
       7
     );
 
 
     ctx.fillRect(
-      x + 24,
-      y + 22,
+      x+24,
+      y+22,
       3,
       7
     );
@@ -2955,24 +3749,24 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 5,
-      y + 5,
+      x+5,
+      y+5,
       3,
       25
     );
 
 
     ctx.fillRect(
-      x + 25,
-      y + 5,
+      x+25,
+      y+5,
       3,
       25
     );
 
 
     ctx.fillRect(
-      x + 5,
-      y + 5,
+      x+5,
+      y+5,
       23,
       3
     );
@@ -2986,8 +3780,8 @@ function drawProp(
 
 
     for (
-      let i = 0;
-      i < 3;
+      let i=0;
+      i<3;
       i++
     ) {
 
@@ -2996,8 +3790,8 @@ function drawProp(
 
 
       ctx.fillRect(
-        x + 8 + i * 6,
-        y + 10,
+        x+8+i*6,
+        y+10,
         5,
         12
       );
@@ -3016,8 +3810,8 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 15,
-      y + 8,
+      x+15,
+      y+8,
       3,
       23
     );
@@ -3029,13 +3823,15 @@ function drawProp(
 
     ctx.beginPath();
 
+
     ctx.arc(
-      x + 16,
-      y + 7,
+      x+16,
+      y+7,
       13,
       0,
-      Math.PI * 2
+      Math.PI*2
     );
+
 
     ctx.fill();
 
@@ -3045,8 +3841,8 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 11,
-      y + 3,
+      x+11,
+      y+3,
       11,
       8
     );
@@ -3063,8 +3859,8 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 14,
-      y + 15,
+      x+14,
+      y+15,
       5,
       17
     );
@@ -3075,8 +3871,8 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 4,
-      y + 3,
+      x+4,
+      y+3,
       25,
       18
     );
@@ -3087,7 +3883,7 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 9,
+      x+9,
       y,
       16,
       12
@@ -3109,15 +3905,15 @@ function drawProp(
 
     ctx.fillRect(
       x,
-      y + 11,
+      y+11,
       54,
       16
     );
 
 
     ctx.fillRect(
-      x + 12,
-      y + 5,
+      x+12,
+      y+5,
       29,
       11
     );
@@ -3128,16 +3924,16 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 16,
-      y + 7,
+      x+16,
+      y+7,
       10,
       7
     );
 
 
     ctx.fillRect(
-      x + 28,
-      y + 7,
+      x+28,
+      y+7,
       9,
       7
     );
@@ -3148,16 +3944,16 @@ function drawProp(
 
 
     ctx.fillRect(
-      x + 7,
-      y + 24,
+      x+7,
+      y+24,
       10,
       7
     );
 
 
     ctx.fillRect(
-      x + 39,
-      y + 24,
+      x+39,
+      y+24,
       10,
       7
     );
@@ -3166,173 +3962,148 @@ function drawProp(
 
 
   else if (
-    type === "signpost"
+    type === "bike"
+  ) {
+
+    ctx.strokeStyle =
+      "#b8a58c";
+
+
+    ctx.lineWidth =
+      2;
+
+
+    ctx.beginPath();
+
+
+    ctx.arc(
+      x+8,
+      y+22,
+      6,
+      0,
+      Math.PI*2
+    );
+
+
+    ctx.arc(
+      x+24,
+      y+22,
+      6,
+      0,
+      Math.PI*2
+    );
+
+
+    ctx.moveTo(
+      x+8,
+      y+22
+    );
+
+
+    ctx.lineTo(
+      x+15,
+      y+12
+    );
+
+
+    ctx.lineTo(
+      x+24,
+      y+22
+    );
+
+
+    ctx.lineTo(
+      x+12,
+      y+21
+    );
+
+
+    ctx.lineTo(
+      x+19,
+      y+16
+    );
+
+
+    ctx.stroke();
+
+  }
+
+
+  else if (
+    type === "scooter"
   ) {
 
     ctx.fillStyle =
-      "#323136";
+      "#30333c";
 
 
     ctx.fillRect(
-      x + 15,
-      y + 7,
-      3,
-      25
+      x+8,
+      y+14,
+      17,
+      10
     );
 
 
     ctx.fillStyle =
-      "#355d75";
+      "#8d3436";
 
 
     ctx.fillRect(
-      x + 3,
-      y + 4,
-      28,
-      9
+      x+10,
+      y+9,
+      11,
+      11
     );
 
 
     ctx.fillStyle =
-      "#e9e4d9";
+      "#16171b";
 
 
-    ctx.font =
-      "7px sans-serif";
+    ctx.fillRect(
+      x+7,
+      y+23,
+      6,
+      5
+    );
 
 
-    ctx.textAlign =
-      "center";
-
-
-    ctx.fillText(
-      "西湖 →",
-      x + 17,
-      y + 11
+    ctx.fillRect(
+      x+22,
+      y+23,
+      6,
+      5
     );
 
   }
 
 
   else if (
-    type === "teaTable"
+    type === "trash"
   ) {
 
     ctx.fillStyle =
-      "#4c3024";
+      "#38494b";
 
 
     ctx.fillRect(
-      x - 5,
-      y + 9,
-      40,
-      12
+      x+8,
+      y+7,
+      16,
+      22
     );
 
 
     ctx.fillStyle =
-      "#795035";
+      "#657475";
 
 
     ctx.fillRect(
-      x - 2,
-      y + 6,
-      34,
-      9
-    );
-
-
-    ctx.fillStyle =
-      "#cab46f";
-
-
-    ctx.fillRect(
-      x + 12,
-      y + 1,
-      8,
-      6
-    );
-
-
-    ctx.fillRect(
-      x + 19,
-      y + 3,
-      4,
-      2
-    );
-
-  }
-
-
-  else if (
-    type === "shelf"
-  ) {
-
-    ctx.fillStyle =
-      "#4d3024";
-
-
-    ctx.fillRect(
-      x + 3,
-      y,
-      26,
-      31
-    );
-
-
-    ctx.fillStyle =
-      "#8a5b3a";
-
-
-    ctx.fillRect(
-      x + 5,
-      y + 3,
-      22,
-      4
-    );
-
-
-    ctx.fillRect(
-      x + 5,
-      y + 14,
-      22,
-      4
-    );
-
-
-    ctx.fillRect(
-      x + 5,
-      y + 25,
-      22,
-      4
-    );
-
-
-    ctx.fillStyle =
-      "#c6a55f";
-
-
-    ctx.fillRect(
-      x + 8,
-      y + 8,
-      5,
-      6
-    );
-
-
-    ctx.fillRect(
-      x + 17,
-      y + 8,
-      6,
-      6
-    );
-
-
-    ctx.fillRect(
-      x + 10,
-      y + 19,
-      6,
-      6
+      x+6,
+      y+5,
+      20,
+      5
     );
 
   }
@@ -3341,7 +4112,151 @@ function drawProp(
 
 
 // ======================================================
-// EXIT
+// LAKE DETAILS
+// ======================================================
+
+function drawLakeDetails(time) {
+
+  if (
+    currentMapId !== "lake"
+  ) {
+
+    return;
+
+  }
+
+
+  for (
+    let i=0;
+    i<8;
+    i++
+  ) {
+
+    const x =
+      18*TILE-
+      camera.x;
+
+
+    const y =
+      (
+        4+i*4
+      )*TILE-
+      camera.y;
+
+
+    ctx.fillStyle =
+      "#3d2d23";
+
+
+    ctx.fillRect(
+      x,
+      y,
+      5,
+      30
+    );
+
+
+    ctx.fillStyle =
+      "#285039";
+
+
+    ctx.fillRect(
+      x-15,
+      y-10,
+      33,
+      14
+    );
+
+
+    const sway =
+      Math.sin(
+        time*1.5+i
+      )*3;
+
+
+    ctx.fillStyle =
+      "#396448";
+
+
+    ctx.fillRect(
+      x-10+sway,
+      y+2,
+      3,
+      29
+    );
+
+
+    ctx.fillRect(
+      x+9+sway,
+      y,
+      3,
+      25
+    );
+
+  }
+
+
+  const boatX =
+    7*TILE-
+    camera.x+
+    Math.sin(
+      time*.5
+    )*18;
+
+
+  const boatY =
+    23*TILE-
+    camera.y;
+
+
+  ctx.fillStyle =
+    "#3c261f";
+
+
+  ctx.fillRect(
+    boatX,
+    boatY,
+    42,
+    8
+  );
+
+
+  ctx.fillStyle =
+    "#7e382b";
+
+
+  ctx.fillRect(
+    boatX+8,
+    boatY-10,
+    25,
+    11
+  );
+
+
+  ctx.fillStyle =
+    "#e3b35e";
+
+
+  ctx.fillRect(
+    boatX+12,
+    boatY-7,
+    5,
+    5
+  );
+
+
+  ctx.fillRect(
+    boatX+24,
+    boatY-7,
+    5,
+    5
+  );
+
+}
+
+
+// ======================================================
+// EXITS
 // ======================================================
 
 function drawExits(time) {
@@ -3356,27 +4271,28 @@ function drawExits(time) {
   ) {
 
     const x =
-      exit.x * TILE -
+      exit.x*TILE-
       camera.x;
 
 
     const y =
-      exit.y * TILE -
+      exit.y*TILE-
       camera.y;
 
 
     const width =
-      exit.width * TILE;
+      exit.width*TILE;
 
 
     const height =
-      exit.height * TILE;
+      exit.height*TILE;
 
 
     const pulse =
-      .10 +
-      Math.sin(time * 3) *
-      .025;
+      .10+
+      Math.sin(
+        time*3
+      )*.025;
 
 
     ctx.fillStyle =
@@ -3393,20 +4309,20 @@ function drawExits(time) {
 
     const signWidth =
       Math.min(
-        width - 20,
+        width-20,
         180
       );
 
 
     const signX =
-      x +
-      width / 2 -
-      signWidth / 2;
+      x+
+      width/2-
+      signWidth/2;
 
 
     const signY =
-      y +
-      height / 2 -
+      y+
+      height/2-
       13;
 
 
@@ -3415,9 +4331,9 @@ function drawExits(time) {
 
 
     ctx.fillRect(
-      signX - 3,
-      signY - 3,
-      signWidth + 6,
+      signX-3,
+      signY-3,
+      signWidth+6,
       28
     );
 
@@ -3448,274 +4364,12 @@ function drawExits(time) {
 
     ctx.fillText(
       exit.label,
-      signX + signWidth / 2,
-      signY + 15
+      signX+
+      signWidth/2,
+      signY+15
     );
 
   }
-
-}
-
-
-// ======================================================
-// WEST LAKE DETAILS
-// ======================================================
-
-function drawLakeDetails(time) {
-
-  if (
-    currentMapId !== "lake"
-  ) {
-
-    return;
-
-  }
-
-
-  // willow trees
-
-  for (
-    let i = 0;
-    i < 7;
-    i++
-  ) {
-
-    const x =
-      17 * TILE -
-      camera.x;
-
-
-    const y =
-      (4 + i * 4) *
-      TILE -
-      camera.y;
-
-
-    ctx.fillStyle =
-      "#3d2d23";
-
-
-    ctx.fillRect(
-      x,
-      y,
-      5,
-      30
-    );
-
-
-    ctx.fillStyle =
-      "#285039";
-
-
-    ctx.fillRect(
-      x - 15,
-      y - 10,
-      33,
-      14
-    );
-
-
-    const sway =
-      Math.sin(
-        time * 1.5 +
-        i
-      ) * 3;
-
-
-    ctx.fillStyle =
-      "#396448";
-
-
-    ctx.fillRect(
-      x - 10 + sway,
-      y + 2,
-      3,
-      29
-    );
-
-
-    ctx.fillRect(
-      x + 9 + sway,
-      y,
-      3,
-      25
-    );
-
-  }
-
-
-  // distant reflected lights
-
-  for (
-    let i = 0;
-    i < 8;
-    i++
-  ) {
-
-    const x =
-      (3 + i) *
-      TILE -
-      camera.x;
-
-
-    const y =
-      13 *
-      TILE -
-      camera.y;
-
-
-    const height =
-      10 +
-      Math.sin(
-        time * 2 + i
-      ) * 5;
-
-
-    ctx.fillStyle =
-      "rgba(244,190,93,.42)";
-
-
-    ctx.fillRect(
-      x,
-      y,
-      3,
-      height
-    );
-
-  }
-
-
-  // boat
-
-  const boatX =
-    7 * TILE -
-    camera.x +
-    Math.sin(time * .5) * 15;
-
-
-  const boatY =
-    22 * TILE -
-    camera.y;
-
-
-  ctx.fillStyle =
-    "#3c261f";
-
-
-  ctx.fillRect(
-    boatX,
-    boatY,
-    42,
-    8
-  );
-
-
-  ctx.fillStyle =
-    "#7e382b";
-
-
-  ctx.fillRect(
-    boatX + 8,
-    boatY - 10,
-    25,
-    11
-  );
-
-
-  ctx.fillStyle =
-    "#e3b35e";
-
-
-  ctx.fillRect(
-    boatX + 12,
-    boatY - 7,
-    5,
-    5
-  );
-
-
-  ctx.fillRect(
-    boatX + 24,
-    boatY - 7,
-    5,
-    5
-  );
-
-}
-
-
-// ======================================================
-// TEA HOUSE DECOR
-// ======================================================
-
-function drawTeaHouseDecor() {
-
-  if (
-    currentMapId !== "tea"
-  ) {
-
-    return;
-
-  }
-
-
-  const sx =
-    13 * TILE -
-    camera.x;
-
-
-  const sy =
-    3 * TILE -
-    camera.y;
-
-
-  ctx.fillStyle =
-    "#dfcda3";
-
-
-  ctx.fillRect(
-    sx - 16,
-    sy + 2,
-    32,
-    49
-  );
-
-
-  ctx.fillStyle =
-    "#392b21";
-
-
-  ctx.font =
-    "20px serif";
-
-
-  ctx.textAlign =
-    "center";
-
-
-  ctx.fillText(
-    "茶",
-    sx,
-    sy + 32
-  );
-
-
-  // hanging lanterns
-
-  drawLantern(
-    5 * TILE -
-    camera.x,
-    4 * TILE -
-    camera.y
-  );
-
-
-  drawLantern(
-    21 * TILE -
-    camera.x,
-    4 * TILE -
-    camera.y
-  );
 
 }
 
@@ -3734,7 +4388,9 @@ function drawPerson(
 
   const step =
     moving &&
-    Math.sin(time * 11) > 0
+    Math.sin(
+      time*11
+    )>0
     ? 1
     : -1;
 
@@ -3744,8 +4400,8 @@ function drawPerson(
 
 
   ctx.fillRect(
-    x + 3,
-    y + 24,
+    x+3,
+    y+24,
     16,
     4
   );
@@ -3756,16 +4412,16 @@ function drawPerson(
 
 
   ctx.fillRect(
-    x + 5,
-    y + 19 + step,
+    x+5,
+    y+19+step,
     5,
     7
   );
 
 
   ctx.fillRect(
-    x + 12,
-    y + 19 - step,
+    x+12,
+    y+19-step,
     5,
     7
   );
@@ -3776,8 +4432,8 @@ function drawPerson(
 
 
   ctx.fillRect(
-    x + 3,
-    y + 9,
+    x+3,
+    y+9,
     16,
     12
   );
@@ -3788,24 +4444,24 @@ function drawPerson(
 
 
   ctx.fillRect(
-    x + 1,
-    y + 11,
+    x+1,
+    y+11,
     3,
     8
   );
 
 
   ctx.fillRect(
-    x + 19,
-    y + 11,
+    x+19,
+    y+11,
     3,
     8
   );
 
 
   ctx.fillRect(
-    x + 5,
-    y + 2,
+    x+5,
+    y+2,
     12,
     9
   );
@@ -3816,7 +4472,7 @@ function drawPerson(
 
 
   ctx.fillRect(
-    x + 4,
+    x+4,
     y,
     14,
     5
@@ -3824,8 +4480,8 @@ function drawPerson(
 
 
   ctx.fillRect(
-    x + 4,
-    y + 3,
+    x+4,
+    y+3,
     3,
     5
   );
@@ -3840,16 +4496,16 @@ function drawPerson(
   ) {
 
     ctx.fillRect(
-      x + 8,
-      y + 6,
+      x+8,
+      y+6,
       2,
       2
     );
 
 
     ctx.fillRect(
-      x + 14,
-      y + 6,
+      x+14,
+      y+6,
       2,
       2
     );
@@ -3862,8 +4518,8 @@ function drawPerson(
   ) {
 
     ctx.fillRect(
-      x + 6,
-      y + 6,
+      x+6,
+      y+6,
       2,
       2
     );
@@ -3876,8 +4532,8 @@ function drawPerson(
   ) {
 
     ctx.fillRect(
-      x + 15,
-      y + 6,
+      x+15,
+      y+6,
       2,
       2
     );
@@ -3903,35 +4559,31 @@ function drawEntities(time) {
 
     entities.push({
 
-      y: npc.y,
+      y:npc.y,
 
-      draw: () => {
-
-        const moving =
-          npc.wander &&
-          (
-            npc.moveX !== 0 ||
-            npc.moveY !== 0
-          );
-
+      draw:() => {
 
         drawPerson(
 
           Math.floor(
-            npc.x -
-            camera.x +
+            npc.x-
+            camera.x+
             5
           ),
 
           Math.floor(
-            npc.y -
-            camera.y +
+            npc.y-
+            camera.y+
             3
           ),
 
           npc,
 
-          moving,
+          npc.wander &&
+          (
+            npc.moveX !== 0 ||
+            npc.moveY !== 0
+          ),
 
           time
         );
@@ -3945,29 +4597,26 @@ function drawEntities(time) {
 
   entities.push({
 
-    y: player.y,
+    y:player.y,
 
-    draw: () => {
+    draw:() => {
 
       drawPerson(
 
         Math.floor(
-          player.x -
+          player.x-
           camera.x
         ),
 
         Math.floor(
-          player.y -
+          player.y-
           camera.y
         ),
 
         {
           color:"#355f7d",
-
           hair:"#211b20",
-
           skin:"#e1ae87",
-
           direction:
             player.direction
         },
@@ -3984,7 +4633,7 @@ function drawEntities(time) {
 
   entities.sort(
     (a,b) =>
-      a.y - b.y
+      a.y-b.y
   );
 
 
@@ -4016,7 +4665,7 @@ function drawLighting() {
   ) {
 
     ctx.fillStyle =
-      "rgba(88,42,10,.06)";
+      "rgba(92,46,15,.05)";
 
   }
 
@@ -4103,7 +4752,8 @@ function updateBanner(dt) {
   }
 
 
-  bannerTimer -= dt;
+  bannerTimer -=
+    dt;
 
 
   if (
@@ -4159,14 +4809,14 @@ function updateInteractionHint() {
   }
 
 
-  const door =
-    getNearbyDoor();
+  const building =
+    getNearbyBuilding();
 
 
-  if (door) {
+  if (building) {
 
     interactionText.textContent =
-      door.label;
+      `${building.name}に入る`;
 
 
     interactionHint.classList.remove(
@@ -4191,13 +4841,13 @@ function updateInteractionHint() {
 // ======================================================
 
 let fakeMinutes =
-  19 * 60 + 42;
+  19*60+42;
 
 
 function updateClock(dt) {
 
   fakeMinutes +=
-    dt * .15;
+    dt*.15;
 
 
   const total =
@@ -4208,12 +4858,12 @@ function updateClock(dt) {
 
   const hour =
     Math.floor(
-      total / 60
-    ) % 24;
+      total/60
+    )%24;
 
 
   const minute =
-    total % 60;
+    total%60;
 
 
   clockElement.textContent =
@@ -4244,17 +4894,13 @@ function draw(time) {
 
   drawLakeDetails(time);
 
-  drawTeaHouseDecor();
-
-  drawDoors();
+  drawBuildings();
 
   drawLanternStrings(time);
 
   drawStalls(time);
 
-  drawSigns();
-
-  drawProps(time);
+  drawProps();
 
   drawExits(time);
 
@@ -4266,7 +4912,7 @@ function draw(time) {
 
 
 // ======================================================
-// LOOP
+// GAME LOOP
 // ======================================================
 
 let previousTime =
@@ -4277,9 +4923,9 @@ function gameLoop(now) {
 
   let dt =
     (
-      now -
+      now-
       previousTime
-    ) / 1000;
+    )/1000;
 
 
   previousTime =
@@ -4294,7 +4940,7 @@ function gameLoop(now) {
 
 
   const time =
-    now / 1000;
+    now/1000;
 
 
   updatePlayer(dt);
