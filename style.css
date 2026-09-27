@@ -63,7 +63,12 @@ body {
     serif;
 
   font-size: clamp(27px, 4vw, 40px);
+
   letter-spacing: .15em;
+
+  text-shadow:
+    0 2px 0 #3a241a,
+    0 0 14px rgba(255,170,80,.18);
 }
 
 .header-right {
@@ -230,6 +235,7 @@ canvas {
   font-family: serif;
 
   font-size: 20px;
+
   letter-spacing: .16em;
 }
 
