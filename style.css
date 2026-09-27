@@ -63,7 +63,6 @@ body {
     serif;
 
   font-size: clamp(27px, 4vw, 40px);
-
   letter-spacing: .15em;
 
   text-shadow:
@@ -88,7 +87,6 @@ body {
   position: relative;
 
   width: 100%;
-
   overflow: hidden;
 
   background: #08070b;
@@ -116,7 +114,6 @@ canvas {
 .game-footer {
   display: flex;
   flex-wrap: wrap;
-
   align-items: center;
 
   gap: 18px;
@@ -171,6 +168,7 @@ canvas {
 
   display: flex;
   align-items: center;
+
   gap: 8px;
 
   padding: 8px 14px;
@@ -235,7 +233,6 @@ canvas {
   font-family: serif;
 
   font-size: 20px;
-
   letter-spacing: .16em;
 }
 
