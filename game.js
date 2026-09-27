@@ -2,119 +2,119 @@
 
 
 // ======================================================
-// CANVAS
+// CANVAS / UI
 // ======================================================
 
 const canvas =
-  document.getElementById(
-    "gameCanvas"
-  );
+  document.getElementById("gameCanvas");
 
 const ctx =
   canvas.getContext("2d");
 
-ctx.imageSmoothingEnabled =
-  false;
+ctx.imageSmoothingEnabled=false;
 
-
-// ======================================================
-// UI
-// ======================================================
 
 const areaHeader =
-  document.getElementById(
-    "areaHeader"
-  );
+  document.getElementById("areaHeader");
+
+const collectionHeader =
+  document.getElementById("collectionHeader");
 
 const clockElement =
-  document.getElementById(
-    "clock"
-  );
+  document.getElementById("clock");
 
 const areaBanner =
-  document.getElementById(
-    "areaBanner"
-  );
+  document.getElementById("areaBanner");
 
 const areaBannerName =
-  document.getElementById(
-    "areaBannerName"
-  );
+  document.getElementById("areaBannerName");
 
 const areaBannerSub =
-  document.getElementById(
-    "areaBannerSub"
-  );
+  document.getElementById("areaBannerSub");
 
 const interactionHint =
-  document.getElementById(
-    "interactionHint"
-  );
+  document.getElementById("interactionHint");
 
 const interactionText =
-  document.getElementById(
-    "interactionText"
-  );
+  document.getElementById("interactionText");
 
 const dialogueBox =
-  document.getElementById(
-    "dialogueBox"
-  );
+  document.getElementById("dialogueBox");
 
 const speakerName =
-  document.getElementById(
-    "speakerName"
-  );
+  document.getElementById("speakerName");
 
 const dialogueText =
-  document.getElementById(
-    "dialogueText"
-  );
+  document.getElementById("dialogueText");
 
 const portraitFace =
-  document.getElementById(
-    "portraitFace"
-  );
+  document.getElementById("portraitFace");
+
+const wordGet =
+  document.getElementById("wordGet");
+
+const wordGetChinese =
+  document.getElementById("wordGetChinese");
+
+const wordGetPinyin =
+  document.getElementById("wordGetPinyin");
+
+const wordGetMeaning =
+  document.getElementById("wordGetMeaning");
+
+const wordGetCategory =
+  document.getElementById("wordGetCategory");
+
+const libraryPanel =
+  document.getElementById("libraryPanel");
+
+const libraryTabs =
+  document.getElementById("libraryTabs");
+
+const libraryList =
+  document.getElementById("libraryList");
+
+const libraryDetail =
+  document.getElementById("libraryDetail");
+
+const libraryProgress =
+  document.getElementById("libraryProgress");
 
 const fadeLayer =
-  document.getElementById(
-    "fadeLayer"
-  );
+  document.getElementById("fadeLayer");
 
 
 // ======================================================
-// WORLD
+// STATE
 // ======================================================
 
-let currentMapId =
-  "food";
+let currentMapId="food";
 
-let transitionLock =
-  false;
+let transitionLock=false;
 
-let exitCooldown =
-  0;
+let exitCooldown=0;
 
-let bannerTimer =
-  0;
+let bannerTimer=0;
+
+let wordGetActive=false;
+
+let libraryOpen=false;
+
+let libraryCategoryIndex=0;
+
+let librarySelection=0;
 
 
 // ======================================================
 // PLAYER
 // ======================================================
 
-const player = {
+const player={
 
-  x:
-    MAPS.food.spawn.x *
-    TILE,
-
-  y:
-    MAPS.food.spawn.y *
-    TILE,
+  x:MAPS.food.spawn.x*TILE,
+  y:MAPS.food.spawn.y*TILE,
 
   width:20,
-
   height:26,
 
   speed:150,
@@ -126,11 +126,7 @@ const player = {
 };
 
 
-// ======================================================
-// CAMERA
-// ======================================================
-
-const camera = {
+const camera={
   x:0,
   y:0
 };
@@ -140,18 +136,15 @@ const camera = {
 // INPUT
 // ======================================================
 
-const keys = {};
+const keys={};
 
 
 window.addEventListener(
   "keydown",
-  event => {
+  event=>{
 
-    const key =
+    const key=
       event.key.toLowerCase();
-
-
-    keys[key] = true;
 
 
     if (
@@ -170,11 +163,66 @@ window.addEventListener(
 
 
     if (
-      !event.repeat &&
-      (
-        key === "e" ||
-        key === "enter"
-      )
+      event.repeat
+    ) {
+
+      keys[key]=true;
+      return;
+
+    }
+
+
+    // WORD GET
+
+    if (
+      wordGetActive
+    ) {
+
+      if (
+        key==="e" ||
+        key==="enter"
+      ) {
+
+        closeWordGet();
+
+      }
+
+      return;
+
+    }
+
+
+    // LIBRARY
+
+    if (
+      libraryOpen
+    ) {
+
+      handleLibraryInput(key);
+
+      return;
+
+    }
+
+
+    // OPEN LIBRARY
+
+    if (
+      key==="l"
+    ) {
+
+      openLibrary();
+
+      return;
+
+    }
+
+
+    // DIALOGUE
+
+    if (
+      key==="e" ||
+      key==="enter"
     ) {
 
       if (
@@ -190,7 +238,12 @@ window.addEventListener(
 
       }
 
+      return;
+
     }
+
+
+    keys[key]=true;
 
   }
 );
@@ -198,11 +251,11 @@ window.addEventListener(
 
 window.addEventListener(
   "keyup",
-  event => {
+  event=>{
 
     keys[
       event.key.toLowerCase()
-    ] = false;
+    ]=false;
 
   }
 );
@@ -212,7 +265,7 @@ window.addEventListener(
 // DIALOGUE
 // ======================================================
 
-const dialogue = {
+const dialogue={
 
   active:false,
 
@@ -225,29 +278,26 @@ const dialogue = {
 
 function startDialogue(npc) {
 
-  dialogue.active =
-    true;
+  dialogue.active=true;
 
-  dialogue.npc =
-    npc;
+  dialogue.npc=npc;
 
-  dialogue.index =
-    0;
+  dialogue.index=0;
 
 
-  speakerName.textContent =
+  speakerName.textContent=
     npc.name;
 
 
-  dialogueText.textContent =
+  dialogueText.textContent=
     npc.dialogue[0];
 
 
-  portraitFace.textContent =
+  portraitFace.textContent=
     npc.label;
 
 
-  portraitFace.style.background =
+  portraitFace.style.background=
     npc.color;
 
 
@@ -273,14 +323,24 @@ function advanceDialogue() {
     dialogue.npc.dialogue.length
   ) {
 
+    const finishedNPC=
+      dialogue.npc;
+
+
     closeDialogue();
+
+
+    giveNPCReward(
+      finishedNPC
+    );
+
 
     return;
 
   }
 
 
-  dialogueText.textContent =
+  dialogueText.textContent=
     dialogue.npc.dialogue[
       dialogue.index
     ];
@@ -290,11 +350,9 @@ function advanceDialogue() {
 
 function closeDialogue() {
 
-  dialogue.active =
-    false;
+  dialogue.active=false;
 
-  dialogue.npc =
-    null;
+  dialogue.npc=null;
 
 
   dialogueBox.classList.add(
@@ -305,7 +363,560 @@ function closeDialogue() {
 
 
 // ======================================================
-// NPC SETUP
+// NPC REWARDS
+// ======================================================
+
+function giveNPCReward(npc) {
+
+  if (
+    !npc.rewards ||
+    npc.rewards.length===0
+  ) {
+
+    return;
+
+  }
+
+
+  for (
+    const id
+    of npc.rewards
+  ) {
+
+    if (
+      !hasVocabulary(id)
+    ) {
+
+      obtainWord(id);
+
+      return;
+
+    }
+
+  }
+
+}
+
+
+// ======================================================
+// WORD GET
+// ======================================================
+
+function obtainWord(id) {
+
+  const vocab=
+    VOCABULARY[id];
+
+
+  if (!vocab) {
+    return;
+  }
+
+
+  const isNew=
+    collectVocabulary(id);
+
+
+  if (!isNew) {
+    return;
+  }
+
+
+  wordGetChinese.textContent=
+    vocab.word;
+
+
+  wordGetPinyin.textContent=
+    vocab.pinyin;
+
+
+  wordGetMeaning.textContent=
+    vocab.meaning;
+
+
+  wordGetCategory.textContent=
+    vocab.category;
+
+
+  wordGetActive=true;
+
+
+  wordGet.classList.remove(
+    "hidden"
+  );
+
+
+  updateCollectionUI();
+
+}
+
+
+function closeWordGet() {
+
+  wordGetActive=false;
+
+
+  wordGet.classList.add(
+    "hidden"
+  );
+
+}
+
+
+// ======================================================
+// VOCAB LIBRARY
+// ======================================================
+
+function openLibrary() {
+
+  if (
+    dialogue.active ||
+    transitionLock ||
+    wordGetActive
+  ) {
+
+    return;
+
+  }
+
+
+  libraryOpen=true;
+
+  librarySelection=0;
+
+
+  keys["w"]=false;
+  keys["a"]=false;
+  keys["s"]=false;
+  keys["d"]=false;
+
+  keys["arrowup"]=false;
+  keys["arrowdown"]=false;
+  keys["arrowleft"]=false;
+  keys["arrowright"]=false;
+
+
+  renderLibrary();
+
+
+  libraryPanel.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+function closeLibrary() {
+
+  libraryOpen=false;
+
+
+  libraryPanel.classList.add(
+    "hidden"
+  );
+
+}
+
+
+function handleLibraryInput(key) {
+
+  if (
+    key==="l" ||
+    key==="escape"
+  ) {
+
+    closeLibrary();
+
+    return;
+
+  }
+
+
+  if (
+    key==="arrowleft" ||
+    key==="a"
+  ) {
+
+    libraryCategoryIndex--;
+
+
+    if (
+      libraryCategoryIndex<0
+    ) {
+
+      libraryCategoryIndex=
+        VOCAB_CATEGORIES.length-1;
+
+    }
+
+
+    librarySelection=0;
+
+    renderLibrary();
+
+    return;
+
+  }
+
+
+  if (
+    key==="arrowright" ||
+    key==="d"
+  ) {
+
+    libraryCategoryIndex++;
+
+
+    if (
+      libraryCategoryIndex>=
+      VOCAB_CATEGORIES.length
+    ) {
+
+      libraryCategoryIndex=0;
+
+    }
+
+
+    librarySelection=0;
+
+    renderLibrary();
+
+    return;
+
+  }
+
+
+  const words=
+    getLibraryWords();
+
+
+  if (
+    key==="arrowup" ||
+    key==="w"
+  ) {
+
+    librarySelection=
+      Math.max(
+        0,
+        librarySelection-1
+      );
+
+
+    renderLibrary();
+
+  }
+
+
+  if (
+    key==="arrowdown" ||
+    key==="s"
+  ) {
+
+    librarySelection=
+      Math.min(
+        words.length-1,
+        librarySelection+1
+      );
+
+
+    renderLibrary();
+
+  }
+
+}
+
+
+function getLibraryWords() {
+
+  const category=
+    VOCAB_CATEGORIES[
+      libraryCategoryIndex
+    ];
+
+
+  return Object.entries(
+    VOCABULARY
+  ).filter(
+    ([id,data])=>
+      category==="すべて" ||
+      data.category===category
+  );
+
+}
+
+
+function renderLibrary() {
+
+  renderLibraryTabs();
+
+
+  const words=
+    getLibraryWords();
+
+
+  if (
+    librarySelection>=
+    words.length
+  ) {
+
+    librarySelection=
+      Math.max(
+        0,
+        words.length-1
+      );
+
+  }
+
+
+  libraryList.innerHTML="";
+
+
+  words.forEach(
+    ([id,data],index)=>{
+
+      const collected=
+        hasVocabulary(id);
+
+
+      const item=
+        document.createElement(
+          "div"
+        );
+
+
+      item.className=
+        "library-entry";
+
+
+      if (
+        index===librarySelection
+      ) {
+
+        item.classList.add(
+          "active"
+        );
+
+      }
+
+
+      if (!collected) {
+
+        item.classList.add(
+          "locked"
+        );
+
+      }
+
+
+      item.innerHTML=`
+
+        <div>
+
+          <div class="library-word">
+            ${collected ? data.word : "？？？"}
+          </div>
+
+          <div class="library-pinyin">
+            ${collected ? data.pinyin : "未発見"}
+          </div>
+
+        </div>
+
+        <div>
+          ${collected ? "◆" : "◇"}
+        </div>
+
+      `;
+
+
+      libraryList.appendChild(
+        item
+      );
+
+    }
+  );
+
+
+  if (
+    words.length>0
+  ) {
+
+    renderLibraryDetail(
+      words[
+        librarySelection
+      ][0],
+
+      words[
+        librarySelection
+      ][1]
+    );
+
+  }
+
+
+  libraryProgress.textContent=
+    `${collectedVocabulary.length} / ${getVocabularyCount()} WORDS`;
+
+}
+
+
+function renderLibraryTabs() {
+
+  libraryTabs.innerHTML="";
+
+
+  VOCAB_CATEGORIES.forEach(
+    (category,index)=>{
+
+      const tab=
+        document.createElement(
+          "div"
+        );
+
+
+      tab.className=
+        "library-tab";
+
+
+      if (
+        index===
+        libraryCategoryIndex
+      ) {
+
+        tab.classList.add(
+          "active"
+        );
+
+      }
+
+
+      const total=
+        Object.values(
+          VOCABULARY
+        ).filter(
+          data=>
+            category==="すべて" ||
+            data.category===category
+        ).length;
+
+
+      const obtained=
+        Object.entries(
+          VOCABULARY
+        ).filter(
+          ([id,data])=>
+            (
+              category==="すべて" ||
+              data.category===category
+            ) &&
+            hasVocabulary(id)
+        ).length;
+
+
+      tab.textContent=
+        `${category} ${obtained}/${total}`;
+
+
+      libraryTabs.appendChild(
+        tab
+      );
+
+    }
+  );
+
+}
+
+
+function renderLibraryDetail(
+  id,
+  data
+) {
+
+  if (
+    !hasVocabulary(id)
+  ) {
+
+    libraryDetail.innerHTML=`
+
+      <div class="empty-library">
+
+        <div style="font-size:42px;margin-bottom:12px;">
+          ？
+        </div>
+
+        まだ発見していない言葉です。<br>
+        杭州の街を探索してみましょう。
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  libraryDetail.innerHTML=`
+
+    <div class="detail-category">
+      ${data.category}
+    </div>
+
+    <div class="detail-word">
+      ${data.word}
+    </div>
+
+    <div class="detail-pinyin">
+      ${data.pinyin}
+    </div>
+
+    <div class="detail-meaning">
+      ${data.meaning}
+    </div>
+
+    <div class="detail-section">
+
+      <div class="detail-label">
+        EXAMPLE
+      </div>
+
+      <div class="detail-example-cn">
+        ${data.example}
+      </div>
+
+      <div class="detail-example-ja">
+        ${data.exampleJa}
+      </div>
+
+    </div>
+
+    <div class="detail-section">
+
+      <div class="detail-label">
+        DISCOVERED IN
+      </div>
+
+      <div class="detail-location">
+        ${data.location}
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+function updateCollectionUI() {
+
+  collectionHeader.textContent=
+    `词语 ${collectedVocabulary.length} / ${getVocabularyCount()}`;
+
+}
+
+
+// ======================================================
+// NPC INIT
 // ======================================================
 
 for (
@@ -313,33 +924,23 @@ for (
   of NPCS
 ) {
 
-  npc.homeX =
-    npc.x;
+  npc.homeX=npc.x;
+  npc.homeY=npc.y;
 
-  npc.homeY =
-    npc.y;
-
-  npc.moveTimer =
+  npc.moveTimer=
     Math.random()*2;
 
-  npc.moveX =
-    0;
-
-  npc.moveY =
-    0;
+  npc.moveX=0;
+  npc.moveY=0;
 
 }
 
 
-// ======================================================
-// NPC
-// ======================================================
-
 function getCurrentNPCs() {
 
   return NPCS.filter(
-    npc =>
-      npc.map ===
+    npc=>
+      npc.map===
       currentMapId
   );
 
@@ -348,21 +949,18 @@ function getCurrentNPCs() {
 
 function getNearbyNPC() {
 
-  const px =
-    player.x +
+  const px=
+    player.x+
     player.width/2;
 
-
-  const py =
-    player.y +
+  const py=
+    player.y+
     player.height/2;
 
 
-  let nearest =
-    null;
+  let nearest=null;
 
-  let bestDistance =
-    55;
+  let bestDistance=55;
 
 
   for (
@@ -370,30 +968,22 @@ function getNearbyNPC() {
     of getCurrentNPCs()
   ) {
 
-    const nx =
-      npc.x+11;
-
-    const ny =
-      npc.y+14;
-
-
-    const distance =
+    const distance=
       Math.hypot(
-        nx-px,
-        ny-py
+        npc.x+11-px,
+        npc.y+14-py
       );
 
 
     if (
-      distance <
+      distance<
       bestDistance
     ) {
 
-      bestDistance =
+      bestDistance=
         distance;
 
-      nearest =
-        npc;
+      nearest=npc;
 
     }
 
@@ -413,7 +1003,9 @@ function updateNPCs(dt) {
 
   if (
     dialogue.active ||
-    transitionLock
+    transitionLock ||
+    libraryOpen ||
+    wordGetActive
   ) {
 
     return;
@@ -431,110 +1023,81 @@ function updateNPCs(dt) {
     }
 
 
-    npc.moveTimer -=
-      dt;
+    npc.moveTimer-=dt;
 
 
     if (
-      npc.moveTimer <= 0
+      npc.moveTimer<=0
     ) {
 
-      npc.moveTimer =
-        1 +
+      npc.moveTimer=
+        1+
         Math.random()*2.5;
 
 
-      const choice =
+      const choice=
         Math.floor(
           Math.random()*5
         );
 
 
-      npc.moveX = 0;
-      npc.moveY = 0;
+      npc.moveX=0;
+      npc.moveY=0;
 
 
-      if (
-        choice === 0
-      ) {
-
-        npc.moveX = 1;
-
-        npc.direction =
-          "right";
-
+      if (choice===0) {
+        npc.moveX=1;
+        npc.direction="right";
       }
 
-
-      else if (
-        choice === 1
-      ) {
-
-        npc.moveX = -1;
-
-        npc.direction =
-          "left";
-
+      else if (choice===1) {
+        npc.moveX=-1;
+        npc.direction="left";
       }
 
-
-      else if (
-        choice === 2
-      ) {
-
-        npc.moveY = 1;
-
-        npc.direction =
-          "down";
-
+      else if (choice===2) {
+        npc.moveY=1;
+        npc.direction="down";
       }
 
-
-      else if (
-        choice === 3
-      ) {
-
-        npc.moveY = -1;
-
-        npc.direction =
-          "up";
-
+      else if (choice===3) {
+        npc.moveY=-1;
+        npc.direction="up";
       }
 
     }
 
 
-    const speed =
-      18;
+    const speed=18;
 
 
-    const nx =
-      npc.x +
+    const nx=
+      npc.x+
       npc.moveX*
       speed*
       dt;
 
 
-    const ny =
-      npc.y +
+    const ny=
+      npc.y+
       npc.moveY*
       speed*
       dt;
 
 
-    const range =
-      npc.range || 60;
+    const range=
+      npc.range||60;
 
 
     if (
       Math.hypot(
         nx-npc.homeX,
         ny-npc.homeY
-      ) > range
+      )>range
     ) {
 
-      npc.moveX = 0;
-      npc.moveY = 0;
+      npc.moveX=0;
+      npc.moveY=0;
 
       continue;
 
@@ -548,17 +1111,14 @@ function updateNPCs(dt) {
       )
     ) {
 
-      npc.x =
-        nx;
-
-      npc.y =
-        ny;
+      npc.x=nx;
+      npc.y=ny;
 
     }
     else {
 
-      npc.moveX = 0;
-      npc.moveY = 0;
+      npc.moveX=0;
+      npc.moveY=0;
 
     }
 
@@ -568,18 +1128,18 @@ function updateNPCs(dt) {
 
 
 // ======================================================
-// BUILDING ENTRANCES
+// BUILDING INTERACTION
 // ======================================================
 
 function getNearbyBuilding() {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
   if (
     !map.buildings ||
-    map.buildings.length === 0
+    map.buildings.length===0
   ) {
 
     return null;
@@ -587,21 +1147,19 @@ function getNearbyBuilding() {
   }
 
 
-  const px =
-    player.x +
+  const px=
+    player.x+
     player.width/2;
 
 
-  const py =
-    player.y +
+  const py=
+    player.y+
     player.height/2;
 
 
-  let nearest =
-    null;
+  let nearest=null;
 
-  let bestDistance =
-    58;
+  let bestDistance=58;
 
 
   for (
@@ -609,21 +1167,19 @@ function getNearbyBuilding() {
     of map.buildings
   ) {
 
-    const bx =
-      (
-        building.doorX +
-        .5
-      ) * TILE;
+    const bx=
+      (building.doorX+.5)*
+      TILE;
 
 
-    const by =
+    const by=
       (
-        building.y +
+        building.y+
         building.h
-      ) * TILE;
+      )*TILE;
 
 
-    const distance =
+    const distance=
       Math.hypot(
         bx-px,
         by-py
@@ -631,15 +1187,12 @@ function getNearbyBuilding() {
 
 
     if (
-      distance <
+      distance<
       bestDistance
     ) {
 
-      bestDistance =
-        distance;
-
-      nearest =
-        building;
+      bestDistance=distance;
+      nearest=building;
 
     }
 
@@ -652,12 +1205,86 @@ function getNearbyBuilding() {
 
 
 // ======================================================
-// INTERACTION
+// OBJECT INTERACTION
+// ======================================================
+
+function getNearbyInteractable() {
+
+  const map=
+    getCurrentMap();
+
+
+  if (
+    !map.interactables
+  ) {
+
+    return null;
+
+  }
+
+
+  const px=
+    player.x+
+    player.width/2;
+
+
+  const py=
+    player.y+
+    player.height/2;
+
+
+  let nearest=null;
+
+  let bestDistance=52;
+
+
+  for (
+    const object
+    of map.interactables
+  ) {
+
+    const ox=
+      (object.x+.5)*
+      TILE;
+
+
+    const oy=
+      (object.y+.5)*
+      TILE;
+
+
+    const distance=
+      Math.hypot(
+        ox-px,
+        oy-py
+      );
+
+
+    if (
+      distance<
+      bestDistance
+    ) {
+
+      bestDistance=distance;
+      nearest=object;
+
+    }
+
+  }
+
+
+  return nearest;
+
+}
+
+
+// ======================================================
+// INTERACT
 // ======================================================
 
 function interact() {
 
-  const npc =
+  const npc=
     getNearbyNPC();
 
 
@@ -670,7 +1297,44 @@ function interact() {
   }
 
 
-  const building =
+  const object=
+    getNearbyInteractable();
+
+
+  if (object) {
+
+    if (
+      hasVocabulary(
+        object.word
+      )
+    ) {
+
+      const vocab=
+        VOCABULARY[
+          object.word
+        ];
+
+
+      startObjectDialogue(
+        object.label,
+        `${vocab.word}（${vocab.pinyin}）―― ${vocab.meaning}`
+      );
+
+    }
+    else {
+
+      obtainWord(
+        object.word
+      );
+
+    }
+
+    return;
+
+  }
+
+
+  const building=
     getNearbyBuilding();
 
 
@@ -691,6 +1355,33 @@ function interact() {
 }
 
 
+function startObjectDialogue(
+  name,
+  text
+) {
+
+  const objectNPC={
+
+    name:name,
+
+    label:"物",
+
+    color:"#76552f",
+
+    dialogue:[
+      text
+    ]
+
+  };
+
+
+  startDialogue(
+    objectNPC
+  );
+
+}
+
+
 // ======================================================
 // EXIT
 // ======================================================
@@ -698,7 +1389,7 @@ function interact() {
 function getActiveExit() {
 
   if (
-    exitCooldown > 0
+    exitCooldown>0
   ) {
 
     return null;
@@ -706,17 +1397,17 @@ function getActiveExit() {
   }
 
 
-  const map =
+  const map=
     getCurrentMap();
 
 
-  const px =
-    player.x +
+  const px=
+    player.x+
     player.width/2;
 
 
-  const py =
-    player.y +
+  const py=
+    player.y+
     player.height/2;
 
 
@@ -750,7 +1441,9 @@ function checkExitZones() {
   if (
     transitionLock ||
     dialogue.active ||
-    exitCooldown > 0
+    exitCooldown>0 ||
+    libraryOpen ||
+    wordGetActive
   ) {
 
     return;
@@ -758,7 +1451,7 @@ function checkExitZones() {
   }
 
 
-  const exit =
+  const exit=
     getActiveExit();
 
 
@@ -795,8 +1488,7 @@ function changeMap(
   }
 
 
-  transitionLock =
-    true;
+  transitionLock=true;
 
 
   fadeLayer.classList.add(
@@ -805,35 +1497,31 @@ function changeMap(
 
 
   setTimeout(
-    () => {
+    ()=>{
 
-      currentMapId =
-        target;
+      currentMapId=target;
 
 
-      player.x =
+      player.x=
         targetX*TILE;
 
-
-      player.y =
+      player.y=
         targetY*TILE;
 
 
-      player.moving =
-        false;
+      player.moving=false;
 
 
-      exitCooldown =
-        .9;
+      exitCooldown=.9;
 
 
-      camera.x =
-        player.x -
+      camera.x=
+        player.x-
         canvas.width/2;
 
 
-      camera.y =
-        player.y -
+      camera.y=
+        player.y-
         canvas.height/2;
 
 
@@ -843,7 +1531,7 @@ function changeMap(
 
 
       setTimeout(
-        () => {
+        ()=>{
 
           fadeLayer.classList.remove(
             "active"
@@ -851,10 +1539,9 @@ function changeMap(
 
 
           setTimeout(
-            () => {
+            ()=>{
 
-              transitionLock =
-                false;
+              transitionLock=false;
 
             },
             320
@@ -872,7 +1559,7 @@ function changeMap(
 
 
 // ======================================================
-// PLAYER COLLISION
+// COLLISION
 // ======================================================
 
 function playerCollides(
@@ -880,41 +1567,17 @@ function playerCollides(
   y
 ) {
 
-  const left =
-    x+4;
-
-  const right =
-    x+
-    player.width-4;
-
-  const top =
-    y+7;
-
-  const bottom =
-    y+
-    player.height-2;
+  const left=x+4;
+  const right=x+player.width-4;
+  const top=y+7;
+  const bottom=y+player.height-2;
 
 
   if (
-    isSolidAtPixel(
-      left,
-      top
-    ) ||
-
-    isSolidAtPixel(
-      right,
-      top
-    ) ||
-
-    isSolidAtPixel(
-      left,
-      bottom
-    ) ||
-
-    isSolidAtPixel(
-      right,
-      bottom
-    )
+    isSolidAtPixel(left,top) ||
+    isSolidAtPixel(right,top) ||
+    isSolidAtPixel(left,bottom) ||
+    isSolidAtPixel(right,bottom)
   ) {
 
     return true;
@@ -927,24 +1590,17 @@ function playerCollides(
     of getCurrentNPCs()
   ) {
 
-    const nl =
-      npc.x+4;
-
-    const nr =
-      npc.x+27;
-
-    const nt =
-      npc.y+5;
-
-    const nb =
-      npc.y+29;
+    const nl=npc.x+4;
+    const nr=npc.x+27;
+    const nt=npc.y+5;
+    const nb=npc.y+29;
 
 
     if (
-      right > nl &&
-      left < nr &&
-      bottom > nt &&
-      top < nb
+      right>nl &&
+      left<nr &&
+      bottom>nt &&
+      top<nb
     ) {
 
       return true;
@@ -960,36 +1616,36 @@ function playerCollides(
 
 
 // ======================================================
-// PLAYER UPDATE
+// PLAYER
 // ======================================================
 
 function updatePlayer(dt) {
 
   if (
-    exitCooldown > 0
+    exitCooldown>0
   ) {
 
-    exitCooldown -=
-      dt;
+    exitCooldown-=dt;
 
   }
 
 
   if (
     dialogue.active ||
-    transitionLock
+    transitionLock ||
+    libraryOpen ||
+    wordGetActive
   ) {
 
-    player.moving =
-      false;
+    player.moving=false;
 
     return;
 
   }
 
 
-  let dx = 0;
-  let dy = 0;
+  let dx=0;
+  let dy=0;
 
 
   if (
@@ -998,9 +1654,7 @@ function updatePlayer(dt) {
   ) {
 
     dy--;
-
-    player.direction =
-      "up";
+    player.direction="up";
 
   }
 
@@ -1011,9 +1665,7 @@ function updatePlayer(dt) {
   ) {
 
     dy++;
-
-    player.direction =
-      "down";
+    player.direction="down";
 
   }
 
@@ -1024,9 +1676,7 @@ function updatePlayer(dt) {
   ) {
 
     dx--;
-
-    player.direction =
-      "left";
+    player.direction="left";
 
   }
 
@@ -1037,40 +1687,34 @@ function updatePlayer(dt) {
   ) {
 
     dx++;
-
-    player.direction =
-      "right";
+    player.direction="right";
 
   }
 
 
   if (
-    dx !== 0 ||
-    dy !== 0
+    dx!==0 ||
+    dy!==0
   ) {
 
-    player.moving =
-      true;
+    player.moving=true;
 
 
-    const length =
-      Math.hypot(
-        dx,
-        dy
-      );
+    const length=
+      Math.hypot(dx,dy);
 
 
-    dx /= length;
-    dy /= length;
+    dx/=length;
+    dy/=length;
 
 
-    const mx =
+    const mx=
       dx*
       player.speed*
       dt;
 
 
-    const my =
+    const my=
       dy*
       player.speed*
       dt;
@@ -1083,8 +1727,7 @@ function updatePlayer(dt) {
       )
     ) {
 
-      player.x +=
-        mx;
+      player.x+=mx;
 
     }
 
@@ -1096,16 +1739,14 @@ function updatePlayer(dt) {
       )
     ) {
 
-      player.y +=
-        my;
+      player.y+=my;
 
     }
 
   }
   else {
 
-    player.moving =
-      false;
+    player.moving=false;
 
   }
 
@@ -1121,43 +1762,41 @@ function updatePlayer(dt) {
 
 function clampCamera() {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
-  const width =
+  const width=
     map.grid[0].length*
     TILE;
 
 
-  const height =
+  const height=
     map.grid.length*
     TILE;
 
 
-  camera.x =
+  camera.x=
     Math.max(
       0,
       Math.min(
         camera.x,
         Math.max(
           0,
-          width-
-          canvas.width
+          width-canvas.width
         )
       )
     );
 
 
-  camera.y =
+  camera.y=
     Math.max(
       0,
       Math.min(
         camera.y,
         Math.max(
           0,
-          height-
-          canvas.height
+          height-canvas.height
         )
       )
     );
@@ -1167,28 +1806,22 @@ function clampCamera() {
 
 function updateCamera() {
 
-  const targetX =
+  const targetX=
     player.x-
     canvas.width/2;
 
 
-  const targetY =
+  const targetY=
     player.y-
     canvas.height/2;
 
 
-  camera.x +=
-    (
-      targetX-
-      camera.x
-    )*.09;
+  camera.x+=
+    (targetX-camera.x)*.09;
 
 
-  camera.y +=
-    (
-      targetY-
-      camera.y
-    )*.09;
+  camera.y+=
+    (targetY-camera.y)*.09;
 
 
   clampCamera();
@@ -1197,364 +1830,12 @@ function updateCamera() {
 
 
 // ======================================================
-// BASE TILE DRAWING
-// ======================================================
-
-function drawFloor(
-  x,
-  y
-) {
-
-  ctx.fillStyle =
-    "#37323a";
-
-
-  ctx.fillRect(
-    x,y,TILE,TILE
-  );
-
-
-  ctx.fillStyle =
-    "#413b43";
-
-
-  ctx.fillRect(
-    x+2,
-    y+3,
-    13,
-    11
-  );
-
-
-  ctx.fillRect(
-    x+17,
-    y+17,
-    13,
-    12
-  );
-
-
-  ctx.fillStyle =
-    "#2e2a31";
-
-
-  ctx.fillRect(
-    x,
-    y+15,
-    TILE,
-    1
-  );
-
-}
-
-
-function drawRoad(
-  x,
-  y
-) {
-
-  ctx.fillStyle =
-    "#302e35";
-
-
-  ctx.fillRect(
-    x,y,TILE,TILE
-  );
-
-
-  ctx.fillStyle =
-    "#3b3840";
-
-
-  ctx.fillRect(
-    x+2,
-    y+4,
-    14,
-    10
-  );
-
-
-  ctx.fillRect(
-    x+18,
-    y+18,
-    12,
-    10
-  );
-
-}
-
-
-function drawPlaza(
-  x,
-  y
-) {
-
-  ctx.fillStyle =
-    "#4b464b";
-
-
-  ctx.fillRect(
-    x,y,TILE,TILE
-  );
-
-
-  ctx.fillStyle =
-    "#575157";
-
-
-  ctx.fillRect(
-    x+2,
-    y+2,
-    28,
-    13
-  );
-
-
-  ctx.fillStyle =
-    "#3d393e";
-
-
-  ctx.fillRect(
-    x,
-    y+15,
-    TILE,
-    2
-  );
-
-}
-
-
-function drawWater(
-  x,
-  y,
-  time
-) {
-
-  ctx.fillStyle =
-    "#142f43";
-
-
-  ctx.fillRect(
-    x,y,TILE,TILE
-  );
-
-
-  const wave =
-    Math.sin(
-      time*2+
-      x*.04+
-      y*.03
-    )*3;
-
-
-  ctx.fillStyle =
-    "#28556d";
-
-
-  ctx.fillRect(
-    x+4+wave,
-    y+9,
-    15,
-    2
-  );
-
-
-  ctx.fillStyle =
-    "#397187";
-
-
-  ctx.fillRect(
-    x+13-wave,
-    y+22,
-    14,
-    2
-  );
-
-}
-
-
-function drawGrass(
-  x,
-  y
-) {
-
-  ctx.fillStyle =
-    "#263d31";
-
-
-  ctx.fillRect(
-    x,y,TILE,TILE
-  );
-
-
-  ctx.fillStyle =
-    "#365743";
-
-
-  ctx.fillRect(
-    x+6,
-    y+7,
-    2,
-    6
-  );
-
-
-  ctx.fillRect(
-    x+22,
-    y+19,
-    2,
-    7
-  );
-
-}
-
-
-function drawIndoor(
-  x,
-  y,
-  mx,
-  my
-) {
-
-  ctx.fillStyle =
-    "#6c4c37";
-
-
-  ctx.fillRect(
-    x,y,TILE,TILE
-  );
-
-
-  ctx.fillStyle =
-    "#7b573c";
-
-
-  ctx.fillRect(
-    x,
-    y+2,
-    TILE,
-    12
-  );
-
-
-  ctx.fillStyle =
-    "#563b2c";
-
-
-  ctx.fillRect(
-    x,
-    y+15,
-    TILE,
-    2
-  );
-
-
-  if (
-    (mx+my)%2===0
-  ) {
-
-    ctx.fillStyle =
-      "#865f42";
-
-
-    ctx.fillRect(
-      x+3,
-      y+3,
-      12,
-      9
-    );
-
-  }
-
-}
-
-
-function drawWall(
-  x,
-  y
-) {
-
-  ctx.fillStyle =
-    "#34241f";
-
-
-  ctx.fillRect(
-    x,y,TILE,TILE
-  );
-
-
-  ctx.fillStyle =
-    "#54372a";
-
-
-  ctx.fillRect(
-    x+1,
-    y+2,
-    30,
-    28
-  );
-
-
-  ctx.fillStyle =
-    "#795034";
-
-
-  ctx.fillRect(
-    x,
-    y+25,
-    TILE,
-    5
-  );
-
-}
-
-
-function drawCounter(
-  x,
-  y
-) {
-
-  drawIndoor(
-    x,
-    y,
-    0,
-    0
-  );
-
-
-  ctx.fillStyle =
-    "#4a3024";
-
-
-  ctx.fillRect(
-    x+2,
-    y+7,
-    28,
-    21
-  );
-
-
-  ctx.fillStyle =
-    "#91613d";
-
-
-  ctx.fillRect(
-    x,
-    y+5,
-    TILE,
-    7
-  );
-
-}
-
-
-// ======================================================
-// MAP
+// TILE DRAWING
 // ======================================================
 
 function drawMap(time) {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
@@ -1570,133 +1851,105 @@ function drawMap(time) {
       x++
     ) {
 
-      const sx =
+      const sx=
         Math.floor(
-          x*TILE-
-          camera.x
+          x*TILE-camera.x
         );
 
 
-      const sy =
+      const sy=
         Math.floor(
-          y*TILE-
-          camera.y
+          y*TILE-camera.y
         );
 
 
-      if (
-        sx < -TILE ||
-        sy < -TILE ||
-        sx > canvas.width ||
-        sy > canvas.height
-      ) {
-
-        continue;
-
-      }
-
-
-      const tile =
+      const tile=
         map.grid[y][x];
 
 
       if (
-        tile === T.FLOOR
+        tile===T.FLOOR
       ) {
 
-        drawFloor(
-          sx,
-          sy
-        );
+        ctx.fillStyle="#37323a";
 
       }
-
 
       else if (
-        tile === T.ROAD
+        tile===T.ROAD
       ) {
 
-        drawRoad(
-          sx,
-          sy
-        );
+        ctx.fillStyle="#302e35";
 
       }
-
 
       else if (
-        tile === T.PLAZA
+        tile===T.PLAZA
       ) {
 
-        drawPlaza(
-          sx,
-          sy
-        );
+        ctx.fillStyle="#4b464b";
 
       }
-
 
       else if (
-        tile === T.WATER
+        tile===T.WATER
       ) {
 
-        drawWater(
-          sx,
-          sy,
-          time
-        );
+        ctx.fillStyle="#14364a";
 
       }
-
 
       else if (
-        tile === T.GRASS
+        tile===T.GRASS
       ) {
 
-        drawGrass(
-          sx,
-          sy
-        );
+        ctx.fillStyle="#294434";
 
       }
-
 
       else if (
-        tile === T.INDOOR
+        tile===T.INDOOR
       ) {
 
-        drawIndoor(
-          sx,
-          sy,
-          x,
-          y
-        );
+        ctx.fillStyle="#6c4c37";
 
       }
-
 
       else if (
-        tile === T.WALL
+        tile===T.WALL
       ) {
 
-        drawWall(
-          sx,
-          sy
-        );
+        ctx.fillStyle="#3b2923";
 
       }
-
 
       else if (
-        tile === T.COUNTER
+        tile===T.COUNTER
       ) {
 
-        drawCounter(
-          sx,
-          sy
-        );
+        ctx.fillStyle="#70472e";
 
       }
+
+
+      ctx.fillRect(
+        sx,
+        sy,
+        TILE,
+        TILE
+      );
+
+
+      ctx.fillStyle=
+        "rgba(255,255,255,.025)";
+
+
+      ctx.fillRect(
+        sx+2,
+        sy+2,
+        TILE-4,
+        1
+      );
 
     }
 
@@ -1711,7 +1964,7 @@ function drawMap(time) {
 
 function drawBuildings() {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
@@ -1721,1116 +1974,239 @@ function drawBuildings() {
 
 
   for (
-    const building
+    const b
     of map.buildings
   ) {
 
-    drawBuildingObject(
-      building
-    );
+    const x=
+      b.x*TILE-camera.x;
 
-  }
+    const y=
+      b.y*TILE-camera.y;
 
-}
+    const w=
+      b.w*TILE;
 
-
-function drawBuildingObject(
-  b
-) {
-
-  const x =
-    b.x*TILE-
-    camera.x;
+    const h=
+      b.h*TILE;
 
 
-  const y =
-    b.y*TILE-
-    camera.y;
-
-
-  const w =
-    b.w*TILE;
-
-
-  const h =
-    b.h*TILE;
-
-
-  // shadow
-
-  ctx.fillStyle =
-    "rgba(0,0,0,.38)";
-
-
-  ctx.fillRect(
-    x+12,
-    y+18,
-    w,
-    h
-  );
-
-
-  // ====================================================
-  // TRADITIONAL
-  // ====================================================
-
-  if (
-    b.type ===
-    "traditional"
-  ) {
-
-    ctx.fillStyle =
-      "#30231f";
+    ctx.fillStyle=
+      "rgba(0,0,0,.4)";
 
 
     ctx.fillRect(
-      x+10,
-      y+35,
-      w-20,
-      h-35
-    );
-
-
-    ctx.fillStyle =
-      "#8a6449";
-
-
-    ctx.fillRect(
-      x+18,
-      y+50,
-      w-36,
-      h-55
-    );
-
-
-    // roof
-
-    ctx.fillStyle =
-      "#292a29";
-
-
-    ctx.fillRect(
-      x-10,
-      y+24,
-      w+20,
-      17
-    );
-
-
-    ctx.fillStyle =
-      "#41413c";
-
-
-    ctx.fillRect(
-      x,
-      y+14,
-      w,
-      14
-    );
-
-
-    // roof tips
-
-    ctx.fillRect(
-      x-17,
-      y+20,
-      20,
-      5
-    );
-
-
-    ctx.fillRect(
-      x+w-3,
-      y+20,
-      20,
-      5
-    );
-
-
-    // beams
-
-    ctx.fillStyle =
-      "#4d2e26";
-
-
-    for (
-      let i=1;
-      i<5;
-      i++
-    ) {
-
-      ctx.fillRect(
-        x+
-        i*w/5,
-        y+51,
-        5,
-        h-55
-      );
-
-    }
-
-
-    drawBuildingWindows(
-      x,
-      y,
-      w,
-      h,
-      "#e0a25b"
-    );
-
-
-    drawBuildingLantern(
-      x+30,
-      y+63
-    );
-
-
-    drawBuildingLantern(
-      x+w-30,
-      y+63
-    );
-
-  }
-
-
-  // ====================================================
-  // NOODLE / RESTAURANT
-  // ====================================================
-
-  else if (
-    b.type === "noodle" ||
-    b.type === "restaurant"
-  ) {
-
-    ctx.fillStyle =
-      b.color;
-
-
-    ctx.fillRect(
-      x+5,
-      y+26,
-      w-10,
-      h-26
-    );
-
-
-    ctx.fillStyle =
-      "#dfd0b1";
-
-
-    ctx.fillRect(
-      x+14,
-      y+50,
-      w-28,
-      h-60
-    );
-
-
-    // red roof
-
-    ctx.fillStyle =
-      "#74322d";
-
-
-    ctx.fillRect(
-      x,
+      x+12,
       y+18,
-      w,
-      22
-    );
-
-
-    ctx.fillStyle =
-      "#a74b39";
-
-
-    for (
-      let i=0;
-      i<w;
-      i+=24
-    ) {
-
-      ctx.fillRect(
-        x+i,
-        y+38,
-        14,
-        9
-      );
-
-    }
-
-
-    drawBuildingWindows(
-      x,
-      y,
-      w,
-      h,
-      "#f0bb69"
-    );
-
-  }
-
-
-  // ====================================================
-  // CONVENIENCE
-  // ====================================================
-
-  else if (
-    b.type ===
-    "convenience"
-  ) {
-
-    ctx.fillStyle =
-      "#d7ddd7";
-
-
-    ctx.fillRect(
-      x+5,
-      y+28,
-      w-10,
-      h-28
-    );
-
-
-    ctx.fillStyle =
-      "#2e626d";
-
-
-    ctx.fillRect(
-      x,
-      y+19,
-      w,
-      24
-    );
-
-
-    ctx.fillStyle =
-      "#e6e7d7";
-
-
-    ctx.fillRect(
-      x+13,
-      y+55,
-      w-26,
-      h-68
-    );
-
-
-    // glass
-
-    ctx.fillStyle =
-      "#315363";
-
-
-    for (
-      let wx=20;
-      wx<w-20;
-      wx+=45
-    ) {
-
-      ctx.fillRect(
-        x+wx,
-        y+66,
-        31,
-        40
-      );
-
-
-      ctx.fillStyle =
-        "#d8ae63";
-
-
-      ctx.fillRect(
-        x+wx+3,
-        y+69,
-        25,
-        4
-      );
-
-
-      ctx.fillStyle =
-        "#315363";
-
-    }
-
-  }
-
-
-  // ====================================================
-  // CULTURE / ACCESSORY
-  // ====================================================
-
-  else if (
-    b.type === "culture" ||
-    b.type === "accessory"
-  ) {
-
-    ctx.fillStyle =
-      b.color;
-
-
-    ctx.fillRect(
-      x+6,
-      y+30,
-      w-12,
-      h-30
-    );
-
-
-    ctx.fillStyle =
-      "#34293c";
-
-
-    ctx.fillRect(
-      x,
-      y+18,
-      w,
-      25
-    );
-
-
-    ctx.fillStyle =
-      "#77516e";
-
-
-    ctx.fillRect(
-      x+13,
-      y+55,
-      w-26,
-      h-65
-    );
-
-
-    drawBuildingWindows(
-      x,
-      y,
-      w,
-      h,
-      "#e3a85e"
-    );
-
-  }
-
-
-  // ====================================================
-  // DEPARTMENT
-  // ====================================================
-
-  else if (
-    b.type === "department"
-  ) {
-
-    ctx.fillStyle =
-      "#514b56";
-
-
-    ctx.fillRect(
-      x,
-      y+20,
-      w,
-      h-20
-    );
-
-
-    ctx.fillStyle =
-      "#322f38";
-
-
-    ctx.fillRect(
-      x,
-      y+14,
-      w,
-      20
-    );
-
-
-    for (
-      let row=0;
-      row<2;
-      row++
-    ) {
-
-      for (
-        let col=0;
-        col<4;
-        col++
-      ) {
-
-        ctx.fillStyle =
-          "#c69051";
-
-
-        ctx.fillRect(
-          x+25+col*65,
-          y+60+row*50,
-          35,
-          24
-        );
-
-
-        ctx.fillStyle =
-          "#463b42";
-
-
-        ctx.fillRect(
-          x+28+col*65,
-          y+63+row*50,
-          29,
-          18
-        );
-
-      }
-
-    }
-
-  }
-
-
-  // ====================================================
-  // DRINK
-  // ====================================================
-
-  else if (
-    b.type === "drink"
-  ) {
-
-    ctx.fillStyle =
-      "#496b61";
-
-
-    ctx.fillRect(
-      x+5,
-      y+25,
-      w-10,
-      h-25
-    );
-
-
-    ctx.fillStyle =
-      "#29463f";
-
-
-    ctx.fillRect(
-      x,
-      y+18,
-      w,
-      22
-    );
-
-
-    drawBuildingWindows(
-      x,
-      y,
-      w,
-      h,
-      "#d5b477"
-    );
-
-  }
-
-
-  // ====================================================
-  // HOTEL
-  // ====================================================
-
-  else if (
-    b.type === "hotel"
-  ) {
-
-    ctx.fillStyle =
-      b.color;
-
-
-    ctx.fillRect(
-      x,
-      y,
       w,
       h
     );
 
 
-    ctx.fillStyle =
-      "#202733";
+    ctx.fillStyle=
+      b.color;
 
 
     ctx.fillRect(
-      x+12,
-      y+12,
-      w-24,
-      h-12
+      x+6,
+      y+28,
+      w-12,
+      h-28
     );
 
 
-    for (
-      let row=0;
-      row<5;
-      row++
+    // roof
+
+    if (
+      b.type==="traditional"
     ) {
 
+      ctx.fillStyle="#282a29";
+
+      ctx.fillRect(
+        x-12,
+        y+18,
+        w+24,
+        17
+      );
+
+      ctx.fillStyle="#45443d";
+
+      ctx.fillRect(
+        x,
+        y+10,
+        w,
+        13
+      );
+
+    }
+
+    else if (
+      b.type==="hotel"
+    ) {
+
+      ctx.fillStyle="#202733";
+
+      ctx.fillRect(
+        x+10,
+        y+8,
+        w-20,
+        h-8
+      );
+
+
       for (
-        let col=0;
-        col<4;
-        col++
+        let yy=35;
+        yy<h-65;
+        yy+=48
       ) {
 
-        ctx.fillStyle =
-          (
-            row+col
-          )%3===0
-          ? "#4d5665"
-          : "#d1a05b";
+        for (
+          let xx=28;
+          xx<w-30;
+          xx+=70
+        ) {
+
+          ctx.fillStyle=
+            (xx+yy)%3===0
+            ? "#d09b53"
+            : "#4e5967";
 
 
-        ctx.fillRect(
-          x+30+col*78,
-          y+34+row*50,
-          35,
-          24
-        );
+          ctx.fillRect(
+            x+xx,
+            y+yy,
+            32,
+            21
+          );
+
+        }
 
       }
 
     }
 
-
-    // entrance canopy
-
-    ctx.fillStyle =
-      "#b59a68";
-
-
-    ctx.fillRect(
-      x+w/2-65,
-      y+h-58,
-      130,
-      10
-    );
-
-
-    ctx.fillStyle =
-      "#293a4b";
-
-
-    ctx.fillRect(
-      x+w/2-45,
-      y+h-48,
-      90,
-      48
-    );
-
-  }
-
-
-  // ====================================================
-  // FALLBACK
-  // ====================================================
-
-  else {
-
-    ctx.fillStyle =
-      b.color ||
-      "#55424a";
-
-
-    ctx.fillRect(
-      x,
-      y+20,
-      w,
-      h-20
-    );
-
-  }
-
-
-  drawBuildingSign(
-    b,
-    x,
-    y,
-    w
-  );
-
-
-  drawBuildingDoor(
-    b,
-    y,
-    h
-  );
-
-}
-
-
-// ======================================================
-// WINDOWS
-// ======================================================
-
-function drawBuildingWindows(
-  x,
-  y,
-  w,
-  h,
-  glow
-) {
-
-  const count =
-    Math.max(
-      2,
-      Math.floor(
-        w/70
-      )
-    );
-
-
-  const gap =
-    w/
-    (
-      count+1
-    );
-
-
-  for (
-    let i=1;
-    i<=count;
-    i++
-  ) {
-
-    const wx =
-      x+
-      gap*i-
-      17;
-
-
-    ctx.fillStyle =
-      "#332c2d";
-
-
-    ctx.fillRect(
-      wx,
-      y+70,
-      34,
-      34
-    );
-
-
-    ctx.fillStyle =
-      glow;
-
-
-    ctx.fillRect(
-      wx+4,
-      y+74,
-      26,
-      26
-    );
-
-
-    ctx.fillStyle =
-      "#513f36";
-
-
-    ctx.fillRect(
-      wx+16,
-      y+74,
-      2,
-      26
-    );
-
-
-    ctx.fillRect(
-      wx+4,
-      y+86,
-      26,
-      2
-    );
-
-  }
-
-}
-
-
-// ======================================================
-// BUILDING SIGN
-// ======================================================
-
-function drawBuildingSign(
-  b,
-  x,
-  y,
-  w
-) {
-
-  const signWidth =
-    Math.min(
-      w-35,
-      Math.max(
-        110,
-        b.name.length*23
-      )
-    );
-
-
-  const sx =
-    x+
-    w/2-
-    signWidth/2;
-
-
-  ctx.fillStyle =
-    "#261a18";
-
-
-  ctx.fillRect(
-    sx-4,
-    y+30,
-    signWidth+8,
-    33
-  );
-
-
-  ctx.fillStyle =
-    b.type === "hotel"
-    ? "#4b5668"
-    : "#833a31";
-
-
-  ctx.fillRect(
-    sx,
-    y+34,
-    signWidth,
-    25
-  );
-
-
-  ctx.fillStyle =
-    "#f6d38b";
-
-
-  ctx.font =
-    "bold 15px sans-serif";
-
-
-  ctx.textAlign =
-    "center";
-
-
-  ctx.fillText(
-    b.name,
-    sx+
-    signWidth/2,
-    y+52
-  );
-
-}
-
-
-// ======================================================
-// BUILDING DOOR
-// ======================================================
-
-function drawBuildingDoor(
-  b,
-  y,
-  h
-) {
-
-  const x =
-    b.doorX*TILE-
-    camera.x;
-
-
-  const bottom =
-    y+h;
-
-
-  ctx.fillStyle =
-    "#24191a";
-
-
-  ctx.fillRect(
-    x-5,
-    bottom-50,
-    TILE+10,
-    50
-  );
-
-
-  if (
-    b.type === "hotel" ||
-    b.type === "convenience"
-  ) {
-
-    ctx.fillStyle =
-      "#345463";
-
-
-    ctx.fillRect(
-      x,
-      bottom-45,
-      TILE,
-      45
-    );
-
-
-    ctx.fillStyle =
-      "#8db0b9";
-
-
-    ctx.fillRect(
-      x+4,
-      bottom-40,
-      TILE-8,
-      25
-    );
-
-  }
-  else {
-
-    ctx.fillStyle =
-      "#75452d";
-
-
-    ctx.fillRect(
-      x,
-      bottom-45,
-      TILE,
-      45
-    );
-
-
-    ctx.fillStyle =
-      "#4c2c24";
-
-
-    ctx.fillRect(
-      x+5,
-      bottom-39,
-      TILE-10,
-      14
-    );
-
-  }
-
-
-  ctx.fillStyle =
-    "#e3b45e";
-
-
-  ctx.fillRect(
-    x+23,
-    bottom-20,
-    3,
-    3
-  );
-
-}
-
-
-// ======================================================
-// BUILDING LANTERN
-// ======================================================
-
-function drawBuildingLantern(
-  x,
-  y
-) {
-
-  ctx.fillStyle =
-    "rgba(255,90,40,.15)";
-
-
-  ctx.beginPath();
-
-  ctx.arc(
-    x,
-    y+7,
-    15,
-    0,
-    Math.PI*2
-  );
-
-  ctx.fill();
-
-
-  ctx.fillStyle =
-    "#c73e2f";
-
-
-  ctx.fillRect(
-    x-5,
-    y,
-    10,
-    15
-  );
-
-
-  ctx.fillStyle =
-    "#ffb451";
-
-
-  ctx.fillRect(
-    x-2,
-    y+4,
-    4,
-    6
-  );
-
-}
-
-
-// ======================================================
-// LANTERN STRINGS
-// ======================================================
-
-function drawLanternStrings(time) {
-
-  const map =
-    getCurrentMap();
-
-
-  for (
-    const string
-    of map.lanternStrings
-  ) {
-
-    const x1 =
-      string.x1*TILE-
-      camera.x;
-
-
-    const x2 =
-      string.x2*TILE-
-      camera.x;
-
-
-    const y =
-      string.y*TILE-
-      camera.y;
-
-
-    ctx.strokeStyle =
-      "#21191a";
-
-
-    ctx.lineWidth =
-      2;
-
-
-    ctx.beginPath();
-
-
-    ctx.moveTo(
-      x1,
-      y
-    );
-
-
-    ctx.quadraticCurveTo(
-      (x1+x2)/2,
-      y+14,
-      x2,
-      y
-    );
-
-
-    ctx.stroke();
-
-
-    for (
-      let i=0;
-      i<9;
-      i++
-    ) {
-
-      const t =
-        i/8;
-
-
-      const lx =
-        x1+
-        (
-          x2-x1
-        )*t;
-
-
-      const ly =
-        y+
-        Math.sin(
-          t*Math.PI
-        )*14+
-        Math.sin(
-          time*2+i
-        )*1.5;
-
-
-      drawLantern(
-        lx,
-        ly
+    else {
+
+      ctx.fillStyle="#382a29";
+
+      ctx.fillRect(
+        x,
+        y+18,
+        w,
+        22
       );
 
     }
 
+
+    // sign
+
+    const signWidth=
+      Math.min(
+        w-35,
+        Math.max(
+          110,
+          b.name.length*23
+        )
+      );
+
+
+    ctx.fillStyle="#291a18";
+
+    ctx.fillRect(
+      x+w/2-signWidth/2-3,
+      y+35,
+      signWidth+6,
+      31
+    );
+
+
+    ctx.fillStyle="#833a31";
+
+    ctx.fillRect(
+      x+w/2-signWidth/2,
+      y+38,
+      signWidth,
+      25
+    );
+
+
+    ctx.fillStyle="#f5d08a";
+
+    ctx.font="bold 15px sans-serif";
+
+    ctx.textAlign="center";
+
+    ctx.fillText(
+      b.name,
+      x+w/2,
+      y+56
+    );
+
+
+    // windows
+
+    for (
+      let wx=35;
+      wx<w-35;
+      wx+=65
+    ) {
+
+      ctx.fillStyle="#342c2c";
+
+      ctx.fillRect(
+        x+wx,
+        y+82,
+        30,
+        30
+      );
+
+
+      ctx.fillStyle="#d19a55";
+
+      ctx.fillRect(
+        x+wx+4,
+        y+86,
+        22,
+        22
+      );
+
+    }
+
+
+    // door
+
+    const dx=
+      b.doorX*TILE-
+      camera.x;
+
+
+    ctx.fillStyle="#25191a";
+
+    ctx.fillRect(
+      dx-5,
+      y+h-50,
+      TILE+10,
+      50
+    );
+
+
+    ctx.fillStyle=
+      b.type==="hotel" ||
+      b.type==="convenience"
+      ? "#365668"
+      : "#75452d";
+
+
+    ctx.fillRect(
+      dx,
+      y+h-45,
+      TILE,
+      45
+    );
+
   }
-
-}
-
-
-function drawLantern(
-  x,
-  y
-) {
-
-  ctx.fillStyle =
-    "rgba(255,100,45,.10)";
-
-
-  ctx.beginPath();
-
-
-  ctx.arc(
-    x,
-    y+7,
-    13,
-    0,
-    Math.PI*2
-  );
-
-
-  ctx.fill();
-
-
-  ctx.fillStyle =
-    "#7c2525";
-
-
-  ctx.fillRect(
-    x-4,
-    y,
-    8,
-    13
-  );
-
-
-  ctx.fillStyle =
-    "#d84a32";
-
-
-  ctx.fillRect(
-    x-5,
-    y+3,
-    10,
-    7
-  );
-
-
-  ctx.fillStyle =
-    "#ffb44e";
-
-
-  ctx.fillRect(
-    x-2,
-    y+4,
-    4,
-    5
-  );
 
 }
 
@@ -2841,7 +2217,7 @@ function drawLantern(
 
 function drawStalls(time) {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
@@ -2850,55 +2226,39 @@ function drawStalls(time) {
     of map.stalls
   ) {
 
-    const x =
+    const x=
       stall.x*TILE-
       camera.x;
 
 
-    const y =
+    const y=
       stall.y*TILE-
       camera.y;
 
 
-    const width =
+    const width=
       stall.width*TILE;
 
 
-    ctx.fillStyle =
-      "rgba(0,0,0,.35)";
-
-
-    ctx.fillRect(
-      x+3,
-      y+27,
-      width-6,
-      8
-    );
-
-
-    ctx.fillStyle =
-      "#543529";
-
+    ctx.fillStyle="#543529";
 
     ctx.fillRect(
       x+4,
-      y+13,
+      y+12,
       5,
-      22
+      24
     );
 
 
     ctx.fillRect(
       x+width-9,
-      y+13,
+      y+12,
       5,
-      22
+      24
     );
 
 
-    ctx.fillStyle =
-      "#a73e35";
-
+    ctx.fillStyle="#a73e35";
 
     ctx.fillRect(
       x,
@@ -2914,7 +2274,7 @@ function drawStalls(time) {
       i+=16
     ) {
 
-      ctx.fillStyle =
+      ctx.fillStyle=
         i%32===0
         ? "#d25344"
         : "#e4b15e";
@@ -2930,9 +2290,7 @@ function drawStalls(time) {
     }
 
 
-    ctx.fillStyle =
-      "#351717";
-
+    ctx.fillStyle="#351717";
 
     ctx.fillRect(
       x+10,
@@ -2942,16 +2300,11 @@ function drawStalls(time) {
     );
 
 
-    ctx.fillStyle =
-      "#ffd478";
+    ctx.fillStyle="#ffd478";
 
+    ctx.font="bold 12px sans-serif";
 
-    ctx.font =
-      "bold 12px sans-serif";
-
-
-    ctx.textAlign =
-      "center";
+    ctx.textAlign="center";
 
 
     ctx.fillText(
@@ -2961,9 +2314,7 @@ function drawStalls(time) {
     );
 
 
-    ctx.fillStyle =
-      "#71462e";
-
+    ctx.fillStyle="#71462e";
 
     ctx.fillRect(
       x+5,
@@ -2973,268 +2324,15 @@ function drawStalls(time) {
     );
 
 
-    drawStallContents(
-      stall,
-      x,
-      y,
-      width,
-      time
-    );
-
-  }
-
-}
-
-
-// ======================================================
-// STALL CONTENT
-// ======================================================
-
-function drawStallContents(
-  stall,
-  x,
-  y,
-  width,
-  time
-) {
-
-  if (
-    stall.type ===
-    "shaokao"
-  ) {
-
-    ctx.fillStyle =
-      "#241918";
-
-
-    ctx.fillRect(
-      x+15,
-      y+21,
-      width-30,
-      6
-    );
-
-
-    for (
-      let i=18;
-      i<width-18;
-      i+=10
+    if (
+      stall.type==="shaokao" ||
+      stall.type==="xiaolongbao"
     ) {
 
-      ctx.fillStyle =
-        "#d1783d";
-
-
-      ctx.fillRect(
-        x+i,
-        y+20,
-        6,
-        3
-      );
-
-
-      ctx.fillStyle =
-        "#d9b068";
-
-
-      ctx.fillRect(
-        x+i+2,
-        y+17,
-        1,
-        10
-      );
-
-    }
-
-
-    drawSteam(
-      x+width/2,
-      y+19,
-      time
-    );
-
-  }
-
-
-  else if (
-    stall.type ===
-    "xiaolongbao"
-  ) {
-
-    ctx.fillStyle =
-      "#a97845";
-
-
-    ctx.fillRect(
-      x+14,
-      y+20,
-      width-28,
-      7
-    );
-
-
-    ctx.fillStyle =
-      "#e6ce9c";
-
-
-    for (
-      let i=18;
-      i<width-18;
-      i+=12
-    ) {
-
-      ctx.fillRect(
-        x+i,
-        y+18,
-        7,
-        6
-      );
-
-    }
-
-
-    drawSteam(
-      x+width/2,
-      y+18,
-      time
-    );
-
-  }
-
-
-  else if (
-    stall.type ===
-    "fruit"
-  ) {
-
-    const colors = [
-      "#c94e42",
-      "#e4a448",
-      "#6c9a50",
-      "#d96f88"
-    ];
-
-
-    for (
-      let i=0;
-      i<10;
-      i++
-    ) {
-
-      ctx.fillStyle =
-        colors[
-          i%colors.length
-        ];
-
-
-      ctx.fillRect(
-        x+14+i*7,
-        y+20+
-        (i%2)*3,
-        6,
-        6
-      );
-
-    }
-
-  }
-
-
-  else if (
-    stall.type ===
-    "phone"
-  ) {
-
-    for (
-      let i=0;
-      i<8;
-      i++
-    ) {
-
-      ctx.fillStyle =
-        [
-          "#d85d62",
-          "#5b78a2",
-          "#d5b052",
-          "#725e91"
-        ][i%4];
-
-
-      ctx.fillRect(
-        x+13+i*9,
-        y+18,
-        6,
-        10
-      );
-
-    }
-
-  }
-
-
-  else if (
-    stall.type ===
-    "flower"
-  ) {
-
-    for (
-      let i=0;
-      i<9;
-      i++
-    ) {
-
-      ctx.fillStyle =
-        [
-          "#d86477",
-          "#e0b453",
-          "#ad6aa4"
-        ][i%3];
-
-
-      ctx.fillRect(
-        x+15+i*8,
-        y+18+
-        (i%2)*4,
-        6,
-        6
-      );
-
-
-      ctx.fillStyle =
-        "#56804e";
-
-
-      ctx.fillRect(
-        x+17+i*8,
-        y+24,
-        2,
-        5
-      );
-
-    }
-
-  }
-
-
-  else {
-
-    for (
-      let i=0;
-      i<8;
-      i++
-    ) {
-
-      ctx.fillStyle =
-        i%2===0
-        ? "#d8b15e"
-        : "#b56a74";
-
-
-      ctx.fillRect(
-        x+15+i*9,
-        y+21,
-        5,
-        5
+      drawSteam(
+        x+width/2,
+        y+22,
+        time
       );
 
     }
@@ -3250,49 +2348,44 @@ function drawSteam(
   time
 ) {
 
-  const offset =
-    (
-      time*12
-    )%14;
+  const offset=
+    (time*12)%14;
 
 
-  ctx.fillStyle =
+  ctx.fillStyle=
     "rgba(240,230,215,.5)";
 
 
   ctx.fillRect(
-    x-10,
+    x-8,
     y-offset,
-    2,
-    5
+    2,5
   );
 
 
   ctx.fillRect(
     x,
     y-6-offset*.7,
-    2,
-    5
+    2,5
   );
 
 
   ctx.fillRect(
-    x+10,
+    x+8,
     y-2-offset*.9,
-    2,
-    4
+    2,4
   );
 
 }
 
 
 // ======================================================
-// PROPS
+// PROPS — UNIQUE INTERIORS
 // ======================================================
 
 function drawProps() {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
@@ -3301,12 +2394,12 @@ function drawProps() {
     of map.props
   ) {
 
-    const x =
+    const x=
       prop.x*TILE-
       camera.x;
 
 
-    const y =
+    const y=
       prop.y*TILE-
       camera.y;
 
@@ -3328,57 +2421,458 @@ function drawProp(
   y
 ) {
 
+  // ----------------------------------
+  // TEA TABLE
+  // ----------------------------------
+
   if (
-    type === "table" ||
-    type === "teaTable"
+    type==="teaTable"
   ) {
 
-    ctx.fillStyle =
-      "#4d3024";
-
-
-    ctx.fillRect(
-      x+2,
-      y+10,
-      29,
-      11
-    );
-
-
-    ctx.fillStyle =
-      "#855838";
-
+    ctx.fillStyle="#4c3023";
 
     ctx.fillRect(
       x,
-      y+7,
-      32,
-      8
+      y+12,
+      32,12
     );
 
 
-    if (
-      type ===
-      "teaTable"
+    ctx.fillStyle="#8b5d39";
+
+    ctx.fillRect(
+      x-3,
+      y+8,
+      38,8
+    );
+
+
+    ctx.fillStyle="#c4a66a";
+
+    ctx.fillRect(
+      x+12,
+      y+3,
+      8,6
+    );
+
+
+    ctx.fillStyle="#e0c987";
+
+    ctx.fillRect(
+      x+5,
+      y+5,
+      4,4
+    );
+
+
+    ctx.fillRect(
+      x+23,
+      y+5,
+      4,4
+    );
+
+  }
+
+
+  // ----------------------------------
+  // TEA SHELF
+  // ----------------------------------
+
+  else if (
+    type==="teaShelf"
+  ) {
+
+    ctx.fillStyle="#3d291f";
+
+    ctx.fillRect(
+      x+3,
+      y,
+      26,31
+    );
+
+
+    ctx.fillStyle="#795038";
+
+    ctx.fillRect(
+      x+5,
+      y+4,
+      22,4
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+15,
+      22,4
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+26,
+      22,4
+    );
+
+
+    ctx.fillStyle="#718254";
+
+    ctx.fillRect(
+      x+8,
+      y+8,
+      6,6
+    );
+
+
+    ctx.fillStyle="#a88552";
+
+    ctx.fillRect(
+      x+18,
+      y+8,
+      6,6
+    );
+
+
+    ctx.fillStyle="#526b4d";
+
+    ctx.fillRect(
+      x+11,
+      y+20,
+      8,6
+    );
+
+  }
+
+
+  // ----------------------------------
+  // SCROLL
+  // ----------------------------------
+
+  else if (
+    type==="scroll"
+  ) {
+
+    ctx.fillStyle="#e0d1ad";
+
+    ctx.fillRect(
+      x+9,
+      y,
+      15,29
+    );
+
+
+    ctx.fillStyle="#34231f";
+
+    ctx.fillRect(
+      x+7,
+      y,
+      19,3
+    );
+
+
+    ctx.fillRect(
+      x+7,
+      y+27,
+      19,3
+    );
+
+
+    ctx.fillStyle="#654334";
+
+    ctx.fillRect(
+      x+15,
+      y+7,
+      2,14
+    );
+
+  }
+
+
+  // ----------------------------------
+  // NOODLE TABLE
+  // ----------------------------------
+
+  else if (
+    type==="noodleTable" ||
+    type==="diningTable"
+  ) {
+
+    ctx.fillStyle="#68432c";
+
+    ctx.fillRect(
+      x,
+      y+11,
+      32,10
+    );
+
+
+    ctx.fillStyle="#98613b";
+
+    ctx.fillRect(
+      x-2,
+      y+7,
+      36,7
+    );
+
+
+    ctx.fillStyle="#e0c99a";
+
+    ctx.fillRect(
+      x+11,
+      y+2,
+      11,6
+    );
+
+
+    ctx.fillStyle="#7d4d32";
+
+    ctx.fillRect(
+      x+14,
+      y+3,
+      5,3
+    );
+
+  }
+
+
+  // ----------------------------------
+  // STEAM POT
+  // ----------------------------------
+
+  else if (
+    type==="steamPot"
+  ) {
+
+    ctx.fillStyle="#5f6264";
+
+    ctx.fillRect(
+      x+5,
+      y+13,
+      22,13
+    );
+
+
+    ctx.fillStyle="#aaa8a0";
+
+    ctx.fillRect(
+      x+3,
+      y+10,
+      26,5
+    );
+
+
+    ctx.fillStyle="#ddd0b0";
+
+    ctx.fillRect(
+      x+13,
+      y+3,
+      3,6
+    );
+
+
+    ctx.fillRect(
+      x+19,
+      y,
+      2,8
+    );
+
+  }
+
+
+  // ----------------------------------
+  // MENU
+  // ----------------------------------
+
+  else if (
+    type==="menuBoard"
+  ) {
+
+    ctx.fillStyle="#2d201d";
+
+    ctx.fillRect(
+      x+2,
+      y,
+      28,30
+    );
+
+
+    ctx.fillStyle="#e1c985";
+
+    ctx.fillRect(
+      x+7,
+      y+6,
+      18,2
+    );
+
+
+    ctx.fillRect(
+      x+7,
+      y+12,
+      14,2
+    );
+
+
+    ctx.fillRect(
+      x+7,
+      y+18,
+      17,2
+    );
+
+  }
+
+
+  // ----------------------------------
+  // CONDIMENTS
+  // ----------------------------------
+
+  else if (
+    type==="condiments"
+  ) {
+
+    ctx.fillStyle="#70462d";
+
+    ctx.fillRect(
+      x,
+      y+18,
+      32,8
+    );
+
+
+    ctx.fillStyle="#b54338";
+
+    ctx.fillRect(
+      x+5,
+      y+8,
+      5,10
+    );
+
+
+    ctx.fillStyle="#c39b51";
+
+    ctx.fillRect(
+      x+14,
+      y+6,
+      5,12
+    );
+
+
+    ctx.fillStyle="#5c493b";
+
+    ctx.fillRect(
+      x+23,
+      y+9,
+      5,9
+    );
+
+  }
+
+
+  // ----------------------------------
+  // FRIDGE
+  // ----------------------------------
+
+  else if (
+    type==="fridge"
+  ) {
+
+    ctx.fillStyle="#c5d0cf";
+
+    ctx.fillRect(
+      x+2,
+      y,
+      28,31
+    );
+
+
+    ctx.fillStyle="#355664";
+
+    ctx.fillRect(
+      x+5,
+      y+4,
+      22,23
+    );
+
+
+    ctx.fillStyle="#7fb0b3";
+
+    ctx.fillRect(
+      x+8,
+      y+7,
+      7,17
+    );
+
+
+    ctx.fillRect(
+      x+17,
+      y+7,
+      7,17
+    );
+
+  }
+
+
+  // ----------------------------------
+  // SHOP SHELF
+  // ----------------------------------
+
+  else if (
+    type==="shopShelf" ||
+    type==="cultureShelf"
+  ) {
+
+    ctx.fillStyle="#55382c";
+
+    ctx.fillRect(
+      x+3,
+      y,
+      26,30
+    );
+
+
+    ctx.fillStyle="#93613d";
+
+    ctx.fillRect(
+      x+5,
+      y+6,
+      22,3
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+16,
+      22,3
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+26,
+      22,3
+    );
+
+
+    const colors=[
+      "#c15d54",
+      "#6d895f",
+      "#d0a654",
+      "#665b8b"
+    ];
+
+
+    for (
+      let i=0;
+      i<4;
+      i++
     ) {
 
-      ctx.fillStyle =
-        "#c8b26d";
+      ctx.fillStyle=
+        colors[i];
 
 
       ctx.fillRect(
-        x+13,
-        y+2,
-        8,
-        6
-      );
-
-
-      ctx.fillRect(
-        x+20,
-        y+4,
-        4,
-        2
+        x+7+i*5,
+        y+10,
+        4,6
       );
 
     }
@@ -3386,396 +2880,78 @@ function drawProp(
   }
 
 
-  else if (
-    type === "chair"
-  ) {
-
-    ctx.fillStyle =
-      "#77482e";
-
-
-    ctx.fillRect(
-      x+9,
-      y+9,
-      14,
-      13
-    );
-
-
-    ctx.fillRect(
-      x+9,
-      y+21,
-      3,
-      8
-    );
-
-
-    ctx.fillRect(
-      x+20,
-      y+21,
-      3,
-      8
-    );
-
-  }
-
+  // ----------------------------------
+  // CASHIER
+  // ----------------------------------
 
   else if (
-    type === "plant"
+    type==="cashier"
   ) {
 
-    ctx.fillStyle =
-      "#825136";
-
+    ctx.fillStyle="#456069";
 
     ctx.fillRect(
-      x+10,
-      y+20,
-      13,
-      10
+      x,
+      y+15,
+      32,14
     );
 
 
-    ctx.fillStyle =
-      "#376044";
-
-
-    ctx.fillRect(
-      x+14,
-      y+7,
-      5,
-      15
-    );
-
-
-    ctx.fillRect(
-      x+7,
-      y+11,
-      10,
-      5
-    );
-
-
-    ctx.fillRect(
-      x+17,
-      y+12,
-      10,
-      5
-    );
-
-  }
-
-
-  else if (
-    type === "shelf"
-  ) {
-
-    ctx.fillStyle =
-      "#4d3024";
-
-
-    ctx.fillRect(
-      x+3,
-      y,
-      26,
-      31
-    );
-
-
-    ctx.fillStyle =
-      "#8a5b3a";
-
-
-    ctx.fillRect(
-      x+5,
-      y+3,
-      22,
-      4
-    );
-
-
-    ctx.fillRect(
-      x+5,
-      y+14,
-      22,
-      4
-    );
-
-
-    ctx.fillRect(
-      x+5,
-      y+25,
-      22,
-      4
-    );
-
-
-    ctx.fillStyle =
-      "#c6a55f";
-
+    ctx.fillStyle="#1d2c31";
 
     ctx.fillRect(
       x+8,
-      y+8,
-      5,
-      6
-    );
-
-
-    ctx.fillStyle =
-      "#6c8b6b";
-
-
-    ctx.fillRect(
-      x+17,
-      y+8,
-      6,
-      6
-    );
-
-
-    ctx.fillStyle =
-      "#b26063";
-
-
-    ctx.fillRect(
-      x+10,
-      y+19,
-      6,
-      6
-    );
-
-  }
-
-
-  else if (
-    type === "display"
-  ) {
-
-    ctx.fillStyle =
-      "#55382d";
-
-
-    ctx.fillRect(
-      x+3,
-      y+13,
-      26,
-      15
-    );
-
-
-    ctx.fillStyle =
-      "#8e6245";
-
-
-    ctx.fillRect(
-      x,
-      y+10,
-      32,
-      7
-    );
-
-
-    ctx.fillStyle =
-      "#d4b663";
-
-
-    ctx.fillRect(
-      x+5,
-      y+4,
-      6,
-      6
-    );
-
-
-    ctx.fillStyle =
-      "#648373";
-
-
-    ctx.fillRect(
-      x+14,
-      y+2,
-      7,
-      8
-    );
-
-
-    ctx.fillStyle =
-      "#aa6372";
-
-
-    ctx.fillRect(
-      x+24,
       y+5,
-      5,
-      5
+      16,12
+    );
+
+
+    ctx.fillStyle="#8fd1c4";
+
+    ctx.fillRect(
+      x+11,
+      y+8,
+      10,6
     );
 
   }
 
 
+  // ----------------------------------
+  // CLOTHES
+  // ----------------------------------
+
   else if (
-    type === "sofa"
+    type==="clothesRack"
   ) {
 
-    ctx.fillStyle =
-      "#493d4f";
-
-
-    ctx.fillRect(
-      x,
-      y+10,
-      45,
-      19
-    );
-
-
-    ctx.fillStyle =
-      "#6d5d73";
-
+    ctx.fillStyle="#433630";
 
     ctx.fillRect(
       x+4,
-      y+5,
-      37,
-      13
-    );
-
-
-    ctx.fillStyle =
-      "#28242c";
-
-
-    ctx.fillRect(
-      x+5,
-      y+28,
-      5,
-      4
-    );
-
-
-    ctx.fillRect(
-      x+35,
-      y+28,
-      5,
-      4
-    );
-
-  }
-
-
-  else if (
-    type === "steamPot"
-  ) {
-
-    ctx.fillStyle =
-      "#56585b";
-
-
-    ctx.fillRect(
-      x+6,
-      y+14,
-      20,
-      12
-    );
-
-
-    ctx.fillStyle =
-      "#929497";
-
-
-    ctx.fillRect(
-      x+4,
-      y+11,
-      24,
-      5
-    );
-
-  }
-
-
-  else if (
-    type === "bench"
-  ) {
-
-    ctx.fillStyle =
-      "#70452d";
-
-
-    ctx.fillRect(
-      x+3,
-      y+10,
-      27,
-      5
-    );
-
-
-    ctx.fillRect(
-      x+3,
-      y+18,
-      27,
-      5
-    );
-
-
-    ctx.fillStyle =
-      "#312a28";
-
-
-    ctx.fillRect(
-      x+6,
-      y+22,
-      3,
-      7
-    );
-
-
-    ctx.fillRect(
-      x+24,
-      y+22,
-      3,
-      7
-    );
-
-  }
-
-
-  else if (
-    type === "clothes"
-  ) {
-
-    ctx.fillStyle =
-      "#4b3a36";
-
-
-    ctx.fillRect(
-      x+5,
-      y+5,
-      3,
-      25
+      y+3,
+      3,28
     );
 
 
     ctx.fillRect(
       x+25,
-      y+5,
-      3,
-      25
+      y+3,
+      3,28
     );
 
 
     ctx.fillRect(
-      x+5,
-      y+5,
-      23,
-      3
+      x+4,
+      y+4,
+      24,3
     );
 
 
-    const colors = [
-      "#9b4b5b",
-      "#486b88",
-      "#b58645"
+    const colors=[
+      "#a34f5d",
+      "#527291",
+      "#b58a49"
     ];
 
 
@@ -3785,15 +2961,14 @@ function drawProp(
       i++
     ) {
 
-      ctx.fillStyle =
+      ctx.fillStyle=
         colors[i];
 
 
       ctx.fillRect(
         x+8+i*6,
         y+10,
-        5,
-        12
+        6,13
       );
 
     }
@@ -3801,104 +2976,499 @@ function drawProp(
   }
 
 
+  // ----------------------------------
+  // JADE DISPLAY
+  // ----------------------------------
+
   else if (
-    type === "streetlight"
+    type==="jadeDisplay"
   ) {
 
-    ctx.fillStyle =
-      "#29282c";
-
+    ctx.fillStyle="#55392b";
 
     ctx.fillRect(
-      x+15,
-      y+8,
-      3,
-      23
+      x,
+      y+17,
+      32,12
     );
 
 
-    ctx.fillStyle =
-      "rgba(255,208,113,.15)";
+    ctx.fillStyle="#8b6041";
+
+    ctx.fillRect(
+      x-2,
+      y+14,
+      36,6
+    );
 
 
-    ctx.beginPath();
+    ctx.fillStyle="#668978";
+
+    ctx.fillRect(
+      x+10,
+      y+4,
+      12,10
+    );
 
 
-    ctx.arc(
-      x+16,
+    ctx.fillStyle="#293f38";
+
+    ctx.fillRect(
+      x+13,
+      y+6,
+      6,6
+    );
+
+  }
+
+
+  // ----------------------------------
+  // JEWELRY
+  // ----------------------------------
+
+  else if (
+    type==="jewelry"
+  ) {
+
+    ctx.fillStyle="#5c3d45";
+
+    ctx.fillRect(
+      x,
+      y+16,
+      32,13
+    );
+
+
+    ctx.fillStyle="#d0a96c";
+
+    ctx.fillRect(
+      x+6,
       y+7,
-      13,
-      0,
-      Math.PI*2
+      5,5
     );
 
 
-    ctx.fill();
-
-
-    ctx.fillStyle =
-      "#f4c76b";
-
+    ctx.fillStyle="#b45d77";
 
     ctx.fillRect(
-      x+11,
-      y+3,
-      11,
-      8
+      x+14,
+      y+4,
+      5,8
+    );
+
+
+    ctx.fillStyle="#7390a3";
+
+    ctx.fillRect(
+      x+23,
+      y+6,
+      5,6
+    );
+
+  }
+
+
+  // ----------------------------------
+  // DRINK COUNTER
+  // ----------------------------------
+
+  else if (
+    type==="drinkCounter"
+  ) {
+
+    ctx.fillStyle="#38584f";
+
+    ctx.fillRect(
+      x,
+      y+15,
+      32,14
+    );
+
+
+    ctx.fillStyle="#81a37f";
+
+    ctx.fillRect(
+      x+5,
+      y+6,
+      6,9
+    );
+
+
+    ctx.fillStyle="#d4b168";
+
+    ctx.fillRect(
+      x+14,
+      y+4,
+      6,11
+    );
+
+
+    ctx.fillStyle="#b66b76";
+
+    ctx.fillRect(
+      x+23,
+      y+7,
+      5,8
     );
 
   }
 
 
   else if (
-    type === "tree"
+    type==="teaCanister"
   ) {
 
-    ctx.fillStyle =
-      "#493427";
-
+    ctx.fillStyle="#6d8158";
 
     ctx.fillRect(
-      x+14,
-      y+15,
-      5,
-      17
+      x+4,
+      y+7,
+      7,18
     );
 
 
-    ctx.fillStyle =
-      "#29483a";
+    ctx.fillStyle="#b19453";
+
+    ctx.fillRect(
+      x+13,
+      y+4,
+      7,21
+    );
+
+
+    ctx.fillStyle="#75566d";
+
+    ctx.fillRect(
+      x+22,
+      y+8,
+      7,17
+    );
+
+  }
+
+
+  // ----------------------------------
+  // HOTEL
+  // ----------------------------------
+
+  else if (
+    type==="hotelDesk"
+  ) {
+
+    ctx.fillStyle="#574132";
+
+    ctx.fillRect(
+      x-30,
+      y+12,
+      92,17
+    );
+
+
+    ctx.fillStyle="#a17b51";
+
+    ctx.fillRect(
+      x-33,
+      y+8,
+      98,7
+    );
+
+  }
+
+
+  else if (
+    type==="hotelSofa"
+  ) {
+
+    ctx.fillStyle="#51475b";
+
+    ctx.fillRect(
+      x-4,
+      y+11,
+      40,18
+    );
+
+
+    ctx.fillStyle="#766881";
+
+    ctx.fillRect(
+      x,
+      y+6,
+      32,12
+    );
+
+  }
+
+
+  else if (
+    type==="luggage"
+  ) {
+
+    ctx.fillStyle="#624538";
+
+    ctx.fillRect(
+      x+6,
+      y+8,
+      20,21
+    );
+
+
+    ctx.strokeStyle="#8d765f";
+
+    ctx.strokeRect(
+      x+11,
+      y+2,
+      10,8
+    );
+
+  }
+
+
+  else if (
+    type==="chandelier"
+  ) {
+
+    ctx.fillStyle="#d8b35f";
+
+    ctx.fillRect(
+      x+15,
+      y,
+      2,9
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+9,
+      22,3
+    );
 
 
     ctx.fillRect(
       x+4,
-      y+3,
-      25,
-      18
+      y+12,
+      5,6
     );
 
 
-    ctx.fillStyle =
-      "#355d48";
+    ctx.fillRect(
+      x+14,
+      y+12,
+      5,6
+    );
 
 
     ctx.fillRect(
-      x+9,
+      x+24,
+      y+12,
+      5,6
+    );
+
+  }
+
+
+  // ----------------------------------
+  // LAKE WINDOW
+  // ----------------------------------
+
+  else if (
+    type==="windowLake"
+  ) {
+
+    ctx.fillStyle="#332824";
+
+    ctx.fillRect(
+      x,
       y,
-      16,
-      12
+      32,30
+    );
+
+
+    ctx.fillStyle="#193d52";
+
+    ctx.fillRect(
+      x+4,
+      y+4,
+      24,22
+    );
+
+
+    ctx.fillStyle="#37748b";
+
+    ctx.fillRect(
+      x+6,
+      y+17,
+      20,3
+    );
+
+
+    ctx.fillStyle="#d9af5d";
+
+    ctx.fillRect(
+      x+20,
+      y+7,
+      4,4
+    );
+
+  }
+
+
+  // ----------------------------------
+  // POSTCARD
+  // ----------------------------------
+
+  else if (
+    type==="postcard"
+  ) {
+
+    ctx.fillStyle="#604333";
+
+    ctx.fillRect(
+      x,
+      y+16,
+      32,12
+    );
+
+
+    ctx.fillStyle="#d5c69f";
+
+    ctx.fillRect(
+      x+3,
+      y+2,
+      12,12
+    );
+
+
+    ctx.fillStyle="#6a8793";
+
+    ctx.fillRect(
+      x+17,
+      y+3,
+      12,11
+    );
+
+  }
+
+
+  // ----------------------------------
+  // GENERIC PROPS
+  // ----------------------------------
+
+  else if (
+    type==="table"
+  ) {
+
+    ctx.fillStyle="#765039";
+
+    ctx.fillRect(
+      x,
+      y+10,
+      32,13
     );
 
   }
 
 
   else if (
-    type === "taxi" ||
-    type === "car"
+    type==="bench"
   ) {
 
-    ctx.fillStyle =
-      type === "taxi"
+    ctx.fillStyle="#70452d";
+
+    ctx.fillRect(
+      x+3,
+      y+10,
+      27,5
+    );
+
+
+    ctx.fillRect(
+      x+3,
+      y+18,
+      27,5
+    );
+
+  }
+
+
+  else if (
+    type==="plant"
+  ) {
+
+    ctx.fillStyle="#805138";
+
+    ctx.fillRect(
+      x+10,
+      y+20,
+      13,10
+    );
+
+
+    ctx.fillStyle="#376044";
+
+    ctx.fillRect(
+      x+7,
+      y+6,
+      19,17
+    );
+
+  }
+
+
+  else if (
+    type==="tree"
+  ) {
+
+    ctx.fillStyle="#493427";
+
+    ctx.fillRect(
+      x+14,
+      y+15,
+      5,17
+    );
+
+
+    ctx.fillStyle="#315642";
+
+    ctx.fillRect(
+      x+4,
+      y+2,
+      25,19
+    );
+
+  }
+
+
+  else if (
+    type==="streetlight"
+  ) {
+
+    ctx.fillStyle="#29282c";
+
+    ctx.fillRect(
+      x+15,
+      y+8,
+      3,23
+    );
+
+
+    ctx.fillStyle="#f4c76b";
+
+    ctx.fillRect(
+      x+11,
+      y+3,
+      11,8
+    );
+
+  }
+
+
+  else if (
+    type==="taxi" ||
+    type==="car"
+  ) {
+
+    ctx.fillStyle=
+      type==="taxi"
       ? "#c99a39"
       : "#3b4b64";
 
@@ -3906,123 +3476,50 @@ function drawProp(
     ctx.fillRect(
       x,
       y+11,
-      54,
-      16
+      54,16
     );
 
 
     ctx.fillRect(
       x+12,
       y+5,
-      29,
-      11
-    );
-
-
-    ctx.fillStyle =
-      "#20242c";
-
-
-    ctx.fillRect(
-      x+16,
-      y+7,
-      10,
-      7
-    );
-
-
-    ctx.fillRect(
-      x+28,
-      y+7,
-      9,
-      7
-    );
-
-
-    ctx.fillStyle =
-      "#151519";
-
-
-    ctx.fillRect(
-      x+7,
-      y+24,
-      10,
-      7
-    );
-
-
-    ctx.fillRect(
-      x+39,
-      y+24,
-      10,
-      7
+      29,11
     );
 
   }
 
 
   else if (
-    type === "bike"
+    type==="bike"
   ) {
 
-    ctx.strokeStyle =
-      "#b8a58c";
+    ctx.strokeStyle="#b8a58c";
 
-
-    ctx.lineWidth =
-      2;
-
+    ctx.lineWidth=2;
 
     ctx.beginPath();
 
-
     ctx.arc(
-      x+8,
-      y+22,
-      6,
-      0,
-      Math.PI*2
+      x+8,y+22,6,
+      0,Math.PI*2
     );
 
-
     ctx.arc(
-      x+24,
-      y+22,
-      6,
-      0,
-      Math.PI*2
+      x+24,y+22,6,
+      0,Math.PI*2
     );
-
 
     ctx.moveTo(
-      x+8,
-      y+22
+      x+8,y+22
     );
-
 
     ctx.lineTo(
-      x+15,
-      y+12
+      x+15,y+12
     );
-
 
     ctx.lineTo(
-      x+24,
-      y+22
+      x+24,y+22
     );
-
-
-    ctx.lineTo(
-      x+12,
-      y+21
-    );
-
-
-    ctx.lineTo(
-      x+19,
-      y+16
-    );
-
 
     ctx.stroke();
 
@@ -4030,80 +3527,43 @@ function drawProp(
 
 
   else if (
-    type === "scooter"
+    type==="scooter"
   ) {
 
-    ctx.fillStyle =
-      "#30333c";
-
+    ctx.fillStyle="#8d3436";
 
     ctx.fillRect(
-      x+8,
-      y+14,
-      17,
-      10
-    );
-
-
-    ctx.fillStyle =
-      "#8d3436";
-
-
-    ctx.fillRect(
-      x+10,
+      x+9,
       y+9,
-      11,
-      11
-    );
-
-
-    ctx.fillStyle =
-      "#16171b";
-
-
-    ctx.fillRect(
-      x+7,
-      y+23,
-      6,
-      5
-    );
-
-
-    ctx.fillRect(
-      x+22,
-      y+23,
-      6,
-      5
+      15,16
     );
 
   }
 
 
   else if (
-    type === "trash"
+    type==="trash"
   ) {
 
-    ctx.fillStyle =
-      "#38494b";
-
+    ctx.fillStyle="#45585a";
 
     ctx.fillRect(
       x+8,
       y+7,
-      16,
-      22
+      16,22
     );
 
+  }
 
-    ctx.fillStyle =
-      "#657475";
 
+  else {
+
+    ctx.fillStyle="#765039";
 
     ctx.fillRect(
-      x+6,
+      x+5,
       y+5,
-      20,
-      5
+      22,22
     );
 
   }
@@ -4112,145 +3572,70 @@ function drawProp(
 
 
 // ======================================================
-// LAKE DETAILS
+// INTERACTABLE SPARKLE
 // ======================================================
 
-function drawLakeDetails(time) {
+function drawInteractables(time) {
 
-  if (
-    currentMapId !== "lake"
-  ) {
+  const map=
+    getCurrentMap();
 
+
+  if (!map.interactables) {
     return;
-
   }
 
 
   for (
-    let i=0;
-    i<8;
-    i++
+    const object
+    of map.interactables
   ) {
 
-    const x =
-      18*TILE-
+    if (
+      hasVocabulary(
+        object.word
+      )
+    ) {
+
+      continue;
+
+    }
+
+
+    const x=
+      (object.x+.5)*TILE-
       camera.x;
 
 
-    const y =
-      (
-        4+i*4
-      )*TILE-
-      camera.y;
+    const y=
+      object.y*TILE-
+      camera.y-4;
 
 
-    ctx.fillStyle =
-      "#3d2d23";
-
-
-    ctx.fillRect(
-      x,
-      y,
-      5,
-      30
-    );
-
-
-    ctx.fillStyle =
-      "#285039";
-
-
-    ctx.fillRect(
-      x-15,
-      y-10,
-      33,
-      14
-    );
-
-
-    const sway =
+    const pulse=
       Math.sin(
-        time*1.5+i
-      )*3;
+        time*4
+      );
 
 
-    ctx.fillStyle =
-      "#396448";
+    ctx.fillStyle=
+      "#f4d17a";
 
 
     ctx.fillRect(
-      x-10+sway,
-      y+2,
-      3,
-      29
+      x-1,
+      y-5-pulse*2,
+      3,8
     );
 
 
     ctx.fillRect(
-      x+9+sway,
-      y,
-      3,
-      25
+      x-4,
+      y-2-pulse*2,
+      9,2
     );
 
   }
-
-
-  const boatX =
-    7*TILE-
-    camera.x+
-    Math.sin(
-      time*.5
-    )*18;
-
-
-  const boatY =
-    23*TILE-
-    camera.y;
-
-
-  ctx.fillStyle =
-    "#3c261f";
-
-
-  ctx.fillRect(
-    boatX,
-    boatY,
-    42,
-    8
-  );
-
-
-  ctx.fillStyle =
-    "#7e382b";
-
-
-  ctx.fillRect(
-    boatX+8,
-    boatY-10,
-    25,
-    11
-  );
-
-
-  ctx.fillStyle =
-    "#e3b35e";
-
-
-  ctx.fillRect(
-    boatX+12,
-    boatY-7,
-    5,
-    5
-  );
-
-
-  ctx.fillRect(
-    boatX+24,
-    boatY-7,
-    5,
-    5
-  );
 
 }
 
@@ -4261,7 +3646,7 @@ function drawLakeDetails(time) {
 
 function drawExits(time) {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
@@ -4270,103 +3655,58 @@ function drawExits(time) {
     of map.exits
   ) {
 
-    const x =
+    const x=
       exit.x*TILE-
       camera.x;
 
 
-    const y =
+    const y=
       exit.y*TILE-
       camera.y;
 
 
-    const width =
+    const width=
       exit.width*TILE;
 
 
-    const height =
+    const height=
       exit.height*TILE;
 
 
-    const pulse =
-      .10+
-      Math.sin(
-        time*3
-      )*.025;
-
-
-    ctx.fillStyle =
-      `rgba(224,174,82,${pulse})`;
+    ctx.fillStyle=
+      `rgba(224,174,82,${
+        .08+
+        Math.sin(time*3)*.02
+      })`;
 
 
     ctx.fillRect(
-      x,
-      y,
-      width,
-      height
+      x,y,
+      width,height
     );
 
 
-    const signWidth =
-      Math.min(
-        width-20,
-        180
-      );
-
-
-    const signX =
-      x+
-      width/2-
-      signWidth/2;
-
-
-    const signY =
-      y+
-      height/2-
-      13;
-
-
-    ctx.fillStyle =
-      "#37261d";
-
+    ctx.fillStyle="#704a30";
 
     ctx.fillRect(
-      signX-3,
-      signY-3,
-      signWidth+6,
-      28
-    );
-
-
-    ctx.fillStyle =
-      "#7d5233";
-
-
-    ctx.fillRect(
-      signX,
-      signY,
-      signWidth,
+      x+width/2-80,
+      y+height/2-10,
+      160,
       22
     );
 
 
-    ctx.fillStyle =
-      "#f4d08a";
+    ctx.fillStyle="#f0ce89";
 
+    ctx.font="bold 11px sans-serif";
 
-    ctx.font =
-      "bold 12px sans-serif";
-
-
-    ctx.textAlign =
-      "center";
+    ctx.textAlign="center";
 
 
     ctx.fillText(
       exit.label,
-      signX+
-      signWidth/2,
-      signY+15
+      x+width/2,
+      y+height/2+5
     );
 
   }
@@ -4386,156 +3726,85 @@ function drawPerson(
   time
 ) {
 
-  const step =
+  const step=
     moving &&
-    Math.sin(
-      time*11
-    )>0
+    Math.sin(time*11)>0
     ? 1
     : -1;
 
 
-  ctx.fillStyle =
+  ctx.fillStyle=
     "rgba(0,0,0,.35)";
 
 
   ctx.fillRect(
     x+3,
     y+24,
-    16,
-    4
+    16,4
   );
 
 
-  ctx.fillStyle =
-    "#292630";
-
+  ctx.fillStyle="#292630";
 
   ctx.fillRect(
     x+5,
     y+19+step,
-    5,
-    7
+    5,7
   );
 
 
   ctx.fillRect(
     x+12,
     y+19-step,
-    5,
-    7
+    5,7
   );
 
 
-  ctx.fillStyle =
-    data.color;
-
+  ctx.fillStyle=data.color;
 
   ctx.fillRect(
     x+3,
     y+9,
-    16,
-    12
+    16,12
   );
 
 
-  ctx.fillStyle =
-    data.skin;
-
-
-  ctx.fillRect(
-    x+1,
-    y+11,
-    3,
-    8
-  );
-
-
-  ctx.fillRect(
-    x+19,
-    y+11,
-    3,
-    8
-  );
-
+  ctx.fillStyle=data.skin;
 
   ctx.fillRect(
     x+5,
     y+2,
-    12,
-    9
+    12,9
   );
 
 
-  ctx.fillStyle =
-    data.hair;
-
+  ctx.fillStyle=data.hair;
 
   ctx.fillRect(
     x+4,
     y,
-    14,
-    5
+    14,5
   );
 
 
-  ctx.fillRect(
-    x+4,
-    y+3,
-    3,
-    5
-  );
-
-
-  ctx.fillStyle =
-    "#251d1d";
+  ctx.fillStyle="#251d1d";
 
 
   if (
-    data.direction === "down"
+    data.direction==="down"
   ) {
 
     ctx.fillRect(
       x+8,
       y+6,
-      2,
-      2
+      2,2
     );
 
 
     ctx.fillRect(
       x+14,
       y+6,
-      2,
-      2
-    );
-
-  }
-
-
-  else if (
-    data.direction === "left"
-  ) {
-
-    ctx.fillRect(
-      x+6,
-      y+6,
-      2,
-      2
-    );
-
-  }
-
-
-  else if (
-    data.direction === "right"
-  ) {
-
-    ctx.fillRect(
-      x+15,
-      y+6,
-      2,
-      2
+      2,2
     );
 
   }
@@ -4549,7 +3818,7 @@ function drawPerson(
 
 function drawEntities(time) {
 
-  const entities = [];
+  const entities=[];
 
 
   for (
@@ -4561,28 +3830,24 @@ function drawEntities(time) {
 
       y:npc.y,
 
-      draw:() => {
+      draw:()=>{
 
         drawPerson(
 
           Math.floor(
-            npc.x-
-            camera.x+
-            5
+            npc.x-camera.x+5
           ),
 
           Math.floor(
-            npc.y-
-            camera.y+
-            3
+            npc.y-camera.y+3
           ),
 
           npc,
 
           npc.wander &&
           (
-            npc.moveX !== 0 ||
-            npc.moveY !== 0
+            npc.moveX!==0 ||
+            npc.moveY!==0
           ),
 
           time
@@ -4599,26 +3864,23 @@ function drawEntities(time) {
 
     y:player.y,
 
-    draw:() => {
+    draw:()=>{
 
       drawPerson(
 
         Math.floor(
-          player.x-
-          camera.x
+          player.x-camera.x
         ),
 
         Math.floor(
-          player.y-
-          camera.y
+          player.y-camera.y
         ),
 
         {
           color:"#355f7d",
           hair:"#211b20",
           skin:"#e1ae87",
-          direction:
-            player.direction
+          direction:player.direction
         },
 
         player.moving,
@@ -4632,8 +3894,7 @@ function drawEntities(time) {
 
 
   entities.sort(
-    (a,b) =>
-      a.y-b.y
+    (a,b)=>a.y-b.y
   );
 
 
@@ -4650,57 +3911,43 @@ function drawEntities(time) {
 
 
 // ======================================================
-// LIGHTING
+// LIGHT
 // ======================================================
 
 function drawLighting() {
 
-  const ambient =
-    getCurrentMap()
-      .ambient;
+  const ambient=
+    getCurrentMap().ambient;
 
 
   if (
-    ambient === "indoor"
+    ambient==="indoor"
   ) {
 
-    ctx.fillStyle =
+    ctx.fillStyle=
       "rgba(92,46,15,.05)";
 
   }
 
-
   else if (
-    ambient === "lake"
+    ambient==="lake"
   ) {
 
-    ctx.fillStyle =
+    ctx.fillStyle=
       "rgba(4,20,43,.18)";
 
   }
 
-
-  else if (
-    ambient === "city"
-  ) {
-
-    ctx.fillStyle =
-      "rgba(13,13,32,.13)";
-
-  }
-
-
   else {
 
-    ctx.fillStyle =
-      "rgba(15,8,31,.15)";
+    ctx.fillStyle=
+      "rgba(15,8,31,.14)";
 
   }
 
 
   ctx.fillRect(
-    0,
-    0,
+    0,0,
     canvas.width,
     canvas.height
   );
@@ -4709,24 +3956,24 @@ function drawLighting() {
 
 
 // ======================================================
-// AREA BANNER
+// UI
 // ======================================================
 
 function showAreaBanner() {
 
-  const map =
+  const map=
     getCurrentMap();
 
 
-  areaHeader.textContent =
+  areaHeader.textContent=
     map.name;
 
 
-  areaBannerName.textContent =
+  areaBannerName.textContent=
     map.name;
 
 
-  areaBannerSub.textContent =
+  areaBannerSub.textContent=
     map.subtitle;
 
 
@@ -4735,8 +3982,7 @@ function showAreaBanner() {
   );
 
 
-  bannerTimer =
-    2.5;
+  bannerTimer=2.5;
 
 }
 
@@ -4744,7 +3990,7 @@ function showAreaBanner() {
 function updateBanner(dt) {
 
   if (
-    bannerTimer <= 0
+    bannerTimer<=0
   ) {
 
     return;
@@ -4752,12 +3998,11 @@ function updateBanner(dt) {
   }
 
 
-  bannerTimer -=
-    dt;
+  bannerTimer-=dt;
 
 
   if (
-    bannerTimer <= 0
+    bannerTimer<=0
   ) {
 
     areaBanner.classList.add(
@@ -4769,15 +4014,13 @@ function updateBanner(dt) {
 }
 
 
-// ======================================================
-// INTERACTION HINT
-// ======================================================
-
 function updateInteractionHint() {
 
   if (
     dialogue.active ||
-    transitionLock
+    transitionLock ||
+    wordGetActive ||
+    libraryOpen
   ) {
 
     interactionHint.classList.add(
@@ -4789,13 +4032,13 @@ function updateInteractionHint() {
   }
 
 
-  const npc =
+  const npc=
     getNearbyNPC();
 
 
   if (npc) {
 
-    interactionText.textContent =
+    interactionText.textContent=
       "話す";
 
 
@@ -4803,26 +4046,43 @@ function updateInteractionHint() {
       "hidden"
     );
 
-
     return;
 
   }
 
 
-  const building =
-    getNearbyBuilding();
+  const object=
+    getNearbyInteractable();
 
 
-  if (building) {
+  if (object) {
 
-    interactionText.textContent =
-      `${building.name}に入る`;
+    interactionText.textContent=
+      object.label;
 
 
     interactionHint.classList.remove(
       "hidden"
     );
 
+    return;
+
+  }
+
+
+  const building=
+    getNearbyBuilding();
+
+
+  if (building) {
+
+    interactionText.textContent=
+      `${building.name}に入る`;
+
+
+    interactionHint.classList.remove(
+      "hidden"
+    );
 
     return;
 
@@ -4840,33 +4100,33 @@ function updateInteractionHint() {
 // CLOCK
 // ======================================================
 
-let fakeMinutes =
+let fakeMinutes=
   19*60+42;
 
 
 function updateClock(dt) {
 
-  fakeMinutes +=
+  fakeMinutes+=
     dt*.15;
 
 
-  const total =
+  const total=
     Math.floor(
       fakeMinutes
     );
 
 
-  const hour =
+  const hour=
     Math.floor(
       total/60
     )%24;
 
 
-  const minute =
+  const minute=
     total%60;
 
 
-  clockElement.textContent =
+  clockElement.textContent=
     `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`;
 
 }
@@ -4878,13 +4138,10 @@ function updateClock(dt) {
 
 function draw(time) {
 
-  ctx.fillStyle =
-    "#100d14";
-
+  ctx.fillStyle="#100d14";
 
   ctx.fillRect(
-    0,
-    0,
+    0,0,
     canvas.width,
     canvas.height
   );
@@ -4892,15 +4149,13 @@ function draw(time) {
 
   drawMap(time);
 
-  drawLakeDetails(time);
-
   drawBuildings();
-
-  drawLanternStrings(time);
 
   drawStalls(time);
 
   drawProps();
+
+  drawInteractables(time);
 
   drawExits(time);
 
@@ -4912,34 +4167,30 @@ function draw(time) {
 
 
 // ======================================================
-// GAME LOOP
+// LOOP
 // ======================================================
 
-let previousTime =
+let previousTime=
   performance.now();
 
 
 function gameLoop(now) {
 
-  let dt =
-    (
-      now-
-      previousTime
-    )/1000;
+  let dt=
+    (now-previousTime)/1000;
 
 
-  previousTime =
-    now;
+  previousTime=now;
 
 
-  dt =
+  dt=
     Math.min(
       dt,
       .05
     );
 
 
-  const time =
+  const time=
     now/1000;
 
 
@@ -4968,6 +4219,8 @@ function gameLoop(now) {
 // ======================================================
 // START
 // ======================================================
+
+updateCollectionUI();
 
 showAreaBanner();
 
