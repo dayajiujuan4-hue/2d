@@ -9,9 +9,27 @@ const ctx =
 ctx.imageSmoothingEnabled = false;
 
 
-// =====================================
+// ========================================================
 // UI
-// =====================================
+// ========================================================
+
+const areaHeader =
+  document.getElementById("areaHeader");
+
+const areaBanner =
+  document.getElementById("areaBanner");
+
+const areaBannerName =
+  document.getElementById("areaBannerName");
+
+const areaBannerSub =
+  document.getElementById("areaBannerSub");
+
+const interactionHint =
+  document.getElementById("interactionHint");
+
+const interactionText =
+  document.getElementById("interactionText");
 
 const dialogueBox =
   document.getElementById("dialogueBox");
@@ -25,30 +43,32 @@ const dialogueText =
 const portraitFace =
   document.getElementById("portraitFace");
 
-const interactionHint =
-  document.getElementById("interactionHint");
-
-const areaHeader =
-  document.getElementById("areaHeader");
-
-const areaBanner =
-  document.getElementById("areaBanner");
-
-const areaBannerName =
-  document.getElementById("areaBannerName");
+const fadeLayer =
+  document.getElementById("fadeLayer");
 
 const clockElement =
   document.getElementById("clock");
 
 
-// =====================================
+// ========================================================
+// WORLD
+// ========================================================
+
+let currentMapId = "food";
+
+let transitionLock = false;
+
+let bannerTimer = 0;
+
+
+// ========================================================
 // PLAYER
-// =====================================
+// ========================================================
 
 const player = {
 
-  x: 26 * TILE,
-  y: 35 * TILE,
+  x: MAPS.food.spawn.x,
+  y: MAPS.food.spawn.y,
 
   width: 20,
   height: 25,
@@ -64,9 +84,9 @@ const player = {
 };
 
 
-// =====================================
+// ========================================================
 // CAMERA
-// =====================================
+// ========================================================
 
 const camera = {
   x: 0,
@@ -74,9 +94,9 @@ const camera = {
 };
 
 
-// =====================================
+// ========================================================
 // INPUT
-// =====================================
+// ========================================================
 
 const keys = {};
 
@@ -116,7 +136,7 @@ window.addEventListener(
         advanceDialogue();
       }
       else {
-        tryInteraction();
+        interact();
       }
 
     }
@@ -137,9 +157,9 @@ window.addEventListener(
 );
 
 
-// =====================================
+// ========================================================
 // DIALOGUE
-// =====================================
+// ========================================================
 
 const dialogue = {
 
@@ -159,18 +179,12 @@ function startDialogue(npc) {
   dialogue.index = 0;
 
 
-  dialogueBox.classList.remove(
-    "hidden"
-  );
-
-
-  interactionHint.classList.add(
-    "hidden"
-  );
-
-
   speakerName.textContent =
     npc.name;
+
+
+  dialogueText.textContent =
+    npc.dialogue[0];
 
 
   portraitFace.textContent =
@@ -181,8 +195,14 @@ function startDialogue(npc) {
     npc.color;
 
 
-  dialogueText.textContent =
-    npc.dialogue[0];
+  dialogueBox.classList.remove(
+    "hidden"
+  );
+
+
+  interactionHint.classList.add(
+    "hidden"
+  );
 
 }
 
@@ -225,11 +245,26 @@ function closeDialogue() {
 }
 
 
-// =====================================
-// NPC INTERACTION
-// =====================================
+// ========================================================
+// NPC
+// ========================================================
+
+function getCurrentNPCs() {
+
+  return NPCS.filter(
+    npc =>
+      npc.map === currentMapId
+  );
+
+}
+
 
 function getNearbyNPC() {
+
+  let nearest = null;
+
+  let distanceBest = 58;
+
 
   const px =
     player.x +
@@ -240,18 +275,16 @@ function getNearbyNPC() {
     player.height / 2;
 
 
-  let nearest = null;
-
-  let nearestDistance = 58;
-
-
-  for (const npc of NPCS) {
+  for (
+    const npc
+    of getCurrentNPCs()
+  ) {
 
     const dx =
-      npc.x + 10 - px;
+      npc.x + 11 - px;
 
     const dy =
-      npc.y + 12 - py;
+      npc.y + 13 - py;
 
 
     const distance =
@@ -260,13 +293,13 @@ function getNearbyNPC() {
 
     if (
       distance <
-      nearestDistance
+      distanceBest
     ) {
 
-      nearest = npc;
-
-      nearestDistance =
+      distanceBest =
         distance;
+
+      nearest = npc;
 
     }
 
@@ -278,22 +311,283 @@ function getNearbyNPC() {
 }
 
 
-function tryInteraction() {
+// ========================================================
+// PORTALS
+// ========================================================
+
+function getNearbyPortal() {
+
+  const map =
+    getCurrentMap();
+
+
+  const px =
+    player.x +
+    player.width / 2;
+
+  const py =
+    player.y +
+    player.height / 2;
+
+
+  const tx =
+    Math.floor(px / TILE);
+
+  const ty =
+    Math.floor(py / TILE);
+
+
+  for (
+    const portal
+    of map.portals
+  ) {
+
+    if (
+      portal.x === undefined
+    ) {
+      continue;
+    }
+
+
+    const distance =
+      Math.hypot(
+        portal.x - tx,
+        portal.y - ty
+      );
+
+
+    if (
+      distance <= 1.4
+    ) {
+      return portal;
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+function interact() {
 
   const npc =
     getNearbyNPC();
 
 
   if (npc) {
+
     startDialogue(npc);
+
+    return;
+  }
+
+
+  const portal =
+    getNearbyPortal();
+
+
+  if (portal) {
+
+    changeMap(
+      portal.target,
+      portal.targetX,
+      portal.targetY
+    );
+
   }
 
 }
 
 
-// =====================================
+// ========================================================
+// MAP TRANSITION
+// ========================================================
+
+function changeMap(
+  target,
+  targetX,
+  targetY
+) {
+
+  if (transitionLock)
+    return;
+
+
+  transitionLock = true;
+
+
+  fadeLayer.classList.add(
+    "active"
+  );
+
+
+  setTimeout(
+    () => {
+
+      currentMapId =
+        target;
+
+
+      player.x =
+        targetX * TILE;
+
+      player.y =
+        targetY * TILE;
+
+
+      camera.x =
+        player.x -
+        canvas.width / 2;
+
+      camera.y =
+        player.y -
+        canvas.height / 2;
+
+
+      clampCamera();
+
+
+      showAreaBanner();
+
+
+      setTimeout(
+        () => {
+
+          fadeLayer.classList.remove(
+            "active"
+          );
+
+
+          setTimeout(
+            () => {
+              transitionLock = false;
+            },
+            330
+          );
+
+        },
+        180
+      );
+
+    },
+    330
+  );
+
+}
+
+
+// ========================================================
+// EDGE TRANSITIONS
+// ========================================================
+
+function checkEdgeTransition() {
+
+  if (
+    transitionLock ||
+    dialogue.active
+  ) {
+    return;
+  }
+
+
+  const map =
+    getCurrentMap();
+
+
+  const mapWidth =
+    map.grid[0].length *
+    TILE;
+
+
+  const mapHeight =
+    map.grid.length *
+    TILE;
+
+
+  for (
+    const portal
+    of map.portals
+  ) {
+
+    if (!portal.edge)
+      continue;
+
+
+    if (
+      portal.edge === "bottom" &&
+      player.y >
+      mapHeight -
+      TILE * 1.4
+    ) {
+
+      changeMap(
+        portal.target,
+        portal.targetX,
+        portal.targetY
+      );
+
+      return;
+    }
+
+
+    if (
+      portal.edge === "top" &&
+      player.y <
+      TILE * 1.15
+    ) {
+
+      changeMap(
+        portal.target,
+        portal.targetX,
+        portal.targetY
+      );
+
+      return;
+    }
+
+
+    if (
+      portal.edge === "left" &&
+      player.x <
+      TILE * 1.15
+    ) {
+
+      changeMap(
+        portal.target,
+        portal.targetX,
+        portal.targetY
+      );
+
+      return;
+    }
+
+
+    if (
+      portal.edge === "right" &&
+      player.x >
+      mapWidth -
+      TILE * 1.4
+    ) {
+
+      changeMap(
+        portal.target,
+        portal.targetX,
+        portal.targetY
+      );
+
+      return;
+    }
+
+  }
+
+}
+
+
+// ========================================================
 // COLLISION
-// =====================================
+// ========================================================
 
 function playerCollides(x,y) {
 
@@ -306,7 +600,7 @@ function playerCollides(x,y) {
     4;
 
   const top =
-    y + 8;
+    y + 7;
 
   const bottom =
     y +
@@ -324,16 +618,19 @@ function playerCollides(x,y) {
   }
 
 
-  for (const npc of NPCS) {
+  for (
+    const npc
+    of getCurrentNPCs()
+  ) {
 
     const npcLeft =
-      npc.x + 5;
+      npc.x + 4;
 
     const npcRight =
-      npc.x + 26;
+      npc.x + 27;
 
     const npcTop =
-      npc.y + 6;
+      npc.y + 5;
 
     const npcBottom =
       npc.y + 29;
@@ -356,13 +653,16 @@ function playerCollides(x,y) {
 }
 
 
-// =====================================
+// ========================================================
 // PLAYER UPDATE
-// =====================================
+// ========================================================
 
 function updatePlayer(dt) {
 
-  if (dialogue.active) {
+  if (
+    dialogue.active ||
+    transitionLock
+  ) {
 
     player.moving = false;
 
@@ -381,8 +681,7 @@ function updatePlayer(dt) {
 
     dy--;
 
-    player.direction =
-      "up";
+    player.direction = "up";
 
   }
 
@@ -394,8 +693,7 @@ function updatePlayer(dt) {
 
     dy++;
 
-    player.direction =
-      "down";
+    player.direction = "down";
 
   }
 
@@ -407,8 +705,7 @@ function updatePlayer(dt) {
 
     dx--;
 
-    player.direction =
-      "left";
+    player.direction = "left";
 
   }
 
@@ -420,8 +717,7 @@ function updatePlayer(dt) {
 
     dx++;
 
-    player.direction =
-      "right";
+    player.direction = "right";
 
   }
 
@@ -442,12 +738,13 @@ function updatePlayer(dt) {
     dy /= length;
 
 
-    const moveX =
+    const mx =
       dx *
       player.speed *
       dt;
 
-    const moveY =
+
+    const my =
       dy *
       player.speed *
       dt;
@@ -455,12 +752,12 @@ function updatePlayer(dt) {
 
     if (
       !playerCollides(
-        player.x + moveX,
+        player.x + mx,
         player.y
       )
     ) {
 
-      player.x += moveX;
+      player.x += mx;
 
     }
 
@@ -468,11 +765,11 @@ function updatePlayer(dt) {
     if (
       !playerCollides(
         player.x,
-        player.y + moveY
+        player.y + my
       )
     ) {
 
-      player.y += moveY;
+      player.y += my;
 
     }
 
@@ -486,170 +783,30 @@ function updatePlayer(dt) {
 
   }
 
-}
 
-
-// =====================================
-// WANDERING NPCS
-// =====================================
-
-for (const npc of NPCS) {
-
-  npc.homeX = npc.x;
-  npc.homeY = npc.y;
-
-  npc.walkTimer =
-    Math.random() * 3;
-
-  npc.walkDX = 0;
-  npc.walkDY = 0;
+  checkEdgeTransition();
 
 }
 
 
-function updateNPCs(dt) {
-
-  if (dialogue.active) {
-    return;
-  }
-
-
-  for (const npc of NPCS) {
-
-    if (
-      npc.behavior !==
-      "wander"
-    ) {
-      continue;
-    }
-
-
-    npc.walkTimer -= dt;
-
-
-    if (
-      npc.walkTimer <= 0
-    ) {
-
-      npc.walkTimer =
-        1.5 +
-        Math.random() * 3;
-
-
-      const choices = [
-
-        [0,0],
-        [0,0],
-
-        [1,0],
-        [-1,0],
-
-        [0,1],
-        [0,-1]
-
-      ];
-
-
-      const choice =
-        choices[
-          Math.floor(
-            Math.random() *
-            choices.length
-          )
-        ];
-
-
-      npc.walkDX =
-        choice[0];
-
-      npc.walkDY =
-        choice[1];
-
-
-      if (npc.walkDX > 0)
-        npc.direction = "right";
-
-      if (npc.walkDX < 0)
-        npc.direction = "left";
-
-      if (npc.walkDY > 0)
-        npc.direction = "down";
-
-      if (npc.walkDY < 0)
-        npc.direction = "up";
-
-    }
-
-
-    const speed = 18;
-
-
-    const newX =
-      npc.x +
-      npc.walkDX *
-      speed *
-      dt;
-
-    const newY =
-      npc.y +
-      npc.walkDY *
-      speed *
-      dt;
-
-
-    const distanceHome =
-      Math.hypot(
-        newX - npc.homeX,
-        newY - npc.homeY
-      );
-
-
-    if (
-      distanceHome < 65 &&
-      !isSolidAtPixel(
-        newX + 16,
-        newY + 24
-      )
-    ) {
-
-      npc.x = newX;
-      npc.y = newY;
-
-    }
-    else {
-
-      npc.walkDX = 0;
-      npc.walkDY = 0;
-
-    }
-
-  }
-
-}
-
-
-// =====================================
+// ========================================================
 // CAMERA
-// =====================================
+// ========================================================
 
-function updateCamera() {
+function clampCamera() {
 
-  const targetX =
-    player.x -
-    canvas.width / 2;
-
-  const targetY =
-    player.y -
-    canvas.height / 2;
+  const map =
+    getCurrentMap();
 
 
-  camera.x +=
-    (targetX-camera.x) *
-    .085;
+  const width =
+    map.grid[0].length *
+    TILE;
 
-  camera.y +=
-    (targetY-camera.y) *
-    .085;
+
+  const height =
+    map.grid.length *
+    TILE;
 
 
   camera.x =
@@ -657,8 +814,11 @@ function updateCamera() {
       0,
       Math.min(
         camera.x,
-        MAP_WIDTH*TILE -
-        canvas.width
+        Math.max(
+          0,
+          width -
+          canvas.width
+        )
       )
     );
 
@@ -668,25 +828,52 @@ function updateCamera() {
       0,
       Math.min(
         camera.y,
-        MAP_HEIGHT*TILE -
-        canvas.height
+        Math.max(
+          0,
+          height -
+          canvas.height
+        )
       )
     );
 
 }
 
 
-// =====================================
-// GROUND
-// =====================================
+function updateCamera() {
 
-function drawStone(x,y,variant=0) {
+  const targetX =
+    player.x -
+    canvas.width / 2;
+
+
+  const targetY =
+    player.y -
+    canvas.height / 2;
+
+
+  camera.x +=
+    (targetX-camera.x) *
+    .09;
+
+
+  camera.y +=
+    (targetY-camera.y) *
+    .09;
+
+
+  clampCamera();
+
+}
+
+
+// ========================================================
+// BASIC TILE DRAWING
+// ========================================================
+
+function drawFloor(x,y) {
 
   ctx.fillStyle =
-    variant === 7
-      ? "#51464c"
-      : "#39343c";
-
+    "#39343c";
 
   ctx.fillRect(
     x,y,TILE,TILE
@@ -694,57 +881,35 @@ function drawStone(x,y,variant=0) {
 
 
   ctx.fillStyle =
-    variant === 7
-      ? "#5d5055"
-      : "#443e46";
-
+    "#443e46";
 
   ctx.fillRect(
-    x+2,
-    y+3,
-    13,
-    11
+    x+2,y+3,
+    13,11
   );
 
 
   ctx.fillRect(
-    x+17,
-    y+17,
-    13,
-    12
+    x+17,y+17,
+    13,12
   );
 
 
   ctx.fillStyle =
     "#302c33";
 
-
   ctx.fillRect(
-    x,
-    y+15,
-    TILE,
-    1
-  );
-
-
-  ctx.fillRect(
-    x+16,
-    y,
-    1,
-    15
+    x,y+15,
+    TILE,1
   );
 
 }
 
 
-// =====================================
-// BUILDING
-// =====================================
-
-function drawBuilding(x,y,mx,my) {
+function drawRoad(x,y) {
 
   ctx.fillStyle =
-    "#201a22";
+    "#302e35";
 
   ctx.fillRect(
     x,y,TILE,TILE
@@ -752,7 +917,73 @@ function drawBuilding(x,y,mx,my) {
 
 
   ctx.fillStyle =
-    "#33262e";
+    "#39373e";
+
+  ctx.fillRect(
+    x+2,y+4,
+    14,10
+  );
+
+
+  ctx.fillRect(
+    x+18,y+18,
+    12,10
+  );
+
+}
+
+
+function drawPlaza(x,y) {
+
+  ctx.fillStyle =
+    "#4c474b";
+
+  ctx.fillRect(
+    x,y,TILE,TILE
+  );
+
+
+  ctx.fillStyle =
+    "#595257";
+
+  ctx.fillRect(
+    x+2,y+2,
+    28,13
+  );
+
+
+  ctx.fillStyle =
+    "#403c41";
+
+  ctx.fillRect(
+    x,y+15,
+    TILE,2
+  );
+
+}
+
+
+// ========================================================
+// BUILDING
+// ========================================================
+
+function drawBuilding(
+  x,
+  y,
+  mx,
+  my
+) {
+
+  ctx.fillStyle =
+    "#211a21";
+
+  ctx.fillRect(
+    x,y,TILE,TILE
+  );
+
+
+  ctx.fillStyle =
+    "#392931";
 
   ctx.fillRect(
     x+1,
@@ -762,51 +993,40 @@ function drawBuilding(x,y,mx,my) {
   );
 
 
-  ctx.fillStyle =
-    "#432e34";
-
-  ctx.fillRect(
-    x+2,
-    y+19,
-    28,
-    11
-  );
-
-
   if (
     (mx+my)%3 === 0
   ) {
 
     ctx.fillStyle =
-      "#6e4b3a";
+      "#5e4439";
 
     ctx.fillRect(
-      x+8,
+      x+7,
       y+6,
-      16,
-      10
+      18,
+      11
     );
 
 
     ctx.fillStyle =
-      "#d79a51";
+      "#c98a4b";
 
     ctx.fillRect(
-      x+10,
+      x+9,
       y+8,
-      12,
-      6
+      14,
+      7
     );
 
 
     ctx.fillStyle =
-      "#4b2a29";
+      "#4b2927";
 
     ctx.fillRect(
       x+15,
       y+8,
       2,
-      6
+      7
     );
 
   }
@@ -814,28 +1034,28 @@ function drawBuilding(x,y,mx,my) {
 }
 
 
-// =====================================
-// ENTRANCE
-// =====================================
+// ========================================================
+// DOOR
+// ========================================================
 
-function drawEntrance(x,y) {
+function drawDoor(x,y) {
 
-  drawStone(x,y);
+  drawFloor(x,y);
 
 
   ctx.fillStyle =
-    "#251b20";
+    "#2a1b1b";
 
   ctx.fillRect(
-    x+5,
+    x+4,
     y,
-    22,
+    24,
     31
   );
 
 
   ctx.fillStyle =
-    "#714b35";
+    "#764c32";
 
   ctx.fillRect(
     x+7,
@@ -846,21 +1066,21 @@ function drawEntrance(x,y) {
 
 
   ctx.fillStyle =
-    "#1e1718";
+    "#241718";
 
   ctx.fillRect(
     x+10,
-    y+7,
+    y+6,
     12,
-    24
+    25
   );
 
 
   ctx.fillStyle =
-    "#e5a951";
+    "#e1a650";
 
   ctx.fillRect(
-    x+20,
+    x+19,
     y+17,
     2,
     2
@@ -869,474 +1089,210 @@ function drawEntrance(x,y) {
 }
 
 
-// =====================================
-// STALL
-// =====================================
+// ========================================================
+// WATER
+// ========================================================
 
-function getStallAt(mx,my) {
-
-  return stalls.find(
-    s =>
-      s.x === mx &&
-      s.y === my
-  );
-
-}
-
-
-function drawStall(
-  x,
-  y,
-  stall,
-  time
-) {
-
-  drawStone(x,y);
-
-
-  // 支柱
+function drawWater(x,y,time) {
 
   ctx.fillStyle =
-    "#57392b";
+    "#162f42";
 
   ctx.fillRect(
-    x+3,
-    y+11,
-    3,
-    20
-  );
-
-  ctx.fillRect(
-    x+26,
-    y+11,
-    3,
-    20
+    x,y,TILE,TILE
   );
 
 
-  // 屋根
-
-  ctx.fillStyle =
-    "#9e3932";
-
-  ctx.fillRect(
-    x+1,
-    y+4,
-    30,
-    9
-  );
-
-
-  ctx.fillStyle =
-    "#d6a250";
-
-  ctx.fillRect(
-    x+3,
-    y+12,
-    26,
-    3
-  );
-
-
-  // カウンター
-
-  ctx.fillStyle =
-    "#69442e";
-
-  ctx.fillRect(
-    x+4,
-    y+23,
-    24,
-    8
-  );
-
-
-  // 看板
-
-  ctx.fillStyle =
-    "#401c1b";
-
-  ctx.fillRect(
-    x+5,
-    y+5,
-    22,
-    8
-  );
-
-
-  ctx.fillStyle =
-    "#ffd177";
-
-  ctx.font =
-    "bold 7px sans-serif";
-
-  ctx.textAlign =
-    "center";
-
-  ctx.fillText(
-    stall.sign,
-    x+16,
-    y+12
-  );
-
-
-  drawFood(
-    x,
-    y,
-    stall.type
-  );
-
-
-  // 湯気
-
-  if (
-    [
-      "shaokao",
-      "xiaolongbao",
-      "choudoufu",
-      "snack"
-    ].includes(stall.type)
-  ) {
-
-    drawSteam(
-      x+16,
-      y+20,
-      time
-    );
-
-  }
-
-}
-
-
-// =====================================
-// FOOD
-// =====================================
-
-function drawFood(x,y,type) {
-
-  if (
-    type === "shaokao"
-  ) {
-
-    ctx.fillStyle =
-      "#d07a3f";
-
-    for (
-      let i=0;
-      i<4;
-      i++
-    ) {
-
-      ctx.fillRect(
-        x+7+i*5,
-        y+20,
-        3,
-        2
-      );
-
-    }
-
-  }
-
-
-  if (
-    type === "xiaolongbao"
-  ) {
-
-    ctx.fillStyle =
-      "#e7cf9d";
-
-    for (
-      let i=0;
-      i<3;
-      i++
-    ) {
-
-      ctx.fillRect(
-        x+8+i*6,
-        y+19,
-        5,
-        4
-      );
-
-    }
-
-  }
-
-
-  if (
-    type === "fruit"
-  ) {
-
-    ctx.fillStyle =
-      "#b7463e";
-
-    ctx.fillRect(
-      x+7,
-      y+19,
-      5,
-      5
-    );
-
-
-    ctx.fillStyle =
-      "#d99b3d";
-
-    ctx.fillRect(
-      x+14,
-      y+18,
-      5,
-      5
-    );
-
-
-    ctx.fillStyle =
-      "#71934a";
-
-    ctx.fillRect(
-      x+21,
-      y+19,
-      5,
-      5
-    );
-
-  }
-
-
-  if (
-    type === "milkTea"
-  ) {
-
-    ctx.fillStyle =
-      "#d7b57c";
-
-    ctx.fillRect(
-      x+10,
-      y+17,
-      5,
-      7
-    );
-
-    ctx.fillRect(
-      x+19,
-      y+17,
-      5,
-      7
-    );
-
-
-    ctx.fillStyle =
-      "#eadcc0";
-
-    ctx.fillRect(
-      x+11,
-      y+16,
-      3,
-      1
-    );
-
-    ctx.fillRect(
-      x+20,
-      y+16,
-      3,
-      1
-    );
-
-  }
-
-
-  if (
-    type === "jewelry"
-  ) {
-
-    ctx.fillStyle =
-      "#d5b35e";
-
-    ctx.fillRect(
-      x+8,
-      y+20,
-      3,
-      3
-    );
-
-    ctx.fillRect(
-      x+15,
-      y+19,
-      3,
-      3
-    );
-
-    ctx.fillRect(
-      x+22,
-      y+20,
-      3,
-      3
-    );
-
-  }
-
-}
-
-
-// =====================================
-// STEAM
-// =====================================
-
-function drawSteam(x,y,time) {
-
-  const offset =
+  const wave =
     Math.floor(
-      (time*12)%10
+      Math.sin(
+        time*2 +
+        x*.04 +
+        y*.03
+      ) * 3
     );
 
 
   ctx.fillStyle =
-    "rgba(230,220,205,.5)";
-
+    "#285269";
 
   ctx.fillRect(
-    x-5,
-    y-8-offset,
-    2,
-    4
+    x+4+wave,
+    y+9,
+    15,
+    2
   );
 
 
+  ctx.fillStyle =
+    "#396b7d";
+
   ctx.fillRect(
-    x+3,
-    y-4-offset,
-    2,
-    4
+    x+13-wave,
+    y+22,
+    14,
+    2
   );
 
 }
 
 
-// =====================================
-// TREE
-// =====================================
+// ========================================================
+// GRASS
+// ========================================================
 
-function drawTree(x,y) {
-
-  drawStone(x,y);
-
+function drawGrass(x,y) {
 
   ctx.fillStyle =
-    "#493426";
+    "#263d31";
 
   ctx.fillRect(
-    x+14,
-    y+17,
-    5,
-    14
+    x,y,TILE,TILE
   );
 
 
   ctx.fillStyle =
-    "#17382b";
+    "#365743";
 
   ctx.fillRect(
-    x+5,
-    y+5,
-    22,
-    17
+    x+6,
+    y+7,
+    2,
+    6
   );
 
 
-  ctx.fillStyle =
-    "#23513b";
-
   ctx.fillRect(
-    x+9,
-    y+1,
-    14,
-    10
-  );
-
-
-  ctx.fillStyle =
-    "#31664a";
-
-  ctx.fillRect(
-    x+7,
-    y+8,
-    8,
+    x+22,
+    y+19,
+    2,
     7
   );
 
 }
 
 
-// =====================================
-// LANTERN POST
-// =====================================
+// ========================================================
+// INDOOR
+// ========================================================
 
-function drawLanternPost(
-  x,
-  y,
-  time
-) {
-
-  drawStone(x,y);
-
+function drawIndoor(x,y,mx,my) {
 
   ctx.fillStyle =
-    "#35251d";
+    "#74533b";
 
   ctx.fillRect(
-    x+15,
-    y+7,
-    3,
-    24
+    x,y,TILE,TILE
   );
 
 
-  const pulse =
-    .14 +
-    Math.sin(time*3) *
-    .03;
+  ctx.fillStyle =
+    "#845f42";
+
+  ctx.fillRect(
+    x,
+    y+2,
+    TILE,
+    12
+  );
 
 
   ctx.fillStyle =
-    `rgba(255,112,45,${pulse})`;
-
+    "#5e422f";
 
   ctx.fillRect(
-    x+5,
-    y,
-    23,
+    x,
+    y+15,
+    TILE,
+    2
+  );
+
+
+  if (
+    (mx+my)%2===0
+  ) {
+
+    ctx.fillStyle =
+      "#916849";
+
+    ctx.fillRect(
+      x+3,
+      y+3,
+      12,
+      9
+    );
+
+  }
+
+}
+
+
+function drawWall(x,y) {
+
+  ctx.fillStyle =
+    "#37251f";
+
+  ctx.fillRect(
+    x,y,TILE,TILE
+  );
+
+
+  ctx.fillStyle =
+    "#57392a";
+
+  ctx.fillRect(
+    x+1,
+    y+2,
+    30,
+    28
+  );
+
+
+  ctx.fillStyle =
+    "#7a5133";
+
+  ctx.fillRect(
+    x,
+    y+25,
+    TILE,
+    5
+  );
+
+}
+
+
+function drawCounter(x,y) {
+
+  drawIndoor(x,y,0,0);
+
+
+  ctx.fillStyle =
+    "#4a3024";
+
+  ctx.fillRect(
+    x+2,
+    y+7,
+    28,
     21
   );
 
 
   ctx.fillStyle =
-    "#b83d32";
+    "#91613d";
 
   ctx.fillRect(
-    x+9,
-    y+2,
-    15,
-    13
-  );
-
-
-  ctx.fillStyle =
-    "#ffc665";
-
-  ctx.fillRect(
-    x+12,
+    x,
     y+5,
-    9,
+    TILE,
     7
   );
 
 }
 
 
-// =====================================
+// ========================================================
 // TILE
-// =====================================
+// ========================================================
 
 function drawTile(
   tile,
@@ -1347,163 +1303,112 @@ function drawTile(
   time
 ) {
 
-  if (tile === 0)
-    drawStone(x,y);
+  switch(tile) {
 
-  if (tile === 1) {
+    case T.FLOOR:
+      drawFloor(x,y);
+      break;
 
-    ctx.fillStyle =
-      "#343039";
+    case T.ROAD:
+      drawRoad(x,y);
+      break;
 
-    ctx.fillRect(
-      x,y,TILE,TILE
-    );
+    case T.BUILDING:
+      drawBuilding(
+        x,y,mx,my
+      );
+      break;
 
+    case T.WALL:
+      drawWall(x,y);
+      break;
 
-    ctx.fillStyle =
-      "#3e3942";
+    case T.PLAZA:
+      drawPlaza(x,y);
+      break;
 
-    ctx.fillRect(
-      x+2,
-      y+5,
-      14,
-      9
-    );
+    case T.DOOR:
+      drawDoor(x,y);
+      break;
 
+    case T.WATER:
+      drawWater(
+        x,y,time
+      );
+      break;
 
-    ctx.fillRect(
-      x+18,
-      y+18,
-      12,
-      9
-    );
+    case T.GRASS:
+      drawGrass(x,y);
+      break;
 
-  }
+    case T.INDOOR:
+      drawIndoor(
+        x,y,mx,my
+      );
+      break;
 
+    case T.COUNTER:
+      drawCounter(x,y);
+      break;
 
-  if (tile === 2)
-    drawBuilding(
-      x,y,mx,my
-    );
-
-
-  if (tile === 3) {
-
-    const stall =
-      getStallAt(mx,my);
-
-    drawStall(
-      x,
-      y,
-      stall || {
-        sign:"小吃",
-        type:"snack"
-      },
-      time
-    );
+    default:
+      drawFloor(x,y);
 
   }
-
-
-  if (tile === 4)
-    drawTree(x,y);
-
-
-  if (tile === 5)
-    drawLanternPost(
-      x,y,time
-    );
-
-
-  if (tile === 6) {
-
-    ctx.fillStyle =
-      "#272329";
-
-    ctx.fillRect(
-      x,y,TILE,TILE
-    );
-
-  }
-
-
-  if (tile === 7)
-    drawStone(x,y,7);
-
-
-  if (tile === 8)
-    drawEntrance(x,y);
 
 }
 
 
-// =====================================
+// ========================================================
 // MAP
-// =====================================
+// ========================================================
 
 function drawMap(time) {
 
-  const startX =
-    Math.floor(
-      camera.x/TILE
-    );
-
-  const startY =
-    Math.floor(
-      camera.y/TILE
-    );
-
-
-  const endX =
-    Math.ceil(
-      (
-        camera.x+
-        canvas.width
-      )/TILE
-    );
-
-  const endY =
-    Math.ceil(
-      (
-        camera.y+
-        canvas.height
-      )/TILE
-    );
+  const map =
+    getCurrentMap();
 
 
   for (
-    let y=startY;
-    y<=endY;
+    let y=0;
+    y<map.grid.length;
     y++
   ) {
 
     for (
-      let x=startX;
-      x<=endX;
+      let x=0;
+      x<map.grid[0].length;
       x++
     ) {
 
+      const sx =
+        Math.floor(
+          x*TILE -
+          camera.x
+        );
+
+
+      const sy =
+        Math.floor(
+          y*TILE -
+          camera.y
+        );
+
+
       if (
-        x<0 ||
-        y<0 ||
-        x>=MAP_WIDTH ||
-        y>=MAP_HEIGHT
+        sx < -TILE ||
+        sy < -TILE ||
+        sx > canvas.width ||
+        sy > canvas.height
       ) {
         continue;
       }
 
 
       drawTile(
-        gameMap[y][x],
-
-        Math.floor(
-          x*TILE-camera.x
-        ),
-
-        Math.floor(
-          y*TILE-camera.y
-        ),
-
+        map.grid[y][x],
+        sx,
+        sy,
         x,
         y,
         time
@@ -1516,25 +1421,458 @@ function drawMap(time) {
 }
 
 
-// =====================================
-// BUILDING SIGNS
-// =====================================
+// ========================================================
+// LARGE STALLS
+// ========================================================
 
-function drawBuildingSigns(time) {
+function drawStalls(time) {
+
+  const map =
+    getCurrentMap();
+
+
+  for (
+    const stall
+    of map.stalls
+  ) {
+
+    const x =
+      stall.x*TILE -
+      camera.x;
+
+
+    const y =
+      stall.y*TILE -
+      camera.y;
+
+
+    const width =
+      stall.w*TILE;
+
+
+    // shadow
+
+    ctx.fillStyle =
+      "rgba(0,0,0,.35)";
+
+    ctx.fillRect(
+      x+3,
+      y+25,
+      width-6,
+      9
+    );
+
+
+    // posts
+
+    ctx.fillStyle =
+      "#553529";
+
+    ctx.fillRect(
+      x+4,
+      y+12,
+      4,
+      22
+    );
+
+
+    ctx.fillRect(
+      x+width-8,
+      y+12,
+      4,
+      22
+    );
+
+
+    // roof
+
+    ctx.fillStyle =
+      "#a43c33";
+
+    ctx.fillRect(
+      x,
+      y+2,
+      width,
+      12
+    );
+
+
+    // striped awning
+
+    for (
+      let i=0;
+      i<width;
+      i+=16
+    ) {
+
+      ctx.fillStyle =
+        i%32===0
+          ? "#c64a3d"
+          : "#e4b15e";
+
+
+      ctx.fillRect(
+        x+i,
+        y+12,
+        16,
+        5
+      );
+
+    }
+
+
+    // sign board
+
+    ctx.fillStyle =
+      "#371817";
+
+    ctx.fillRect(
+      x+8,
+      y+3,
+      width-16,
+      10
+    );
+
+
+    ctx.fillStyle =
+      "#ffd476";
+
+    ctx.font =
+      "bold 10px sans-serif";
+
+    ctx.textAlign =
+      "center";
+
+
+    ctx.fillText(
+      stall.sign,
+      x+width/2,
+      y+12
+    );
+
+
+    // counter
+
+    ctx.fillStyle =
+      "#70452e";
+
+    ctx.fillRect(
+      x+5,
+      y+25,
+      width-10,
+      10
+    );
+
+
+    drawStallFood(
+      stall,
+      x,
+      y,
+      width,
+      time
+    );
+
+  }
+
+}
+
+
+function drawStallFood(
+  stall,
+  x,
+  y,
+  width,
+  time
+) {
+
+  if (
+    stall.type ===
+    "shaokao"
+  ) {
+
+    ctx.fillStyle =
+      "#cf733b";
+
+
+    for (
+      let i=12;
+      i<width-10;
+      i+=9
+    ) {
+
+      ctx.fillRect(
+        x+i,
+        y+21,
+        5,
+        3
+      );
+
+    }
+
+
+    drawSteam(
+      x+width/2,
+      y+21,
+      time
+    );
+
+  }
+
+
+  else if (
+    stall.type ===
+    "xiaolongbao"
+  ) {
+
+    ctx.fillStyle =
+      "#b8864d";
+
+    ctx.fillRect(
+      x+13,
+      y+18,
+      17,
+      7
+    );
+
+    ctx.fillRect(
+      x+34,
+      y+17,
+      17,
+      8
+    );
+
+
+    ctx.fillStyle =
+      "#ead1a0";
+
+    for (
+      let i=0;
+      i<5;
+      i++
+    ) {
+
+      ctx.fillRect(
+        x+15+i*8,
+        y+18,
+        5,
+        4
+      );
+
+    }
+
+
+    drawSteam(
+      x+width/2,
+      y+18,
+      time
+    );
+
+  }
+
+
+  else if (
+    stall.type ===
+    "milkTea"
+  ) {
+
+    for (
+      let i=0;
+      i<4;
+      i++
+    ) {
+
+      ctx.fillStyle =
+        i%2===0
+          ? "#d5a66d"
+          : "#b88062";
+
+
+      ctx.fillRect(
+        x+13+i*11,
+        y+18,
+        7,
+        8
+      );
+
+
+      ctx.fillStyle =
+        "#eee1c7";
+
+
+      ctx.fillRect(
+        x+14+i*11,
+        y+16,
+        5,
+        2
+      );
+
+    }
+
+  }
+
+
+  else if (
+    stall.type ===
+    "fruit"
+  ) {
+
+    const colors = [
+      "#c84e42",
+      "#e5a646",
+      "#6e9a50",
+      "#d36f8a"
+    ];
+
+
+    for (
+      let i=0;
+      i<8;
+      i++
+    ) {
+
+      ctx.fillStyle =
+        colors[
+          i%colors.length
+        ];
+
+
+      ctx.fillRect(
+        x+10+i*6,
+        y+19+(i%2)*3,
+        5,
+        5
+      );
+
+    }
+
+  }
+
+
+  else if (
+    stall.type ===
+    "jewelry" ||
+    stall.type ===
+    "souvenir"
+  ) {
+
+    ctx.fillStyle =
+      "#d9bd68";
+
+
+    for (
+      let i=0;
+      i<6;
+      i++
+    ) {
+
+      ctx.fillRect(
+        x+12+i*8,
+        y+20,
+        4,
+        4
+      );
+
+    }
+
+  }
+
+
+  else {
+
+    ctx.fillStyle =
+      "#d88a49";
+
+    for (
+      let i=0;
+      i<5;
+      i++
+    ) {
+
+      ctx.fillRect(
+        x+14+i*9,
+        y+20,
+        6,
+        4
+      );
+
+    }
+
+
+    drawSteam(
+      x+width/2,
+      y+19,
+      time
+    );
+
+  }
+
+}
+
+
+function drawSteam(
+  x,
+  y,
+  time
+) {
+
+  const offset =
+    (time*13)%13;
+
+
+  ctx.fillStyle =
+    "rgba(235,225,210,.48)";
+
+
+  ctx.fillRect(
+    x-8,
+    y-5-offset,
+    2,
+    5
+  );
+
+
+  ctx.fillRect(
+    x+2,
+    y-10-offset*.6,
+    2,
+    5
+  );
+
+
+  ctx.fillRect(
+    x+10,
+    y-4-offset*.8,
+    2,
+    4
+  );
+
+}
+
+
+// ========================================================
+// SIGNS
+// ========================================================
+
+function drawSigns(time) {
+
+  const map =
+    getCurrentMap();
+
 
   for (
     let i=0;
-    i<buildingSigns.length;
+    i<map.signs.length;
     i++
   ) {
 
     const sign =
-      buildingSigns[i];
+      map.signs[i];
 
 
     const x =
       sign.x*TILE -
       camera.x;
+
 
     const y =
       sign.y*TILE -
@@ -1544,39 +1882,38 @@ function drawBuildingSigns(time) {
     const flicker =
       Math.sin(
         time*3+i
-      ) > -.92;
-
-
-    ctx.fillStyle =
-      flicker
-        ? sign.color
-        : "#4b3434";
+      ) > -.93;
 
 
     const width =
       Math.max(
-        60,
-        sign.text.length*18
+        64,
+        sign.text.length*19
       );
+
+
+    ctx.fillStyle =
+      flicker
+        ? "#87362f"
+        : "#493331";
 
 
     ctx.fillRect(
       x,
       y,
       width,
-      23
+      24
     );
 
 
     ctx.fillStyle =
       flicker
-        ? "#ffe0a0"
-        : "#89765e";
+        ? "#ffe09a"
+        : "#887762";
 
 
     ctx.font =
       "bold 14px sans-serif";
-
 
     ctx.textAlign =
       "center";
@@ -1593,263 +1930,248 @@ function drawBuildingSigns(time) {
 }
 
 
-// =====================================
-// LANTERN STRINGS
-// =====================================
+// ========================================================
+// WEST LAKE DETAILS
+// ========================================================
 
-function drawLanternStrings(time) {
+function drawLakeDetails(time) {
 
-  for (
-    const line
-    of lanternStrings
+  if (
+    currentMapId !== "lake"
   ) {
-
-    const y =
-      line.y*TILE -
-      camera.y;
-
-
-    const x1 =
-      line.x1*TILE -
-      camera.x;
-
-
-    const x2 =
-      line.x2*TILE -
-      camera.x;
-
-
-    ctx.strokeStyle =
-      "#39231f";
-
-
-    ctx.lineWidth = 2;
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(x1,y);
-
-    ctx.lineTo(x2,y);
-
-    ctx.stroke();
-
-
-    for (
-      let x=x1+20;
-      x<x2;
-      x+=42
-    ) {
-
-      const sway =
-        Math.sin(
-          time*2+x*.02
-        );
-
-
-      ctx.fillStyle =
-        "rgba(255,95,42,.12)";
-
-
-      ctx.fillRect(
-        x-7+sway,
-        y-2,
-        15,
-        18
-      );
-
-
-      ctx.fillStyle =
-        "#b93d32";
-
-
-      ctx.fillRect(
-        x-4+sway,
-        y,
-        9,
-        11
-      );
-
-
-      ctx.fillStyle =
-        "#ffc25d";
-
-
-      ctx.fillRect(
-        x-2+sway,
-        y+2,
-        5,
-        6
-      );
-
-    }
-
+    return;
   }
 
-}
 
-
-// =====================================
-// DECORATIONS
-// =====================================
-
-function drawDecorations() {
+  // 柳
 
   for (
-    const d
-    of decorations
+    let i=0;
+    i<7;
+    i++
   ) {
 
     const x =
-      d.x-camera.x;
+      16*TILE -
+      camera.x;
+
 
     const y =
-      d.y-camera.y;
+      (3+i*4)*TILE -
+      camera.y;
 
 
-    if (d.type==="bike") {
+    ctx.fillStyle =
+      "#3c2c23";
 
-      ctx.strokeStyle =
-        "#8c8b86";
-
-      ctx.lineWidth=2;
-
-
-      ctx.beginPath();
-
-      ctx.arc(
-        x+7,y+22,
-        6,0,Math.PI*2
-      );
-
-      ctx.arc(
-        x+23,y+22,
-        6,0,Math.PI*2
-      );
-
-      ctx.moveTo(
-        x+7,y+22
-      );
-
-      ctx.lineTo(
-        x+15,y+12
-      );
-
-      ctx.lineTo(
-        x+23,y+22
-      );
-
-      ctx.stroke();
-
-    }
+    ctx.fillRect(
+      x,
+      y,
+      5,
+      29
+    );
 
 
-    if (
-      d.type==="scooter"
-    ) {
+    ctx.fillStyle =
+      "#274b36";
 
-      ctx.fillStyle =
-        "#724e55";
-
-      ctx.fillRect(
-        x+7,y+12,
-        17,9
-      );
-
-      ctx.fillStyle =
-        "#29282c";
-
-      ctx.fillRect(
-        x+6,y+21,
-        6,5
-      );
-
-      ctx.fillRect(
-        x+22,y+21,
-        6,5
-      );
-
-    }
+    ctx.fillRect(
+      x-13,
+      y-8,
+      30,
+      13
+    );
 
 
-    if (
-      d.type==="trash"
-    ) {
-
-      ctx.fillStyle =
-        "#3c5450";
-
-      ctx.fillRect(
-        x+8,y+8,
-        16,22
-      );
-
-      ctx.fillStyle =
-        "#263b38";
-
-      ctx.fillRect(
-        x+6,y+6,
-        20,4
-      );
-
-    }
+    ctx.fillStyle =
+      "#356143";
 
 
-    if (
-      d.type==="table"
-    ) {
+    const sway =
+      Math.sin(
+        time*1.5+i
+      )*3;
 
-      ctx.fillStyle =
-        "#744d32";
 
-      ctx.fillRect(
-        x+6,y+12,
-        20,8
-      );
+    ctx.fillRect(
+      x-10+sway,
+      y+3,
+      3,
+      27
+    );
 
-      ctx.fillRect(
-        x+9,y+20,
-        3,10
-      );
 
-      ctx.fillRect(
-        x+21,y+20,
-        3,10
-      );
+    ctx.fillRect(
+      x+7+sway,
+      y+1,
+      3,
+      23
+    );
 
-    }
+  }
+
+
+  // 湖面の遠い光
+
+  for (
+    let i=0;
+    i<8;
+    i++
+  ) {
+
+    const x =
+      (3+i)*TILE -
+      camera.x;
+
+
+    const y =
+      12*TILE -
+      camera.y;
+
+
+    ctx.fillStyle =
+      "rgba(239,190,102,.45)";
+
+
+    ctx.fillRect(
+      x,
+      y,
+      3,
+      12+
+      Math.sin(time+i)*4
+    );
 
   }
 
 }
 
 
-// =====================================
-// NPC
-// =====================================
+// ========================================================
+// TEA HOUSE DETAILS
+// ========================================================
+
+function drawTeaHouseDetails() {
+
+  if (
+    currentMapId !== "tea"
+  ) {
+    return;
+  }
+
+
+  // 掛け軸
+
+  const x =
+    12*TILE -
+    camera.x;
+
+
+  const y =
+    3*TILE -
+    camera.y;
+
+
+  ctx.fillStyle =
+    "#d9c79d";
+
+  ctx.fillRect(
+    x-15,
+    y+2,
+    30,
+    47
+  );
+
+
+  ctx.fillStyle =
+    "#35291f";
+
+  ctx.font =
+    "18px serif";
+
+  ctx.textAlign =
+    "center";
+
+  ctx.fillText(
+    "茶",
+    x,
+    y+31
+  );
+
+
+  // 丸テーブル
+
+  drawTeaTable(
+    8*TILE-camera.x,
+    11*TILE-camera.y
+  );
+
+
+  drawTeaTable(
+    17*TILE-camera.x,
+    12*TILE-camera.y
+  );
+
+}
+
+
+function drawTeaTable(x,y) {
+
+  ctx.fillStyle =
+    "#4c3024";
+
+  ctx.fillRect(
+    x-18,
+    y-6,
+    36,
+    13
+  );
+
+
+  ctx.fillStyle =
+    "#795035";
+
+  ctx.fillRect(
+    x-15,
+    y-8,
+    30,
+    10
+  );
+
+
+  ctx.fillStyle =
+    "#c9b16d";
+
+  ctx.fillRect(
+    x-3,
+    y-12,
+    6,
+    5
+  );
+
+}
+
+
+// ========================================================
+// CHARACTER
+// ========================================================
 
 function drawPerson(
   x,
   y,
   data,
-  moving=false,
-  time=0
+  moving,
+  time
 ) {
 
   const step =
-    moving
-      ? (
-        Math.sin(time*10)>0
-          ? 1
-          : -1
-      )
+    moving &&
+    Math.sin(time*11)>0
+      ? 1
       : 0;
 
 
-  // shadow
-
   ctx.fillStyle =
-    "rgba(0,0,0,.38)";
+    "rgba(0,0,0,.35)";
 
   ctx.fillRect(
     x+3,
@@ -1859,27 +2181,24 @@ function drawPerson(
   );
 
 
-  // legs
-
   ctx.fillStyle =
-    "#292630";
+    "#282630";
 
   ctx.fillRect(
     x+5,
-    y+18+step,
+    y+19+step,
     5,
     7
   );
+
 
   ctx.fillRect(
     x+12,
-    y+18-step,
+    y+19-step,
     5,
     7
   );
 
-
-  // body
 
   ctx.fillStyle =
     data.color;
@@ -1892,8 +2211,6 @@ function drawPerson(
   );
 
 
-  // arms
-
   ctx.fillStyle =
     data.skin;
 
@@ -1904,6 +2221,7 @@ function drawPerson(
     8
   );
 
+
   ctx.fillRect(
     x+19,
     y+11,
@@ -1912,11 +2230,6 @@ function drawPerson(
   );
 
 
-  // head
-
-  ctx.fillStyle =
-    data.skin;
-
   ctx.fillRect(
     x+5,
     y+2,
@@ -1924,8 +2237,6 @@ function drawPerson(
     9
   );
 
-
-  // hair
 
   ctx.fillStyle =
     data.hair;
@@ -1946,44 +2257,55 @@ function drawPerson(
   );
 
 
-  // face direction
-
   ctx.fillStyle =
-    "#2a2020";
+    "#251d1d";
 
 
   if (
-    data.direction==="down"
+    data.direction === "down"
   ) {
 
     ctx.fillRect(
-      x+8,y+6,2,2
+      x+8,
+      y+6,
+      2,
+      2
     );
 
-    ctx.fillRect(
-      x+14,y+6,2,2
-    );
-
-  }
-
-
-  if (
-    data.direction==="left"
-  ) {
 
     ctx.fillRect(
-      x+6,y+6,2,2
+      x+14,
+      y+6,
+      2,
+      2
     );
 
   }
 
 
   if (
-    data.direction==="right"
+    data.direction === "left"
   ) {
 
     ctx.fillRect(
-      x+15,y+6,2,2
+      x+6,
+      y+6,
+      2,
+      2
+    );
+
+  }
+
+
+  if (
+    data.direction === "right"
+  ) {
+
+    ctx.fillRect(
+      x+15,
+      y+6,
+      2,
+      2
     );
 
   }
@@ -1991,387 +2313,81 @@ function drawPerson(
 }
 
 
-function drawNPC(npc,time) {
+// ========================================================
+// ENTITIES
+// ========================================================
 
-  const moving =
-    npc.walkDX !== 0 ||
-    npc.walkDY !== 0;
+function drawEntities(time) {
 
-
-  drawPerson(
-
-    Math.floor(
-      npc.x-camera.x+5
-    ),
-
-    Math.floor(
-      npc.y-camera.y+3
-    ),
-
-    npc,
-
-    moving,
-
-    time
-
-  );
-
-}
+  const entities = [];
 
 
-// =====================================
-// PLAYER
-// =====================================
-
-function drawPlayer(time) {
-
-  drawPerson(
-
-    Math.floor(
-      player.x-camera.x
-    ),
-
-    Math.floor(
-      player.y-camera.y
-    ),
-
-    {
-      color:"#355f7d",
-      hair:"#211b20",
-      skin:"#e1ae87",
-      direction:
-        player.direction
-    },
-
-    player.moving,
-
-    time
-
-  );
-
-
-  // バッグ
-
-  const x =
-    Math.floor(
-      player.x-camera.x
-    );
-
-  const y =
-    Math.floor(
-      player.y-camera.y
-    );
-
-
-  ctx.fillStyle =
-    "#704932";
-
-
-  if (
-    player.direction !==
-    "up"
+  for (
+    const npc
+    of getCurrentNPCs()
   ) {
 
-    ctx.fillRect(
-      x+16,
-      y+12,
-      4,
-      8
-    );
+    entities.push({
 
-  }
+      y: npc.y,
 
-}
+      draw: () => {
 
+        drawPerson(
+          Math.floor(
+            npc.x-camera.x+5
+          ),
 
-// =====================================
-// ENTRANCE ARCH
-// =====================================
+          Math.floor(
+            npc.y-camera.y+3
+          ),
 
-function drawEntranceArch() {
+          npc,
 
-  const worldX =
-    26*TILE;
+          false,
 
-  const worldY =
-    34*TILE;
+          time
+        );
 
+      }
 
-  const x =
-    worldX-camera.x;
-
-  const y =
-    worldY-camera.y;
-
-
-  if (
-    x < -200 ||
-    x > canvas.width+200 ||
-    y < -100 ||
-    y > canvas.height+100
-  ) {
-    return;
-  }
-
-
-  ctx.fillStyle =
-    "#4a2925";
-
-  ctx.fillRect(
-    x-110,
-    y,
-    7,
-    70
-  );
-
-  ctx.fillRect(
-    x+103,
-    y,
-    7,
-    70
-  );
-
-
-  ctx.fillStyle =
-    "#8e332d";
-
-  ctx.fillRect(
-    x-118,
-    y-9,
-    236,
-    25
-  );
-
-
-  ctx.fillStyle =
-    "#351c1b";
-
-  ctx.fillRect(
-    x-75,
-    y-6,
-    150,
-    22
-  );
-
-
-  ctx.fillStyle =
-    "#f2c36c";
-
-  ctx.font =
-    "bold 18px serif";
-
-  ctx.textAlign =
-    "center";
-
-  ctx.fillText(
-    "武 林 夜 市",
-    x,
-    y+10
-  );
-
-}
-
-
-// =====================================
-// NIGHT FILTER
-// =====================================
-
-function drawNightOverlay() {
-
-  ctx.fillStyle =
-    "rgba(14,10,32,.14)";
-
-
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-}
-
-
-// =====================================
-// AREA
-// =====================================
-
-let currentArea = "";
-
-let bannerTimer = 0;
-
-
-function updateArea(dt) {
-
-  const newArea =
-    getAreaName(
-      player.y
-    );
-
-
-  if (
-    newArea !==
-    currentArea
-  ) {
-
-    currentArea =
-      newArea;
-
-
-    areaHeader.textContent =
-      newArea;
-
-
-    areaBannerName.textContent =
-      newArea;
-
-
-    areaBanner.classList.remove(
-      "hidden"
-    );
-
-
-    bannerTimer = 2.5;
+    });
 
   }
 
 
-  if (
-    bannerTimer > 0
-  ) {
+  entities.push({
 
-    bannerTimer -= dt;
+    y: player.y,
 
+    draw: () => {
 
-    if (
-      bannerTimer <= 0
-    ) {
+      drawPerson(
 
-      areaBanner.classList.add(
-        "hidden"
+        Math.floor(
+          player.x-camera.x
+        ),
+
+        Math.floor(
+          player.y-camera.y
+        ),
+
+        {
+          color:"#355f7d",
+          hair:"#211b20",
+          skin:"#e1ae87",
+          direction:
+            player.direction
+        },
+
+        player.moving,
+
+        time
       );
 
     }
 
-  }
-
-}
-
-
-// =====================================
-// INTERACTION HINT
-// =====================================
-
-function updateInteractionHint() {
-
-  if (dialogue.active) {
-
-    interactionHint.classList.add(
-      "hidden"
-    );
-
-    return;
-  }
-
-
-  const npc =
-    getNearbyNPC();
-
-
-  interactionHint.classList.toggle(
-    "hidden",
-    !npc
-  );
-
-}
-
-
-// =====================================
-// CLOCK
-// =====================================
-
-let fakeMinutes =
-  19*60+42;
-
-
-function updateClock(dt) {
-
-  fakeMinutes +=
-    dt*.18;
-
-
-  const total =
-    Math.floor(
-      fakeMinutes
-    );
-
-
-  const h =
-    Math.floor(
-      total/60
-    )%24;
-
-
-  const m =
-    total%60;
-
-
-  clockElement.textContent =
-    `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
-
-}
-
-
-// =====================================
-// DRAW
-// =====================================
-
-function draw(time) {
-
-  ctx.fillStyle =
-    "#100d14";
-
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  drawMap(time);
-
-
-  drawBuildingSigns(time);
-
-  drawDecorations();
-
-  drawEntranceArch();
-
-  drawLanternStrings(time);
-
-
-  // NPCとプレイヤーを
-  // Y座標で並び替える
-
-  const entities = [
-
-    ...NPCS.map(
-      npc => ({
-        y:npc.y,
-        draw:() =>
-          drawNPC(npc,time)
-      })
-    ),
-
-    {
-      y:player.y,
-
-      draw:() =>
-        drawPlayer(time)
-    }
-
-  ];
+  });
 
 
   entities.sort(
@@ -2389,15 +2405,257 @@ function draw(time) {
 
   }
 
+}
 
-  drawNightOverlay();
+
+// ========================================================
+// LIGHTING
+// ========================================================
+
+function drawLighting() {
+
+  const map =
+    getCurrentMap();
+
+
+  if (
+    map.ambient ===
+    "indoor"
+  ) {
+
+    ctx.fillStyle =
+      "rgba(61,31,10,.08)";
+
+  }
+
+  else if (
+    map.ambient ===
+    "lake"
+  ) {
+
+    ctx.fillStyle =
+      "rgba(5,22,43,.20)";
+
+  }
+
+  else if (
+    map.ambient ===
+    "city"
+  ) {
+
+    ctx.fillStyle =
+      "rgba(13,13,32,.14)";
+
+  }
+
+  else {
+
+    ctx.fillStyle =
+      "rgba(15,8,31,.17)";
+
+  }
+
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
 
 }
 
 
-// =====================================
-// LOOP
-// =====================================
+// ========================================================
+// UI UPDATE
+// ========================================================
+
+function showAreaBanner() {
+
+  const map =
+    getCurrentMap();
+
+
+  areaHeader.textContent =
+    map.name;
+
+
+  areaBannerName.textContent =
+    map.name;
+
+
+  areaBannerSub.textContent =
+    map.subtitle;
+
+
+  areaBanner.classList.remove(
+    "hidden"
+  );
+
+
+  bannerTimer = 2.7;
+
+}
+
+
+function updateBanner(dt) {
+
+  if (
+    bannerTimer <= 0
+  ) {
+    return;
+  }
+
+
+  bannerTimer -= dt;
+
+
+  if (
+    bannerTimer <= 0
+  ) {
+
+    areaBanner.classList.add(
+      "hidden"
+    );
+
+  }
+
+}
+
+
+function updateInteractionHint() {
+
+  if (
+    dialogue.active ||
+    transitionLock
+  ) {
+
+    interactionHint.classList.add(
+      "hidden"
+    );
+
+    return;
+  }
+
+
+  const npc =
+    getNearbyNPC();
+
+
+  if (npc) {
+
+    interactionText.textContent =
+      "話す";
+
+
+    interactionHint.classList.remove(
+      "hidden"
+    );
+
+    return;
+  }
+
+
+  const portal =
+    getNearbyPortal();
+
+
+  if (portal) {
+
+    interactionText.textContent =
+      portal.label ||
+      "移動する";
+
+
+    interactionHint.classList.remove(
+      "hidden"
+    );
+
+    return;
+  }
+
+
+  interactionHint.classList.add(
+    "hidden"
+  );
+
+}
+
+
+// ========================================================
+// CLOCK
+// ========================================================
+
+let fakeMinutes =
+  19*60+42;
+
+
+function updateClock(dt) {
+
+  fakeMinutes +=
+    dt*.15;
+
+
+  const total =
+    Math.floor(
+      fakeMinutes
+    );
+
+
+  const hour =
+    Math.floor(
+      total/60
+    )%24;
+
+
+  const minute =
+    total%60;
+
+
+  clockElement.textContent =
+    `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`;
+
+}
+
+
+// ========================================================
+// DRAW
+// ========================================================
+
+function draw(time) {
+
+  ctx.fillStyle =
+    "#100d14";
+
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  drawMap(time);
+
+  drawLakeDetails(time);
+
+  drawTeaHouseDetails();
+
+  drawStalls(time);
+
+  drawSigns(time);
+
+  drawEntities(time);
+
+  drawLighting();
+
+}
+
+
+// ========================================================
+// GAME LOOP
+// ========================================================
 
 let previousTime =
   performance.now();
@@ -2407,9 +2665,9 @@ function gameLoop(now) {
 
   let dt =
     (
-      now-
+      now -
       previousTime
-    )/1000;
+    ) / 1000;
 
 
   previousTime =
@@ -2424,16 +2682,14 @@ function gameLoop(now) {
 
 
   const time =
-    now/1000;
+    now / 1000;
 
 
   updatePlayer(dt);
 
-  updateNPCs(dt);
-
   updateCamera();
 
-  updateArea(dt);
+  updateBanner(dt);
 
   updateInteractionHint();
 
@@ -2449,9 +2705,11 @@ function gameLoop(now) {
 }
 
 
-// =====================================
+// ========================================================
 // START
-// =====================================
+// ========================================================
+
+showAreaBanner();
 
 updateCamera();
 
