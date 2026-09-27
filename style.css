@@ -9,8 +9,10 @@ body {
 }
 
 body {
-  background:
-    radial-gradient(circle at 50% 0%, #34233b 0%, #17121d 38%, #09080c 100%);
+  padding: 22px;
+
+  display: flex;
+  justify-content: center;
 
   color: #f6ead6;
 
@@ -20,17 +22,13 @@ body {
     system-ui,
     sans-serif;
 
-  display: flex;
-  justify-content: center;
-
-  padding: 22px;
+  background:
+    radial-gradient(circle at 50% 0%, #34233b 0%, #17121d 40%, #09080c 100%);
 }
-
 
 .game-shell {
   width: min(1120px, 100%);
 }
-
 
 .game-header {
   display: flex;
@@ -39,7 +37,6 @@ body {
 
   padding: 0 5px 12px;
 }
-
 
 .eyebrow {
   margin: 0 0 3px;
@@ -50,9 +47,10 @@ body {
   letter-spacing: .28em;
 }
 
-
 .game-header h1 {
   margin: 0;
+
+  color: #fff0cf;
 
   font-family:
     "Yu Mincho",
@@ -62,13 +60,10 @@ body {
   font-size: clamp(27px, 4vw, 40px);
   letter-spacing: .15em;
 
-  color: #fff0cf;
-
   text-shadow:
     0 2px 0 #3a241a,
     0 0 12px rgba(255, 170, 80, .18);
 }
-
 
 .header-right {
   display: flex;
@@ -77,14 +72,11 @@ body {
   color: #b8a78d;
 
   font-size: 12px;
-  letter-spacing: .1em;
 }
-
 
 #areaHeader {
   color: #dda95a;
 }
-
 
 .game-frame {
   position: relative;
@@ -103,7 +95,6 @@ body {
     inset 0 0 0 1px #a47a49;
 }
 
-
 canvas {
   display: block;
 
@@ -115,7 +106,6 @@ canvas {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
-
 
 .game-footer {
   display: flex;
@@ -132,13 +122,10 @@ canvas {
   font-size: 12px;
 }
 
-
 .footer-location {
   margin-left: auto;
-
   color: #cba66c;
 }
-
 
 .key {
   display: inline-flex;
@@ -147,11 +134,10 @@ canvas {
   height: 25px;
 
   padding: 0 6px;
+  margin-right: 3px;
 
   justify-content: center;
   align-items: center;
-
-  margin-right: 3px;
 
   background: #201b22;
 
@@ -166,18 +152,18 @@ canvas {
   font-weight: bold;
 }
 
-
 .interaction-hint {
   position: absolute;
 
   left: 50%;
   bottom: 19px;
 
+  z-index: 10;
+
   transform: translateX(-50%);
 
   display: flex;
   align-items: center;
-
   gap: 7px;
 
   padding: 7px 12px;
@@ -185,7 +171,6 @@ canvas {
   background: rgba(12,9,13,.94);
 
   border: 1px solid #967247;
-
   border-radius: 5px;
 
   color: #f7e8ca;
@@ -193,18 +178,19 @@ canvas {
   font-size: 13px;
 }
 
-
 .area-banner {
   position: absolute;
 
   left: 50%;
-  top: 28px;
+  top: 35px;
+
+  z-index: 8;
 
   transform: translateX(-50%);
 
-  min-width: 220px;
+  min-width: 320px;
 
-  padding: 9px 22px 11px;
+  padding: 11px 35px 14px;
 
   text-align: center;
 
@@ -217,33 +203,40 @@ canvas {
       rgba(16,11,16,0)
     );
 
-  color: #fff0d3;
-
   pointer-events: none;
 }
 
-
-.area-banner span {
+.area-banner small {
   display: block;
-
-  margin-bottom: 2px;
 
   color: #a9906e;
 
   font-size: 8px;
-
   letter-spacing: .4em;
 }
 
-
 .area-banner strong {
+  display: block;
+
+  margin-top: 3px;
+
+  color: #fff0d3;
+
   font-family: serif;
 
-  font-size: 19px;
-
-  letter-spacing: .2em;
+  font-size: 20px;
+  letter-spacing: .16em;
 }
 
+.area-banner span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #9d8e7b;
+
+  font-size: 10px;
+}
 
 .dialogue-box {
   position: absolute;
@@ -251,6 +244,8 @@ canvas {
   left: 4%;
   right: 4%;
   bottom: 4%;
+
+  z-index: 20;
 
   min-height: 140px;
 
@@ -266,14 +261,12 @@ canvas {
     );
 
   border: 4px solid #dfbd82;
-
   outline: 4px solid #261910;
 
   box-shadow:
     inset 0 0 0 2px #76542f,
     0 10px 32px rgba(0,0,0,.68);
 }
-
 
 .portrait {
   width: 92px;
@@ -290,13 +283,11 @@ canvas {
   border: 2px solid #735a3b;
 }
 
-
 #portraitFace {
   width: 58px;
   height: 58px;
 
   display: flex;
-
   justify-content: center;
   align-items: center;
 
@@ -307,11 +298,9 @@ canvas {
   color: white;
 
   font-family: serif;
-
   font-size: 21px;
   font-weight: bold;
 }
-
 
 .dialogue-content {
   position: relative;
@@ -323,17 +312,13 @@ canvas {
   padding-bottom: 23px;
 }
 
-
 .speaker-name {
   margin-bottom: 8px;
 
   color: #e6b45e;
 
   font-weight: bold;
-
-  letter-spacing: .08em;
 }
-
 
 .dialogue-text {
   color: #fff5e6;
@@ -342,7 +327,6 @@ canvas {
 
   line-height: 1.85;
 }
-
 
 .dialogue-footer {
   position: absolute;
@@ -355,11 +339,29 @@ canvas {
   font-size: 10px;
 }
 
+.fade-layer {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 100;
+
+  background: #08070b;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transition: opacity .32s ease;
+}
+
+.fade-layer.active {
+  opacity: 1;
+}
 
 .hidden {
   display: none !important;
 }
-
 
 @media (max-width: 620px) {
 
@@ -382,7 +384,6 @@ canvas {
 
   .footer-location {
     width: 100%;
-
     margin-left: 0;
   }
 
