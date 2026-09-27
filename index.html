@@ -4,94 +4,102 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>武林夜市 - Wulin Night Market</title>
+  <title>武林夜市 - 杭州探索録</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <main class="game-shell">
+<main class="game-shell">
 
-    <header class="game-header">
-      <div>
-        <p class="eyebrow">杭州探索録</p>
-        <h1>武林夜市</h1>
+  <header class="game-header">
+
+    <div>
+      <p class="eyebrow">杭州探索録 · HANGZHOU</p>
+      <h1>武林夜市</h1>
+    </div>
+
+    <div class="header-right">
+      <div id="areaHeader">夜市入口</div>
+      <div id="clock">19:42</div>
+    </div>
+
+  </header>
+
+
+  <section class="game-frame">
+
+    <canvas
+      id="gameCanvas"
+      width="960"
+      height="576"
+      aria-label="武林夜市を探索する2Dゲーム"
+    ></canvas>
+
+
+    <div id="areaBanner" class="area-banner hidden">
+      <span>AREA</span>
+      <strong id="areaBannerName">夜市入口</strong>
+    </div>
+
+
+    <div id="interactionHint" class="interaction-hint hidden">
+      <span class="key">E</span>
+      <span id="interactionText">話す</span>
+    </div>
+
+
+    <div id="dialogueBox" class="dialogue-box hidden">
+
+      <div class="portrait">
+        <div id="portraitFace">人</div>
       </div>
 
-      <div class="header-info">
-        <span>WULIN NIGHT MARKET</span>
-        <span id="clock">19:42</span>
-      </div>
-    </header>
+      <div class="dialogue-content">
 
-
-    <section class="game-frame">
-
-      <canvas
-        id="gameCanvas"
-        width="960"
-        height="576"
-        aria-label="武林夜市を探索する2Dゲーム"
-      ></canvas>
-
-      <div id="interactionHint" class="interaction-hint hidden">
-        <span class="key">E</span>
-        <span>話す</span>
-      </div>
-
-
-      <div id="dialogueBox" class="dialogue-box hidden">
-
-        <div class="portrait">
-          <div id="portraitFace">人</div>
+        <div id="speakerName" class="speaker-name">
+          杭州の人
         </div>
 
-        <div class="dialogue-content">
+        <div id="dialogueText" class="dialogue-text"></div>
 
-          <div id="speakerName" class="speaker-name">
-            店主
-          </div>
-
-          <div id="dialogueText" class="dialogue-text">
-          </div>
-
-          <div class="dialogue-footer">
-            E / Enter
-          </div>
-
+        <div class="dialogue-footer">
+          E / ENTER
         </div>
 
       </div>
 
-    </section>
+    </div>
+
+  </section>
 
 
-    <footer class="game-footer">
+  <footer class="game-footer">
 
-      <div>
-        <span class="key">WASD</span>
-        <span class="key">↑↓←→</span>
-        移動
-      </div>
+    <div>
+      <span class="key">WASD</span>
+      <span class="key">↑↓←→</span>
+      移動
+    </div>
 
-      <div>
-        <span class="key">E</span>
-        会話
-      </div>
+    <div>
+      <span class="key">E</span>
+      話す
+    </div>
 
-      <div id="locationText">
-        杭州市・武林夜市
-      </div>
+    <div class="footer-location">
+      中国 · 浙江省 · 杭州市
+    </div>
 
-    </footer>
+  </footer>
 
-  </main>
+</main>
 
 
-  <script src="map.js"></script>
-  <script src="dialogue.js"></script>
-  <script src="game.js"></script>
+<script src="map.js"></script>
+<script src="dialogue.js"></script>
+<script src="game.js"></script>
 
 </body>
 </html>
