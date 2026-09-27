@@ -1,102 +1,143 @@
 "use strict";
 
+
+// ======================================================
+// CANVAS
+// ======================================================
+
 const canvas =
-  document.getElementById("gameCanvas");
+  document.getElementById(
+    "gameCanvas"
+  );
 
 const ctx =
   canvas.getContext("2d");
 
-ctx.imageSmoothingEnabled = false;
+ctx.imageSmoothingEnabled =
+  false;
 
 
-// ========================================================
+// ======================================================
 // UI
-// ========================================================
+// ======================================================
 
 const areaHeader =
-  document.getElementById("areaHeader");
-
-const areaBanner =
-  document.getElementById("areaBanner");
-
-const areaBannerName =
-  document.getElementById("areaBannerName");
-
-const areaBannerSub =
-  document.getElementById("areaBannerSub");
-
-const interactionHint =
-  document.getElementById("interactionHint");
-
-const interactionText =
-  document.getElementById("interactionText");
-
-const dialogueBox =
-  document.getElementById("dialogueBox");
-
-const speakerName =
-  document.getElementById("speakerName");
-
-const dialogueText =
-  document.getElementById("dialogueText");
-
-const portraitFace =
-  document.getElementById("portraitFace");
-
-const fadeLayer =
-  document.getElementById("fadeLayer");
+  document.getElementById(
+    "areaHeader"
+  );
 
 const clockElement =
-  document.getElementById("clock");
+  document.getElementById(
+    "clock"
+  );
+
+const areaBanner =
+  document.getElementById(
+    "areaBanner"
+  );
+
+const areaBannerName =
+  document.getElementById(
+    "areaBannerName"
+  );
+
+const areaBannerSub =
+  document.getElementById(
+    "areaBannerSub"
+  );
+
+const interactionHint =
+  document.getElementById(
+    "interactionHint"
+  );
+
+const interactionText =
+  document.getElementById(
+    "interactionText"
+  );
+
+const dialogueBox =
+  document.getElementById(
+    "dialogueBox"
+  );
+
+const speakerName =
+  document.getElementById(
+    "speakerName"
+  );
+
+const dialogueText =
+  document.getElementById(
+    "dialogueText"
+  );
+
+const portraitFace =
+  document.getElementById(
+    "portraitFace"
+  );
+
+const fadeLayer =
+  document.getElementById(
+    "fadeLayer"
+  );
 
 
-// ========================================================
+// ======================================================
 // WORLD
-// ========================================================
+// ======================================================
 
-let currentMapId = "food";
+let currentMapId =
+  "food";
 
-let transitionLock = false;
+let transitionLock =
+  false;
 
-let bannerTimer = 0;
+let exitCooldown =
+  0;
+
+let bannerTimer =
+  0;
 
 
-// ========================================================
+// ======================================================
 // PLAYER
-// ========================================================
+// ======================================================
 
 const player = {
 
-  x: MAPS.food.spawn.x,
-  y: MAPS.food.spawn.y,
+  x:
+    MAPS.food.spawn.x *
+    TILE,
 
-  width: 20,
-  height: 25,
+  y:
+    MAPS.food.spawn.y *
+    TILE,
 
-  speed: 145,
+  width:20,
+  height:26,
 
-  direction: "up",
+  speed:150,
 
-  moving: false,
+  direction:"up",
 
-  animationTime: 0
+  moving:false
 
 };
 
 
-// ========================================================
+// ======================================================
 // CAMERA
-// ========================================================
+// ======================================================
 
 const camera = {
-  x: 0,
-  y: 0
+  x:0,
+  y:0
 };
 
 
-// ========================================================
+// ======================================================
 // INPUT
-// ========================================================
+// ======================================================
 
 const keys = {};
 
@@ -107,6 +148,7 @@ window.addEventListener(
 
     const key =
       event.key.toLowerCase();
+
 
     keys[key] = true;
 
@@ -120,7 +162,9 @@ window.addEventListener(
         " "
       ].includes(key)
     ) {
+
       event.preventDefault();
+
     }
 
 
@@ -132,11 +176,17 @@ window.addEventListener(
       )
     ) {
 
-      if (dialogue.active) {
+      if (
+        dialogue.active
+      ) {
+
         advanceDialogue();
+
       }
       else {
+
         interact();
+
       }
 
     }
@@ -157,26 +207,31 @@ window.addEventListener(
 );
 
 
-// ========================================================
+// ======================================================
 // DIALOGUE
-// ========================================================
+// ======================================================
 
 const dialogue = {
 
-  active: false,
-  npc: null,
-  index: 0
+  active:false,
+
+  npc:null,
+
+  index:0
 
 };
 
 
 function startDialogue(npc) {
 
-  dialogue.active = true;
+  dialogue.active =
+    true;
 
-  dialogue.npc = npc;
+  dialogue.npc =
+    npc;
 
-  dialogue.index = 0;
+  dialogue.index =
+    0;
 
 
   speakerName.textContent =
@@ -220,6 +275,7 @@ function advanceDialogue() {
     closeDialogue();
 
     return;
+
   }
 
 
@@ -233,9 +289,11 @@ function advanceDialogue() {
 
 function closeDialogue() {
 
-  dialogue.active = false;
+  dialogue.active =
+    false;
 
-  dialogue.npc = null;
+  dialogue.npc =
+    null;
 
 
   dialogueBox.classList.add(
@@ -245,34 +303,41 @@ function closeDialogue() {
 }
 
 
-// ========================================================
-// NPC
-// ========================================================
+// ======================================================
+// CURRENT NPCS
+// ======================================================
 
 function getCurrentNPCs() {
 
   return NPCS.filter(
     npc =>
-      npc.map === currentMapId
+      npc.map ===
+      currentMapId
   );
 
 }
 
 
+// ======================================================
+// NEARBY NPC
+// ======================================================
+
 function getNearbyNPC() {
-
-  let nearest = null;
-
-  let distanceBest = 58;
-
 
   const px =
     player.x +
-    player.width / 2;
+    player.width/2;
 
   const py =
     player.y +
-    player.height / 2;
+    player.height/2;
+
+
+  let nearest =
+    null;
+
+  let bestDistance =
+    55;
 
 
   for (
@@ -280,26 +345,30 @@ function getNearbyNPC() {
     of getCurrentNPCs()
   ) {
 
-    const dx =
-      npc.x + 11 - px;
+    const nx =
+      npc.x + 11;
 
-    const dy =
-      npc.y + 13 - py;
+    const ny =
+      npc.y + 14;
 
 
     const distance =
-      Math.hypot(dx,dy);
+      Math.hypot(
+        nx-px,
+        ny-py
+      );
 
 
     if (
       distance <
-      distanceBest
+      bestDistance
     ) {
 
-      distanceBest =
+      bestDistance =
         distance;
 
-      nearest = npc;
+      nearest =
+        npc;
 
     }
 
@@ -311,11 +380,11 @@ function getNearbyNPC() {
 }
 
 
-// ========================================================
-// PORTALS
-// ========================================================
+// ======================================================
+// DOORS
+// ======================================================
 
-function getNearbyPortal() {
+function getNearbyDoor() {
 
   const map =
     getCurrentMap();
@@ -323,43 +392,45 @@ function getNearbyPortal() {
 
   const px =
     player.x +
-    player.width / 2;
+    player.width/2;
 
   const py =
     player.y +
-    player.height / 2;
-
-
-  const tx =
-    Math.floor(px / TILE);
-
-  const ty =
-    Math.floor(py / TILE);
+    player.height/2;
 
 
   for (
-    const portal
-    of map.portals
+    const door
+    of map.doors
   ) {
 
-    if (
-      portal.x === undefined
-    ) {
-      continue;
-    }
+    const centerX =
+      (
+        door.x +
+        door.width/2
+      ) * TILE;
+
+
+    const centerY =
+      (
+        door.y +
+        0.5
+      ) * TILE;
 
 
     const distance =
       Math.hypot(
-        portal.x - tx,
-        portal.y - ty
+        centerX-px,
+        centerY-py
       );
 
 
     if (
-      distance <= 1.4
+      distance < 55
     ) {
-      return portal;
+
+      return door;
+
     }
 
   }
@@ -369,6 +440,10 @@ function getNearbyPortal() {
 
 }
 
+
+// ======================================================
+// INTERACTION
+// ======================================================
 
 function interact() {
 
@@ -381,19 +456,20 @@ function interact() {
     startDialogue(npc);
 
     return;
+
   }
 
 
-  const portal =
-    getNearbyPortal();
+  const door =
+    getNearbyDoor();
 
 
-  if (portal) {
+  if (door) {
 
     changeMap(
-      portal.target,
-      portal.targetX,
-      portal.targetY
+      door.target,
+      door.targetX,
+      door.targetY
     );
 
   }
@@ -401,9 +477,93 @@ function interact() {
 }
 
 
-// ========================================================
-// MAP TRANSITION
-// ========================================================
+// ======================================================
+// EXIT ZONES
+// ======================================================
+
+function getActiveExit() {
+
+  if (
+    exitCooldown > 0
+  ) {
+
+    return null;
+
+  }
+
+
+  const map =
+    getCurrentMap();
+
+
+  const px =
+    player.x +
+    player.width/2;
+
+
+  const py =
+    player.y +
+    player.height/2;
+
+
+  for (
+    const exit
+    of map.exits
+  ) {
+
+    if (
+      isInsideRect(
+        px,
+        py,
+        exit
+      )
+    ) {
+
+      return exit;
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+function checkExitZones() {
+
+  if (
+    transitionLock ||
+    dialogue.active ||
+    exitCooldown > 0
+  ) {
+
+    return;
+
+  }
+
+
+  const exit =
+    getActiveExit();
+
+
+  if (!exit)
+    return;
+
+
+  changeMap(
+    exit.target,
+    exit.targetX,
+    exit.targetY
+  );
+
+}
+
+
+// ======================================================
+// MAP CHANGE
+// ======================================================
 
 function changeMap(
   target,
@@ -411,11 +571,15 @@ function changeMap(
   targetY
 ) {
 
-  if (transitionLock)
+  if (
+    transitionLock
+  ) {
     return;
+  }
 
 
-  transitionLock = true;
+  transitionLock =
+    true;
 
 
   fadeLayer.classList.add(
@@ -431,23 +595,31 @@ function changeMap(
 
 
       player.x =
-        targetX * TILE;
+        targetX*TILE;
 
       player.y =
-        targetY * TILE;
+        targetY*TILE;
+
+
+      player.moving =
+        false;
+
+
+      exitCooldown =
+        0.9;
 
 
       camera.x =
         player.x -
-        canvas.width / 2;
+        canvas.width/2;
+
 
       camera.y =
         player.y -
-        canvas.height / 2;
+        canvas.height/2;
 
 
       clampCamera();
-
 
       showAreaBanner();
 
@@ -462,159 +634,73 @@ function changeMap(
 
           setTimeout(
             () => {
-              transitionLock = false;
+
+              transitionLock =
+                false;
+
             },
-            330
+            320
           );
 
         },
-        180
+        150
       );
 
     },
-    330
+    320
   );
 
 }
 
 
-// ========================================================
-// EDGE TRANSITIONS
-// ========================================================
-
-function checkEdgeTransition() {
-
-  if (
-    transitionLock ||
-    dialogue.active
-  ) {
-    return;
-  }
-
-
-  const map =
-    getCurrentMap();
-
-
-  const mapWidth =
-    map.grid[0].length *
-    TILE;
-
-
-  const mapHeight =
-    map.grid.length *
-    TILE;
-
-
-  for (
-    const portal
-    of map.portals
-  ) {
-
-    if (!portal.edge)
-      continue;
-
-
-    if (
-      portal.edge === "bottom" &&
-      player.y >
-      mapHeight -
-      TILE * 1.4
-    ) {
-
-      changeMap(
-        portal.target,
-        portal.targetX,
-        portal.targetY
-      );
-
-      return;
-    }
-
-
-    if (
-      portal.edge === "top" &&
-      player.y <
-      TILE * 1.15
-    ) {
-
-      changeMap(
-        portal.target,
-        portal.targetX,
-        portal.targetY
-      );
-
-      return;
-    }
-
-
-    if (
-      portal.edge === "left" &&
-      player.x <
-      TILE * 1.15
-    ) {
-
-      changeMap(
-        portal.target,
-        portal.targetX,
-        portal.targetY
-      );
-
-      return;
-    }
-
-
-    if (
-      portal.edge === "right" &&
-      player.x >
-      mapWidth -
-      TILE * 1.4
-    ) {
-
-      changeMap(
-        portal.target,
-        portal.targetX,
-        portal.targetY
-      );
-
-      return;
-    }
-
-  }
-
-}
-
-
-// ========================================================
+// ======================================================
 // COLLISION
-// ========================================================
+// ======================================================
 
-function playerCollides(x,y) {
+function playerCollides(
+  x,
+  y
+) {
 
   const left =
-    x + 4;
+    x+4;
 
   const right =
-    x +
-    player.width -
-    4;
+    x+
+    player.width-4;
 
   const top =
-    y + 7;
+    y+7;
 
   const bottom =
-    y +
-    player.height -
-    2;
+    y+
+    player.height-2;
 
 
   if (
-    isSolidAtPixel(left,top) ||
-    isSolidAtPixel(right,top) ||
-    isSolidAtPixel(left,bottom) ||
-    isSolidAtPixel(right,bottom)
+    isSolidAtPixel(
+      left,
+      top
+    ) ||
+
+    isSolidAtPixel(
+      right,
+      top
+    ) ||
+
+    isSolidAtPixel(
+      left,
+      bottom
+    ) ||
+
+    isSolidAtPixel(
+      right,
+      bottom
+    )
   ) {
+
     return true;
+
   }
 
 
@@ -623,26 +709,28 @@ function playerCollides(x,y) {
     of getCurrentNPCs()
   ) {
 
-    const npcLeft =
-      npc.x + 4;
+    const nl =
+      npc.x+4;
 
-    const npcRight =
-      npc.x + 27;
+    const nr =
+      npc.x+27;
 
-    const npcTop =
-      npc.y + 5;
+    const nt =
+      npc.y+5;
 
-    const npcBottom =
-      npc.y + 29;
+    const nb =
+      npc.y+29;
 
 
     if (
-      right > npcLeft &&
-      left < npcRight &&
-      bottom > npcTop &&
-      top < npcBottom
+      right > nl &&
+      left < nr &&
+      bottom > nt &&
+      top < nb
     ) {
+
       return true;
+
     }
 
   }
@@ -653,20 +741,31 @@ function playerCollides(x,y) {
 }
 
 
-// ========================================================
+// ======================================================
 // PLAYER UPDATE
-// ========================================================
+// ======================================================
 
 function updatePlayer(dt) {
+
+  if (
+    exitCooldown > 0
+  ) {
+
+    exitCooldown -= dt;
+
+  }
+
 
   if (
     dialogue.active ||
     transitionLock
   ) {
 
-    player.moving = false;
+    player.moving =
+      false;
 
     return;
+
   }
 
 
@@ -681,7 +780,8 @@ function updatePlayer(dt) {
 
     dy--;
 
-    player.direction = "up";
+    player.direction =
+      "up";
 
   }
 
@@ -693,7 +793,8 @@ function updatePlayer(dt) {
 
     dy++;
 
-    player.direction = "down";
+    player.direction =
+      "down";
 
   }
 
@@ -705,7 +806,8 @@ function updatePlayer(dt) {
 
     dx--;
 
-    player.direction = "left";
+    player.direction =
+      "left";
 
   }
 
@@ -717,7 +819,8 @@ function updatePlayer(dt) {
 
     dx++;
 
-    player.direction = "right";
+    player.direction =
+      "right";
 
   }
 
@@ -727,11 +830,15 @@ function updatePlayer(dt) {
     dy !== 0
   ) {
 
-    player.moving = true;
+    player.moving =
+      true;
 
 
     const length =
-      Math.hypot(dx,dy);
+      Math.hypot(
+        dx,
+        dy
+      );
 
 
     dx /= length;
@@ -752,12 +859,13 @@ function updatePlayer(dt) {
 
     if (
       !playerCollides(
-        player.x + mx,
+        player.x+mx,
         player.y
       )
     ) {
 
-      player.x += mx;
+      player.x +=
+        mx;
 
     }
 
@@ -765,33 +873,32 @@ function updatePlayer(dt) {
     if (
       !playerCollides(
         player.x,
-        player.y + my
+        player.y+my
       )
     ) {
 
-      player.y += my;
+      player.y +=
+        my;
 
     }
-
-
-    player.animationTime += dt;
 
   }
   else {
 
-    player.moving = false;
+    player.moving =
+      false;
 
   }
 
 
-  checkEdgeTransition();
+  checkExitZones();
 
 }
 
 
-// ========================================================
+// ======================================================
 // CAMERA
-// ========================================================
+// ======================================================
 
 function clampCamera() {
 
@@ -843,22 +950,26 @@ function updateCamera() {
 
   const targetX =
     player.x -
-    canvas.width / 2;
+    canvas.width/2;
 
 
   const targetY =
     player.y -
-    canvas.height / 2;
+    canvas.height/2;
 
 
   camera.x +=
-    (targetX-camera.x) *
-    .09;
+    (
+      targetX -
+      camera.x
+    ) * .09;
 
 
   camera.y +=
-    (targetY-camera.y) *
-    .09;
+    (
+      targetY -
+      camera.y
+    ) * .09;
 
 
   clampCamera();
@@ -866,11 +977,14 @@ function updateCamera() {
 }
 
 
-// ========================================================
-// BASIC TILE DRAWING
-// ========================================================
+// ======================================================
+// TILE DRAWING
+// ======================================================
 
-function drawFloor(x,y) {
+function drawFloor(
+  x,
+  y
+) {
 
   ctx.fillStyle =
     "#39343c";
@@ -881,17 +995,21 @@ function drawFloor(x,y) {
 
 
   ctx.fillStyle =
-    "#443e46";
+    "#454048";
 
   ctx.fillRect(
-    x+2,y+3,
-    13,11
+    x+2,
+    y+3,
+    13,
+    11
   );
 
 
   ctx.fillRect(
-    x+17,y+17,
-    13,12
+    x+17,
+    y+17,
+    13,
+    12
   );
 
 
@@ -899,14 +1017,19 @@ function drawFloor(x,y) {
     "#302c33";
 
   ctx.fillRect(
-    x,y+15,
-    TILE,1
+    x,
+    y+15,
+    TILE,
+    1
   );
 
 }
 
 
-function drawRoad(x,y) {
+function drawRoad(
+  x,
+  y
+) {
 
   ctx.fillStyle =
     "#302e35";
@@ -917,26 +1040,33 @@ function drawRoad(x,y) {
 
 
   ctx.fillStyle =
-    "#39373e";
+    "#3c3941";
 
   ctx.fillRect(
-    x+2,y+4,
-    14,10
+    x+2,
+    y+4,
+    14,
+    10
   );
 
 
   ctx.fillRect(
-    x+18,y+18,
-    12,10
+    x+18,
+    y+18,
+    12,
+    10
   );
 
 }
 
 
-function drawPlaza(x,y) {
+function drawPlaza(
+  x,
+  y
+) {
 
   ctx.fillStyle =
-    "#4c474b";
+    "#4b464b";
 
   ctx.fillRect(
     x,y,TILE,TILE
@@ -944,28 +1074,32 @@ function drawPlaza(x,y) {
 
 
   ctx.fillStyle =
-    "#595257";
+    "#575157";
 
   ctx.fillRect(
-    x+2,y+2,
-    28,13
+    x+2,
+    y+2,
+    28,
+    13
   );
 
 
   ctx.fillStyle =
-    "#403c41";
+    "#3d393e";
 
   ctx.fillRect(
-    x,y+15,
-    TILE,2
+    x,
+    y+15,
+    TILE,
+    2
   );
 
 }
 
 
-// ========================================================
+// ======================================================
 // BUILDING
-// ========================================================
+// ======================================================
 
 function drawBuilding(
   x,
@@ -994,11 +1128,11 @@ function drawBuilding(
 
 
   if (
-    (mx+my)%3 === 0
+    (mx+my)%3===0
   ) {
 
     ctx.fillStyle =
-      "#5e4439";
+      "#60463a";
 
     ctx.fillRect(
       x+7,
@@ -1009,7 +1143,7 @@ function drawBuilding(
 
 
     ctx.fillStyle =
-      "#c98a4b";
+      "#d0904d";
 
     ctx.fillRect(
       x+9,
@@ -1034,69 +1168,18 @@ function drawBuilding(
 }
 
 
-// ========================================================
-// DOOR
-// ========================================================
-
-function drawDoor(x,y) {
-
-  drawFloor(x,y);
-
-
-  ctx.fillStyle =
-    "#2a1b1b";
-
-  ctx.fillRect(
-    x+4,
-    y,
-    24,
-    31
-  );
-
-
-  ctx.fillStyle =
-    "#764c32";
-
-  ctx.fillRect(
-    x+7,
-    y+3,
-    18,
-    28
-  );
-
-
-  ctx.fillStyle =
-    "#241718";
-
-  ctx.fillRect(
-    x+10,
-    y+6,
-    12,
-    25
-  );
-
-
-  ctx.fillStyle =
-    "#e1a650";
-
-  ctx.fillRect(
-    x+19,
-    y+17,
-    2,
-    2
-  );
-
-}
-
-
-// ========================================================
+// ======================================================
 // WATER
-// ========================================================
+// ======================================================
 
-function drawWater(x,y,time) {
+function drawWater(
+  x,
+  y,
+  time
+) {
 
   ctx.fillStyle =
-    "#162f42";
+    "#142f43";
 
   ctx.fillRect(
     x,y,TILE,TILE
@@ -1104,17 +1187,15 @@ function drawWater(x,y,time) {
 
 
   const wave =
-    Math.floor(
-      Math.sin(
-        time*2 +
-        x*.04 +
-        y*.03
-      ) * 3
-    );
+    Math.sin(
+      time*2 +
+      x*.04 +
+      y*.03
+    )*3;
 
 
   ctx.fillStyle =
-    "#285269";
+    "#28556d";
 
   ctx.fillRect(
     x+4+wave,
@@ -1125,7 +1206,7 @@ function drawWater(x,y,time) {
 
 
   ctx.fillStyle =
-    "#396b7d";
+    "#397187";
 
   ctx.fillRect(
     x+13-wave,
@@ -1137,11 +1218,14 @@ function drawWater(x,y,time) {
 }
 
 
-// ========================================================
+// ======================================================
 // GRASS
-// ========================================================
+// ======================================================
 
-function drawGrass(x,y) {
+function drawGrass(
+  x,
+  y
+) {
 
   ctx.fillStyle =
     "#263d31";
@@ -1172,11 +1256,16 @@ function drawGrass(x,y) {
 }
 
 
-// ========================================================
+// ======================================================
 // INDOOR
-// ========================================================
+// ======================================================
 
-function drawIndoor(x,y,mx,my) {
+function drawIndoor(
+  x,
+  y,
+  mx,
+  my
+) {
 
   ctx.fillStyle =
     "#74533b";
@@ -1227,7 +1316,10 @@ function drawIndoor(x,y,mx,my) {
 }
 
 
-function drawWall(x,y) {
+function drawWall(
+  x,
+  y
+) {
 
   ctx.fillStyle =
     "#37251f";
@@ -1261,9 +1353,14 @@ function drawWall(x,y) {
 }
 
 
-function drawCounter(x,y) {
+function drawCounter(
+  x,
+  y
+) {
 
-  drawIndoor(x,y,0,0);
+  drawIndoor(
+    x,y,0,0
+  );
 
 
   ctx.fillStyle =
@@ -1290,78 +1387,9 @@ function drawCounter(x,y) {
 }
 
 
-// ========================================================
-// TILE
-// ========================================================
-
-function drawTile(
-  tile,
-  x,
-  y,
-  mx,
-  my,
-  time
-) {
-
-  switch(tile) {
-
-    case T.FLOOR:
-      drawFloor(x,y);
-      break;
-
-    case T.ROAD:
-      drawRoad(x,y);
-      break;
-
-    case T.BUILDING:
-      drawBuilding(
-        x,y,mx,my
-      );
-      break;
-
-    case T.WALL:
-      drawWall(x,y);
-      break;
-
-    case T.PLAZA:
-      drawPlaza(x,y);
-      break;
-
-    case T.DOOR:
-      drawDoor(x,y);
-      break;
-
-    case T.WATER:
-      drawWater(
-        x,y,time
-      );
-      break;
-
-    case T.GRASS:
-      drawGrass(x,y);
-      break;
-
-    case T.INDOOR:
-      drawIndoor(
-        x,y,mx,my
-      );
-      break;
-
-    case T.COUNTER:
-      drawCounter(x,y);
-      break;
-
-    default:
-      drawFloor(x,y);
-
-  }
-
-}
-
-
-// ========================================================
-// MAP
-// ========================================================
+// ======================================================
+// MAP DRAW
+// ======================================================
 
 function drawMap(time) {
 
@@ -1398,21 +1426,132 @@ function drawMap(time) {
       if (
         sx < -TILE ||
         sy < -TILE ||
-        sx > canvas.width ||
-        sy > canvas.height
+        sx >
+        canvas.width ||
+        sy >
+        canvas.height
       ) {
+
         continue;
+
       }
 
 
-      drawTile(
-        map.grid[y][x],
-        sx,
-        sy,
-        x,
-        y,
-        time
-      );
+      const tile =
+        map.grid[y][x];
+
+
+      if (
+        tile === T.FLOOR
+      ) {
+
+        drawFloor(
+          sx,
+          sy
+        );
+
+      }
+
+
+      else if (
+        tile === T.ROAD
+      ) {
+
+        drawRoad(
+          sx,
+          sy
+        );
+
+      }
+
+
+      else if (
+        tile === T.PLAZA
+      ) {
+
+        drawPlaza(
+          sx,
+          sy
+        );
+
+      }
+
+
+      else if (
+        tile === T.BUILDING
+      ) {
+
+        drawBuilding(
+          sx,
+          sy,
+          x,
+          y
+        );
+
+      }
+
+
+      else if (
+        tile === T.WATER
+      ) {
+
+        drawWater(
+          sx,
+          sy,
+          time
+        );
+
+      }
+
+
+      else if (
+        tile === T.GRASS
+      ) {
+
+        drawGrass(
+          sx,
+          sy
+        );
+
+      }
+
+
+      else if (
+        tile === T.INDOOR
+      ) {
+
+        drawIndoor(
+          sx,
+          sy,
+          x,
+          y
+        );
+
+      }
+
+
+      else if (
+        tile === T.WALL
+      ) {
+
+        drawWall(
+          sx,
+          sy
+        );
+
+      }
+
+
+      else if (
+        tile === T.COUNTER
+      ) {
+
+        drawCounter(
+          sx,
+          sy
+        );
+
+      }
 
     }
 
@@ -1421,9 +1560,106 @@ function drawMap(time) {
 }
 
 
-// ========================================================
-// LARGE STALLS
-// ========================================================
+// ======================================================
+// DOORS
+// ======================================================
+
+function drawDoors() {
+
+  const map =
+    getCurrentMap();
+
+
+  for (
+    const door
+    of map.doors
+  ) {
+
+    const x =
+      door.x*TILE -
+      camera.x;
+
+
+    const y =
+      door.y*TILE -
+      camera.y;
+
+
+    const width =
+      door.width*TILE;
+
+
+    // frame
+
+    ctx.fillStyle =
+      "#251719";
+
+
+    ctx.fillRect(
+      x-3,
+      y-9,
+      width+6,
+      TILE+10
+    );
+
+
+    // door
+
+    ctx.fillStyle =
+      "#75452d";
+
+
+    ctx.fillRect(
+      x,
+      y-5,
+      width,
+      TILE+5
+    );
+
+
+    // panels
+
+    ctx.fillStyle =
+      "#3d2521";
+
+
+    ctx.fillRect(
+      x+5,
+      y,
+      width-10,
+      13
+    );
+
+
+    ctx.fillRect(
+      x+5,
+      y+17,
+      width-10,
+      12
+    );
+
+
+    // knob
+
+    ctx.fillStyle =
+      "#e3b45e";
+
+
+    ctx.fillRect(
+      x+width-8,
+      y+15,
+      3,
+      3
+    );
+
+  }
+
+}
+
+
+// ======================================================
+// STALLS
+// ======================================================
 
 function drawStalls(time) {
 
@@ -1447,7 +1683,7 @@ function drawStalls(time) {
 
 
     const width =
-      stall.w*TILE;
+      stall.width*TILE;
 
 
     // shadow
@@ -1455,31 +1691,33 @@ function drawStalls(time) {
     ctx.fillStyle =
       "rgba(0,0,0,.35)";
 
+
     ctx.fillRect(
       x+3,
-      y+25,
+      y+27,
       width-6,
-      9
+      8
     );
 
 
     // posts
 
     ctx.fillStyle =
-      "#553529";
+      "#543529";
+
 
     ctx.fillRect(
       x+4,
-      y+12,
-      4,
+      y+13,
+      5,
       22
     );
 
 
     ctx.fillRect(
-      x+width-8,
-      y+12,
-      4,
+      x+width-9,
+      y+13,
+      5,
       22
     );
 
@@ -1487,17 +1725,18 @@ function drawStalls(time) {
     // roof
 
     ctx.fillStyle =
-      "#a43c33";
+      "#a73e35";
+
 
     ctx.fillRect(
       x,
-      y+2,
+      y,
       width,
-      12
+      14
     );
 
 
-    // striped awning
+    // awning
 
     for (
       let i=0;
@@ -1507,38 +1746,41 @@ function drawStalls(time) {
 
       ctx.fillStyle =
         i%32===0
-          ? "#c64a3d"
-          : "#e4b15e";
+        ? "#d25344"
+        : "#e4b15e";
 
 
       ctx.fillRect(
         x+i,
-        y+12,
+        y+13,
         16,
-        5
+        6
       );
 
     }
 
 
-    // sign board
+    // sign
 
     ctx.fillStyle =
-      "#371817";
+      "#351717";
+
 
     ctx.fillRect(
-      x+8,
-      y+3,
-      width-16,
-      10
+      x+10,
+      y+2,
+      width-20,
+      11
     );
 
 
     ctx.fillStyle =
-      "#ffd476";
+      "#ffd478";
+
 
     ctx.font =
-      "bold 10px sans-serif";
+      "bold 12px sans-serif";
+
 
     ctx.textAlign =
       "center";
@@ -1554,17 +1796,18 @@ function drawStalls(time) {
     // counter
 
     ctx.fillStyle =
-      "#70452e";
+      "#71462e";
+
 
     ctx.fillRect(
       x+5,
-      y+25,
+      y+27,
       width-10,
       10
     );
 
 
-    drawStallFood(
+    drawFood(
       stall,
       x,
       y,
@@ -1577,7 +1820,11 @@ function drawStalls(time) {
 }
 
 
-function drawStallFood(
+// ======================================================
+// FOOD
+// ======================================================
+
+function drawFood(
   stall,
   x,
   y,
@@ -1590,21 +1837,33 @@ function drawStallFood(
     "shaokao"
   ) {
 
-    ctx.fillStyle =
-      "#cf733b";
-
-
     for (
       let i=12;
-      i<width-10;
-      i+=9
+      i<width-12;
+      i+=10
     ) {
+
+      ctx.fillStyle =
+        "#d1783d";
+
 
       ctx.fillRect(
         x+i,
-        y+21,
-        5,
+        y+22,
+        6,
         3
+      );
+
+
+      ctx.fillStyle =
+        "#9c4c2d";
+
+
+      ctx.fillRect(
+        x+i+2,
+        y+20,
+        2,
+        2
       );
 
     }
@@ -1612,7 +1871,7 @@ function drawStallFood(
 
     drawSteam(
       x+width/2,
-      y+21,
+      y+20,
       time
     );
 
@@ -1625,37 +1884,32 @@ function drawStallFood(
   ) {
 
     ctx.fillStyle =
-      "#b8864d";
+      "#a97845";
+
 
     ctx.fillRect(
-      x+13,
-      y+18,
-      17,
-      7
-    );
-
-    ctx.fillRect(
-      x+34,
-      y+17,
-      17,
-      8
+      x+14,
+      y+20,
+      width-28,
+      6
     );
 
 
     ctx.fillStyle =
-      "#ead1a0";
+      "#e6ce9c";
+
 
     for (
-      let i=0;
-      i<5;
-      i++
+      let i=18;
+      i<width-18;
+      i+=12
     ) {
 
       ctx.fillRect(
-        x+15+i*8,
+        x+i,
         y+18,
-        5,
-        4
+        7,
+        6
       );
 
     }
@@ -1677,32 +1931,32 @@ function drawStallFood(
 
     for (
       let i=0;
-      i<4;
+      i<5;
       i++
     ) {
 
       ctx.fillStyle =
         i%2===0
-          ? "#d5a66d"
-          : "#b88062";
+        ? "#d6aa73"
+        : "#b87f63";
 
 
       ctx.fillRect(
-        x+13+i*11,
-        y+18,
-        7,
-        8
+        x+17+i*13,
+        y+19,
+        8,
+        9
       );
 
 
       ctx.fillStyle =
-        "#eee1c7";
+        "#f0dfc3";
 
 
       ctx.fillRect(
-        x+14+i*11,
-        y+16,
-        5,
+        x+18+i*13,
+        y+17,
+        6,
         2
       );
 
@@ -1717,16 +1971,18 @@ function drawStallFood(
   ) {
 
     const colors = [
-      "#c84e42",
-      "#e5a646",
-      "#6e9a50",
-      "#d36f8a"
+
+      "#c94e42",
+      "#e4a448",
+      "#6c9a50",
+      "#d96f88"
+
     ];
 
 
     for (
       let i=0;
-      i<8;
+      i<10;
       i++
     ) {
 
@@ -1737,39 +1993,10 @@ function drawStallFood(
 
 
       ctx.fillRect(
-        x+10+i*6,
-        y+19+(i%2)*3,
-        5,
-        5
-      );
-
-    }
-
-  }
-
-
-  else if (
-    stall.type ===
-    "jewelry" ||
-    stall.type ===
-    "souvenir"
-  ) {
-
-    ctx.fillStyle =
-      "#d9bd68";
-
-
-    for (
-      let i=0;
-      i<6;
-      i++
-    ) {
-
-      ctx.fillRect(
-        x+12+i*8,
-        y+20,
-        4,
-        4
+        x+14+i*7,
+        y+20+(i%2)*3,
+        6,
+        6
       );
 
     }
@@ -1780,29 +2007,23 @@ function drawStallFood(
   else {
 
     ctx.fillStyle =
-      "#d88a49";
+      "#d8b15e";
+
 
     for (
       let i=0;
-      i<5;
+      i<8;
       i++
     ) {
 
       ctx.fillRect(
-        x+14+i*9,
-        y+20,
-        6,
-        4
+        x+15+i*9,
+        y+21,
+        5,
+        5
       );
 
     }
-
-
-    drawSteam(
-      x+width/2,
-      y+19,
-      time
-    );
 
   }
 
@@ -1816,24 +2037,26 @@ function drawSteam(
 ) {
 
   const offset =
-    (time*13)%13;
+    (
+      time*12
+    )%14;
 
 
   ctx.fillStyle =
-    "rgba(235,225,210,.48)";
+    "rgba(240,230,215,.5)";
 
 
   ctx.fillRect(
-    x-8,
-    y-5-offset,
+    x-10,
+    y-offset,
     2,
     5
   );
 
 
   ctx.fillRect(
-    x+2,
-    y-10-offset*.6,
+    x,
+    y-6-offset*.7,
     2,
     5
   );
@@ -1841,7 +2064,7 @@ function drawSteam(
 
   ctx.fillRect(
     x+10,
-    y-4-offset*.8,
+    y-2-offset*.9,
     2,
     4
   );
@@ -1849,25 +2072,20 @@ function drawSteam(
 }
 
 
-// ========================================================
-// SIGNS
-// ========================================================
+// ======================================================
+// BUILDING SIGNS
+// ======================================================
 
-function drawSigns(time) {
+function drawSigns() {
 
   const map =
     getCurrentMap();
 
 
   for (
-    let i=0;
-    i<map.signs.length;
-    i++
+    const sign
+    of map.signs
   ) {
-
-    const sign =
-      map.signs[i];
-
 
     const x =
       sign.x*TILE -
@@ -1879,41 +2097,32 @@ function drawSigns(time) {
       camera.y;
 
 
-    const flicker =
-      Math.sin(
-        time*3+i
-      ) > -.93;
-
-
     const width =
       Math.max(
-        64,
-        sign.text.length*19
+        70,
+        sign.text.length*20
       );
 
 
     ctx.fillStyle =
-      flicker
-        ? "#87362f"
-        : "#493331";
+      "#8b382f";
 
 
     ctx.fillRect(
       x,
       y,
       width,
-      24
+      25
     );
 
 
     ctx.fillStyle =
-      flicker
-        ? "#ffe09a"
-        : "#887762";
+      "#ffe09a";
 
 
     ctx.font =
       "bold 14px sans-serif";
+
 
     ctx.textAlign =
       "center";
@@ -1922,7 +2131,7 @@ function drawSigns(time) {
     ctx.fillText(
       sign.text,
       x+width/2,
-      y+17
+      y+18
     );
 
   }
@@ -1930,20 +2139,279 @@ function drawSigns(time) {
 }
 
 
-// ========================================================
-// WEST LAKE DETAILS
-// ========================================================
+// ======================================================
+// EXIT ZONES
+// ======================================================
 
-function drawLakeDetails(time) {
+function drawExits(
+  time
+) {
+
+  const map =
+    getCurrentMap();
+
+
+  for (
+    const exit
+    of map.exits
+  ) {
+
+    const x =
+      exit.x*TILE -
+      camera.x;
+
+
+    const y =
+      exit.y*TILE -
+      camera.y;
+
+
+    const width =
+      exit.width*TILE;
+
+
+    const height =
+      exit.height*TILE;
+
+
+    // glowing ground marker
+
+    const pulse =
+      .11 +
+      Math.sin(time*3) *
+      .025;
+
+
+    ctx.fillStyle =
+      `rgba(224,174,82,${pulse})`;
+
+
+    ctx.fillRect(
+      x,
+      y,
+      width,
+      height
+    );
+
+
+    // wooden sign
+
+    const signWidth =
+      Math.min(
+        width-20,
+        170
+      );
+
+
+    const signX =
+      x +
+      width/2 -
+      signWidth/2;
+
+
+    const signY =
+      y +
+      height/2 -
+      13;
+
+
+    ctx.fillStyle =
+      "#37261d";
+
+
+    ctx.fillRect(
+      signX-3,
+      signY-3,
+      signWidth+6,
+      28
+    );
+
+
+    ctx.fillStyle =
+      "#7d5233";
+
+
+    ctx.fillRect(
+      signX,
+      signY,
+      signWidth,
+      22
+    );
+
+
+    ctx.fillStyle =
+      "#f4d08a";
+
+
+    ctx.font =
+      "bold 12px sans-serif";
+
+
+    ctx.textAlign =
+      "center";
+
+
+    ctx.fillText(
+      exit.label,
+      signX+
+      signWidth/2,
+      signY+15
+    );
+
+  }
+
+}
+
+
+// ======================================================
+// TEA HOUSE DETAILS
+// ======================================================
+
+function drawTeaHouseDetails() {
 
   if (
-    currentMapId !== "lake"
+    currentMapId !==
+    "tea"
   ) {
+
     return;
+
   }
 
 
-  // 柳
+  // scroll
+
+  const sx =
+    13*TILE -
+    camera.x;
+
+
+  const sy =
+    3*TILE -
+    camera.y;
+
+
+  ctx.fillStyle =
+    "#dfcda3";
+
+
+  ctx.fillRect(
+    sx-16,
+    sy+2,
+    32,
+    49
+  );
+
+
+  ctx.fillStyle =
+    "#392b21";
+
+
+  ctx.font =
+    "20px serif";
+
+
+  ctx.textAlign =
+    "center";
+
+
+  ctx.fillText(
+    "茶",
+    sx,
+    sy+32
+  );
+
+
+  drawTeaTable(
+    9*TILE-
+    camera.x,
+
+    12*TILE-
+    camera.y
+  );
+
+
+  drawTeaTable(
+    18*TILE-
+    camera.x,
+
+    13*TILE-
+    camera.y
+  );
+
+}
+
+
+function drawTeaTable(
+  x,
+  y
+) {
+
+  ctx.fillStyle =
+    "#4c3024";
+
+
+  ctx.fillRect(
+    x-20,
+    y-5,
+    40,
+    12
+  );
+
+
+  ctx.fillStyle =
+    "#795035";
+
+
+  ctx.fillRect(
+    x-17,
+    y-8,
+    34,
+    9
+  );
+
+
+  // teapot
+
+  ctx.fillStyle =
+    "#cab46f";
+
+
+  ctx.fillRect(
+    x-4,
+    y-13,
+    8,
+    6
+  );
+
+
+  ctx.fillRect(
+    x+4,
+    y-11,
+    4,
+    2
+  );
+
+}
+
+
+// ======================================================
+// WEST LAKE DETAILS
+// ======================================================
+
+function drawLakeDetails(
+  time
+) {
+
+  if (
+    currentMapId !==
+    "lake"
+  ) {
+
+    return;
+
+  }
+
 
   for (
     let i=0;
@@ -1952,39 +2420,37 @@ function drawLakeDetails(time) {
   ) {
 
     const x =
-      16*TILE -
+      17*TILE -
       camera.x;
 
 
     const y =
-      (3+i*4)*TILE -
+      (4+i*4)*TILE -
       camera.y;
 
 
     ctx.fillStyle =
-      "#3c2c23";
+      "#3d2d23";
+
 
     ctx.fillRect(
       x,
       y,
       5,
-      29
+      30
     );
 
 
     ctx.fillStyle =
-      "#274b36";
+      "#285039";
+
 
     ctx.fillRect(
-      x-13,
-      y-8,
-      30,
-      13
+      x-15,
+      y-10,
+      33,
+      14
     );
-
-
-    ctx.fillStyle =
-      "#356143";
 
 
     const sway =
@@ -1993,52 +2459,23 @@ function drawLakeDetails(time) {
       )*3;
 
 
+    ctx.fillStyle =
+      "#396448";
+
+
     ctx.fillRect(
       x-10+sway,
-      y+3,
+      y+2,
       3,
-      27
+      29
     );
 
 
     ctx.fillRect(
-      x+7+sway,
-      y+1,
-      3,
-      23
-    );
-
-  }
-
-
-  // 湖面の遠い光
-
-  for (
-    let i=0;
-    i<8;
-    i++
-  ) {
-
-    const x =
-      (3+i)*TILE -
-      camera.x;
-
-
-    const y =
-      12*TILE -
-      camera.y;
-
-
-    ctx.fillStyle =
-      "rgba(239,190,102,.45)";
-
-
-    ctx.fillRect(
-      x,
+      x+9+sway,
       y,
       3,
-      12+
-      Math.sin(time+i)*4
+      25
     );
 
   }
@@ -2046,114 +2483,9 @@ function drawLakeDetails(time) {
 }
 
 
-// ========================================================
-// TEA HOUSE DETAILS
-// ========================================================
-
-function drawTeaHouseDetails() {
-
-  if (
-    currentMapId !== "tea"
-  ) {
-    return;
-  }
-
-
-  // 掛け軸
-
-  const x =
-    12*TILE -
-    camera.x;
-
-
-  const y =
-    3*TILE -
-    camera.y;
-
-
-  ctx.fillStyle =
-    "#d9c79d";
-
-  ctx.fillRect(
-    x-15,
-    y+2,
-    30,
-    47
-  );
-
-
-  ctx.fillStyle =
-    "#35291f";
-
-  ctx.font =
-    "18px serif";
-
-  ctx.textAlign =
-    "center";
-
-  ctx.fillText(
-    "茶",
-    x,
-    y+31
-  );
-
-
-  // 丸テーブル
-
-  drawTeaTable(
-    8*TILE-camera.x,
-    11*TILE-camera.y
-  );
-
-
-  drawTeaTable(
-    17*TILE-camera.x,
-    12*TILE-camera.y
-  );
-
-}
-
-
-function drawTeaTable(x,y) {
-
-  ctx.fillStyle =
-    "#4c3024";
-
-  ctx.fillRect(
-    x-18,
-    y-6,
-    36,
-    13
-  );
-
-
-  ctx.fillStyle =
-    "#795035";
-
-  ctx.fillRect(
-    x-15,
-    y-8,
-    30,
-    10
-  );
-
-
-  ctx.fillStyle =
-    "#c9b16d";
-
-  ctx.fillRect(
-    x-3,
-    y-12,
-    6,
-    5
-  );
-
-}
-
-
-// ========================================================
+// ======================================================
 // CHARACTER
-// ========================================================
+// ======================================================
 
 function drawPerson(
   x,
@@ -2166,12 +2498,15 @@ function drawPerson(
   const step =
     moving &&
     Math.sin(time*11)>0
-      ? 1
-      : 0;
+    ? 1
+    : -1;
 
+
+  // shadow
 
   ctx.fillStyle =
     "rgba(0,0,0,.35)";
+
 
   ctx.fillRect(
     x+3,
@@ -2181,8 +2516,11 @@ function drawPerson(
   );
 
 
+  // legs
+
   ctx.fillStyle =
-    "#282630";
+    "#292630";
+
 
   ctx.fillRect(
     x+5,
@@ -2200,8 +2538,11 @@ function drawPerson(
   );
 
 
+  // body
+
   ctx.fillStyle =
     data.color;
+
 
   ctx.fillRect(
     x+3,
@@ -2211,8 +2552,11 @@ function drawPerson(
   );
 
 
+  // arms
+
   ctx.fillStyle =
     data.skin;
+
 
   ctx.fillRect(
     x+1,
@@ -2230,6 +2574,8 @@ function drawPerson(
   );
 
 
+  // head
+
   ctx.fillRect(
     x+5,
     y+2,
@@ -2238,8 +2584,11 @@ function drawPerson(
   );
 
 
+  // hair
+
   ctx.fillStyle =
     data.hair;
+
 
   ctx.fillRect(
     x+4,
@@ -2257,12 +2606,15 @@ function drawPerson(
   );
 
 
+  // eyes
+
   ctx.fillStyle =
     "#251d1d";
 
 
   if (
-    data.direction === "down"
+    data.direction ===
+    "down"
   ) {
 
     ctx.fillRect(
@@ -2284,7 +2636,8 @@ function drawPerson(
 
 
   if (
-    data.direction === "left"
+    data.direction ===
+    "left"
   ) {
 
     ctx.fillRect(
@@ -2298,7 +2651,8 @@ function drawPerson(
 
 
   if (
-    data.direction === "right"
+    data.direction ===
+    "right"
   ) {
 
     ctx.fillRect(
@@ -2313,11 +2667,13 @@ function drawPerson(
 }
 
 
-// ========================================================
+// ======================================================
 // ENTITIES
-// ========================================================
+// ======================================================
 
-function drawEntities(time) {
+function drawEntities(
+  time
+) {
 
   const entities = [];
 
@@ -2329,27 +2685,29 @@ function drawEntities(time) {
 
     entities.push({
 
-      y: npc.y,
+      y:
+        npc.y,
 
-      draw: () => {
+      draw:
+        () =>
+          drawPerson(
 
-        drawPerson(
-          Math.floor(
-            npc.x-camera.x+5
-          ),
+            Math.floor(
+              npc.x-
+              camera.x+5
+            ),
 
-          Math.floor(
-            npc.y-camera.y+3
-          ),
+            Math.floor(
+              npc.y-
+              camera.y+3
+            ),
 
-          npc,
+            npc,
 
-          false,
+            false,
 
-          time
-        );
-
-      }
+            time
+          )
 
     });
 
@@ -2358,40 +2716,47 @@ function drawEntities(time) {
 
   entities.push({
 
-    y: player.y,
+    y:
+      player.y,
 
-    draw: () => {
+    draw:
+      () =>
+        drawPerson(
 
-      drawPerson(
+          Math.floor(
+            player.x-
+            camera.x
+          ),
 
-        Math.floor(
-          player.x-camera.x
-        ),
+          Math.floor(
+            player.y-
+            camera.y
+          ),
 
-        Math.floor(
-          player.y-camera.y
-        ),
+          {
+            color:
+              "#355f7d",
 
-        {
-          color:"#355f7d",
-          hair:"#211b20",
-          skin:"#e1ae87",
-          direction:
-            player.direction
-        },
+            hair:
+              "#211b20",
 
-        player.moving,
+            skin:
+              "#e1ae87",
 
-        time
-      );
+            direction:
+              player.direction
+          },
 
-    }
+          player.moving,
+
+          time
+        )
 
   });
 
 
   entities.sort(
-    (a,b)=>
+    (a,b) =>
       a.y-b.y
   );
 
@@ -2408,50 +2773,54 @@ function drawEntities(time) {
 }
 
 
-// ========================================================
+// ======================================================
 // LIGHTING
-// ========================================================
+// ======================================================
 
 function drawLighting() {
 
-  const map =
-    getCurrentMap();
+  const ambient =
+    getCurrentMap()
+    .ambient;
 
 
   if (
-    map.ambient ===
+    ambient ===
     "indoor"
   ) {
 
     ctx.fillStyle =
-      "rgba(61,31,10,.08)";
+      "rgba(88,42,10,.07)";
 
   }
 
+
   else if (
-    map.ambient ===
+    ambient ===
     "lake"
   ) {
 
     ctx.fillStyle =
-      "rgba(5,22,43,.20)";
+      "rgba(4,20,43,.18)";
 
   }
 
+
   else if (
-    map.ambient ===
+    ambient ===
     "city"
   ) {
 
     ctx.fillStyle =
-      "rgba(13,13,32,.14)";
+      "rgba(13,13,32,.13)";
 
   }
+
 
   else {
 
     ctx.fillStyle =
-      "rgba(15,8,31,.17)";
+      "rgba(15,8,31,.16)";
 
   }
 
@@ -2466,9 +2835,9 @@ function drawLighting() {
 }
 
 
-// ========================================================
-// UI UPDATE
-// ========================================================
+// ======================================================
+// UI
+// ======================================================
 
 function showAreaBanner() {
 
@@ -2493,7 +2862,8 @@ function showAreaBanner() {
   );
 
 
-  bannerTimer = 2.7;
+  bannerTimer =
+    2.5;
 
 }
 
@@ -2503,11 +2873,14 @@ function updateBanner(dt) {
   if (
     bannerTimer <= 0
   ) {
+
     return;
+
   }
 
 
-  bannerTimer -= dt;
+  bannerTimer -=
+    dt;
 
 
   if (
@@ -2523,6 +2896,10 @@ function updateBanner(dt) {
 }
 
 
+// ======================================================
+// INTERACTION HINT
+// ======================================================
+
 function updateInteractionHint() {
 
   if (
@@ -2535,6 +2912,7 @@ function updateInteractionHint() {
     );
 
     return;
+
   }
 
 
@@ -2552,26 +2930,29 @@ function updateInteractionHint() {
       "hidden"
     );
 
+
     return;
+
   }
 
 
-  const portal =
-    getNearbyPortal();
+  const door =
+    getNearbyDoor();
 
 
-  if (portal) {
+  if (door) {
 
     interactionText.textContent =
-      portal.label ||
-      "移動する";
+      door.label;
 
 
     interactionHint.classList.remove(
       "hidden"
     );
 
+
     return;
+
   }
 
 
@@ -2582,9 +2963,9 @@ function updateInteractionHint() {
 }
 
 
-// ========================================================
+// ======================================================
 // CLOCK
-// ========================================================
+// ======================================================
 
 let fakeMinutes =
   19*60+42;
@@ -2618,9 +2999,9 @@ function updateClock(dt) {
 }
 
 
-// ========================================================
+// ======================================================
 // DRAW
-// ========================================================
+// ======================================================
 
 function draw(time) {
 
@@ -2642,9 +3023,13 @@ function draw(time) {
 
   drawTeaHouseDetails();
 
+  drawDoors();
+
   drawStalls(time);
 
-  drawSigns(time);
+  drawSigns();
+
+  drawExits(time);
 
   drawEntities(time);
 
@@ -2653,9 +3038,9 @@ function draw(time) {
 }
 
 
-// ========================================================
+// ======================================================
 // GAME LOOP
-// ========================================================
+// ======================================================
 
 let previousTime =
   performance.now();
@@ -2665,9 +3050,9 @@ function gameLoop(now) {
 
   let dt =
     (
-      now -
+      now-
       previousTime
-    ) / 1000;
+    )/1000;
 
 
   previousTime =
@@ -2682,7 +3067,7 @@ function gameLoop(now) {
 
 
   const time =
-    now / 1000;
+    now/1000;
 
 
   updatePlayer(dt);
@@ -2705,9 +3090,9 @@ function gameLoop(now) {
 }
 
 
-// ========================================================
+// ======================================================
 // START
-// ========================================================
+// ======================================================
 
 showAreaBanner();
 
