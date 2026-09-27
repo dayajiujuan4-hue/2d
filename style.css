@@ -25,9 +25,9 @@ body {
   background:
     radial-gradient(
       circle at 50% 0%,
-      #34233b 0%,
-      #17121d 40%,
-      #09080c 100%
+      #35233d 0%,
+      #17121d 42%,
+      #08070b 100%
     );
 }
 
@@ -39,18 +39,22 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: end;
+
   padding: 0 5px 12px;
 }
 
 .eyebrow {
   margin: 0 0 3px;
+
   color: #d3a65f;
+
   font-size: 11px;
   letter-spacing: .28em;
 }
 
 .game-header h1 {
   margin: 0;
+
   color: #fff0cf;
 
   font-family:
@@ -59,6 +63,7 @@ body {
     serif;
 
   font-size: clamp(27px, 4vw, 40px);
+
   letter-spacing: .15em;
 
   text-shadow:
@@ -68,25 +73,36 @@ body {
 
 .header-right {
   display: flex;
-  gap: 20px;
+  gap: 17px;
 
-  color: #b8a78d;
-  font-size: 12px;
+  color: #a89b89;
+
+  font-size: 11px;
 }
 
-#areaHeader,
+#rankHeader {
+  color: #e1bc78;
+}
+
+#areaHeader {
+  color: #c39a60;
+}
+
 #collectionHeader {
-  color: #dda95a;
+  color: #e3b35f;
 }
 
 .game-frame {
   position: relative;
+
   width: 100%;
+
   overflow: hidden;
 
   background: #08070b;
 
   border: 3px solid #705235;
+
   outline: 2px solid #171018;
 
   box-shadow:
@@ -96,6 +112,7 @@ body {
 
 canvas {
   display: block;
+
   width: 100%;
   height: auto;
 
@@ -111,9 +128,11 @@ canvas {
   align-items: center;
 
   gap: 18px;
+
   padding: 12px 4px;
 
   color: #9f927f;
+
   font-size: 12px;
 }
 
@@ -148,9 +167,9 @@ canvas {
 }
 
 
-/* ======================================================
+/* ==============================================
    INTERACTION
-====================================================== */
+============================================== */
 
 .interaction-hint {
   position: absolute;
@@ -175,6 +194,7 @@ canvas {
   border-radius: 5px;
 
   color: #fff0d3;
+
   font-size: 13px;
 
   box-shadow:
@@ -182,9 +202,9 @@ canvas {
 }
 
 
-/* ======================================================
-   AREA BANNER
-====================================================== */
+/* ==============================================
+   AREA
+============================================== */
 
 .area-banner {
   position: absolute;
@@ -196,7 +216,7 @@ canvas {
 
   transform: translateX(-50%);
 
-  min-width: 340px;
+  min-width: 360px;
 
   padding: 12px 38px 15px;
 
@@ -216,8 +236,11 @@ canvas {
 
 .area-banner small {
   display: block;
+
   color: #a9906e;
+
   font-size: 8px;
+
   letter-spacing: .4em;
 }
 
@@ -227,22 +250,28 @@ canvas {
   margin-top: 3px;
 
   color: #fff0d3;
+
   font-family: serif;
+
   font-size: 20px;
+
   letter-spacing: .16em;
 }
 
 .area-banner span {
   display: block;
+
   margin-top: 4px;
+
   color: #9d8e7b;
+
   font-size: 10px;
 }
 
 
-/* ======================================================
+/* ==============================================
    DIALOGUE
-====================================================== */
+============================================== */
 
 .dialogue-box {
   position: absolute;
@@ -267,6 +296,7 @@ canvas {
     );
 
   border: 4px solid #dfbd82;
+
   outline: 4px solid #261910;
 
   box-shadow:
@@ -276,6 +306,7 @@ canvas {
 
 .portrait {
   width: 92px;
+
   flex: 0 0 92px;
 
   display: flex;
@@ -285,6 +316,7 @@ canvas {
   margin-right: 15px;
 
   background: #19141a;
+
   border: 2px solid #735a3b;
 }
 
@@ -303,42 +335,52 @@ canvas {
   color: white;
 
   font-family: serif;
+
   font-size: 21px;
   font-weight: bold;
 }
 
 .dialogue-content {
   position: relative;
+
   min-width: 0;
+
   flex: 1;
+
   padding-bottom: 23px;
 }
 
 .speaker-name {
   margin-bottom: 8px;
+
   color: #e6b45e;
+
   font-weight: bold;
 }
 
 .dialogue-text {
   color: #fff5e6;
-  font-size: clamp(14px, 2vw, 17px);
+
+  font-size: clamp(14px,2vw,17px);
+
   line-height: 1.85;
 }
 
 .dialogue-footer {
   position: absolute;
+
   right: 3px;
   bottom: 0;
 
   color: #938570;
+
   font-size: 10px;
 }
 
 
-/* ======================================================
+/* ==============================================
    WORD GET
-====================================================== */
+============================================== */
 
 .word-get {
   position: absolute;
@@ -348,9 +390,9 @@ canvas {
 
   z-index: 70;
 
-  transform: translate(-50%, -50%);
+  transform: translate(-50%,-50%);
 
-  width: min(430px, 88%);
+  width: min(440px,88%);
 
   padding: 25px 30px 22px;
 
@@ -364,6 +406,7 @@ canvas {
     );
 
   border: 4px solid #e2bb73;
+
   outline: 4px solid #26180f;
 
   box-shadow:
@@ -373,8 +416,11 @@ canvas {
 
 .word-get-label {
   color: #d9a951;
+
   font-size: 11px;
+
   font-weight: bold;
+
   letter-spacing: .3em;
 }
 
@@ -388,6 +434,7 @@ canvas {
     serif;
 
   font-size: 43px;
+
   font-weight: bold;
 }
 
@@ -397,6 +444,7 @@ canvas {
   color: #e4b766;
 
   font-size: 18px;
+
   letter-spacing: .08em;
 }
 
@@ -404,6 +452,7 @@ canvas {
   margin-top: 13px;
 
   color: #fff7e8;
+
   font-size: 16px;
 }
 
@@ -411,35 +460,309 @@ canvas {
   display: inline-block;
 
   margin-top: 16px;
+
   padding: 5px 12px;
 
   background: #382d27;
+
   border: 1px solid #796142;
 
   color: #cfb17d;
+
   font-size: 11px;
 }
 
+.word-get-progress {
+  margin-top: 14px;
+
+  color: #d7bd8c;
+
+  font-family: serif;
+
+  font-size: 14px;
+
+  letter-spacing: .15em;
+}
+
 .word-get-close {
-  margin-top: 18px;
+  margin-top: 13px;
+
   color: #887a68;
+
   font-size: 10px;
 }
 
 
-/* ======================================================
+/* ==============================================
+   RANK
+============================================== */
+
+.rank-up-panel {
+  position: absolute;
+
+  left: 50%;
+  top: 50%;
+
+  z-index: 75;
+
+  transform: translate(-50%,-50%);
+
+  width: min(390px,85%);
+
+  padding: 30px;
+
+  text-align: center;
+
+  background:
+    linear-gradient(
+      180deg,
+      #33261f,
+      #100d11
+    );
+
+  border: 3px solid #c99b58;
+
+  outline: 4px solid #24170f;
+
+  box-shadow:
+    0 18px 55px rgba(0,0,0,.75);
+}
+
+.rank-small {
+  color: #947b59;
+
+  font-size: 9px;
+
+  letter-spacing: .35em;
+}
+
+.rank-title {
+  margin-top: 8px;
+
+  color: #e1b566;
+
+  font-size: 13px;
+}
+
+.new-rank-name {
+  margin-top: 12px;
+
+  color: #fff0c7;
+
+  font-family: serif;
+
+  font-size: 30px;
+}
+
+.rank-close {
+  margin-top: 20px;
+
+  color: #827464;
+
+  font-size: 10px;
+}
+
+
+/* ==============================================
+   COMPLETION
+============================================== */
+
+.completion-panel {
+  position: absolute;
+
+  inset: 0;
+
+  z-index: 90;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(117,58,29,.36),
+      rgba(6,5,9,.98) 66%
+    );
+
+  overflow: hidden;
+}
+
+.completion-glow {
+  position: absolute;
+
+  width: 560px;
+  height: 560px;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,184,72,.18),
+      transparent 68%
+    );
+
+  animation:
+    completionGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes completionGlow {
+
+  0%,
+  100% {
+    transform: scale(.85);
+    opacity: .5;
+  }
+
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+
+}
+
+.completion-content {
+  position: relative;
+
+  z-index: 2;
+
+  width: min(620px,90%);
+
+  padding: 36px;
+
+  text-align: center;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(53,31,23,.97),
+      rgba(12,9,12,.98)
+    );
+
+  border: 4px solid #d8a856;
+
+  outline: 5px solid #2c1a10;
+
+  box-shadow:
+    0 0 60px rgba(224,153,62,.25);
+}
+
+.completion-small {
+  color: #9f8158;
+
+  font-size: 9px;
+
+  letter-spacing: .4em;
+}
+
+.completion-content h2 {
+  margin: 10px 0 3px;
+
+  color: #ffe1a0;
+
+  font-family: serif;
+
+  font-size: 38px;
+
+  letter-spacing: .1em;
+}
+
+.completion-cn {
+  color: #d1a35c;
+
+  font-size: 15px;
+}
+
+.completion-count {
+  margin-top: 8px;
+
+  color: #fff1c9;
+
+  font-family: serif;
+
+  font-size: 29px;
+
+  letter-spacing: .15em;
+}
+
+.completion-divider {
+  width: 170px;
+  height: 1px;
+
+  margin: 20px auto;
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      #a97a42,
+      transparent
+    );
+}
+
+.completion-content p {
+  color: #d8c8b2;
+
+  line-height: 1.9;
+}
+
+.completion-title-label {
+  margin-top: 18px;
+
+  color: #967c5a;
+
+  font-size: 10px;
+}
+
+.completion-title-name {
+  margin-top: 4px;
+
+  color: #ffd990;
+
+  font-family: serif;
+
+  font-size: 25px;
+}
+
+.completion-unlock {
+  margin-top: 23px;
+
+  padding: 9px;
+
+  background: rgba(135,79,34,.22);
+
+  border: 1px solid #7b5835;
+
+  color: #e1ba76;
+
+  font-size: 12px;
+}
+
+.completion-close {
+  margin-top: 18px;
+
+  color: #827363;
+
+  font-size: 10px;
+}
+
+
+/* ==============================================
    LIBRARY
-====================================================== */
+============================================== */
 
 .library-panel {
   position: absolute;
+
   inset: 0;
 
   z-index: 80;
 
   padding: 25px;
 
-  background: rgba(5,5,8,.93);
+  background: rgba(5,5,8,.94);
 }
 
 .library-window {
@@ -447,6 +770,7 @@ canvas {
   height: 100%;
 
   display: flex;
+
   flex-direction: column;
 
   overflow: hidden;
@@ -459,22 +783,26 @@ canvas {
     );
 
   border: 3px solid #b58a4e;
+
   outline: 3px solid #2d1d14;
 }
 
 .library-top {
   display: flex;
+
   justify-content: space-between;
   align-items: end;
 
-  padding: 20px 25px 14px;
+  padding: 17px 25px 12px;
 
   border-bottom: 1px solid #57432e;
 }
 
 .library-eyebrow {
   color: #947957;
+
   font-size: 9px;
+
   letter-spacing: .3em;
 }
 
@@ -484,18 +812,27 @@ canvas {
   color: #f4d79f;
 
   font-family: serif;
+
   font-size: 27px;
+
   letter-spacing: .12em;
 }
 
 .library-top p {
-  margin: 0;
+  margin: 2px 0 0;
+
   color: #9b8567;
+
   font-size: 11px;
+}
+
+#libraryRank {
+  color: #d3aa67;
 }
 
 .library-controls {
   color: #8d806e;
+
   font-size: 10px;
 }
 
@@ -512,7 +849,7 @@ canvas {
 .library-tab {
   flex: 0 0 auto;
 
-  padding: 7px 13px;
+  padding: 7px 11px;
 
   background: #171319;
 
@@ -520,7 +857,7 @@ canvas {
 
   color: #8f806e;
 
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .library-tab.active {
@@ -535,6 +872,7 @@ canvas {
   min-height: 0;
 
   display: grid;
+
   grid-template-columns: 38% 62%;
 
   flex: 1;
@@ -552,12 +890,13 @@ canvas {
 
 .library-entry {
   display: flex;
+
   justify-content: space-between;
   align-items: center;
 
-  min-height: 48px;
+  min-height: 46px;
 
-  padding: 8px 12px;
+  padding: 7px 12px;
 
   border-bottom: 1px solid #2f2827;
 
@@ -566,6 +905,7 @@ canvas {
 
 .library-entry.active {
   background: #493323;
+
   color: #ffe1aa;
 }
 
@@ -575,16 +915,19 @@ canvas {
 
 .library-word {
   font-size: 17px;
+
   font-family: serif;
 }
 
 .library-pinyin {
   color: #8d7960;
+
   font-size: 10px;
 }
 
 .library-detail {
   overflow-y: auto;
+
   padding: 22px 28px;
 }
 
@@ -598,6 +941,7 @@ canvas {
   border: 1px solid #7d5e3c;
 
   color: #d6b476;
+
   font-size: 10px;
 }
 
@@ -607,11 +951,13 @@ canvas {
   color: #fff0c7;
 
   font-family: serif;
+
   font-size: 43px;
 }
 
 .detail-pinyin {
   color: #dfa95d;
+
   font-size: 18px;
 }
 
@@ -619,6 +965,7 @@ canvas {
   margin-top: 14px;
 
   color: #f0e5d3;
+
   font-size: 17px;
 }
 
@@ -632,11 +979,13 @@ canvas {
   color: #917a5b;
 
   font-size: 9px;
+
   letter-spacing: .16em;
 }
 
 .detail-example-cn {
   color: #f1d8aa;
+
   font-size: 16px;
 }
 
@@ -644,27 +993,32 @@ canvas {
   margin-top: 4px;
 
   color: #a99b87;
+
   font-size: 13px;
 }
 
 .detail-location {
   color: #baa37e;
+
   font-size: 13px;
 }
 
 .empty-library {
   padding-top: 80px;
+
   text-align: center;
+
   color: #655d55;
 }
 
 
-/* ======================================================
+/* ==============================================
    FADE
-====================================================== */
+============================================== */
 
 .fade-layer {
   position: absolute;
+
   inset: 0;
 
   z-index: 100;
@@ -687,7 +1041,7 @@ canvas {
 }
 
 
-@media (max-width: 700px) {
+@media(max-width:700px) {
 
   body {
     padding: 7px;
@@ -701,13 +1055,8 @@ canvas {
     display: none;
   }
 
-  .dialogue-box {
-    left: 3%;
-    right: 3%;
-  }
-
   .library-panel {
-    padding: 10px;
+    padding: 8px;
   }
 
   .library-body {
@@ -715,7 +1064,7 @@ canvas {
   }
 
   .library-detail {
-    padding: 15px;
+    padding: 14px;
   }
 
   .library-controls {
@@ -724,6 +1073,8 @@ canvas {
 
   .footer-location {
     width: 100%;
+
     margin-left: 0;
   }
+
 }
