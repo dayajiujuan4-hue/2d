@@ -2,38 +2,59 @@
 
 const TILE = 32;
 
+
 const T = {
   FLOOR: 0,
   ROAD: 1,
   BUILDING: 2,
   WALL: 3,
-  TREE: 4,
-  LANTERN: 5,
-  DARK: 6,
-  PLAZA: 7,
-  DOOR: 8,
-  WATER: 9,
-  GRASS: 10,
-  INDOOR: 11,
-  COUNTER: 12
+  PLAZA: 4,
+  WATER: 5,
+  GRASS: 6,
+  INDOOR: 7,
+  COUNTER: 8
 };
 
 
-function createGrid(width, height, base = T.FLOOR) {
+// ======================================================
+// GRID HELPERS
+// ======================================================
+
+function createGrid(
+  width,
+  height,
+  base
+) {
 
   return Array.from(
     { length: height },
-    () => Array(width).fill(base)
+    () =>
+      Array(width).fill(base)
   );
 
 }
 
 
-function fill(grid, x, y, w, h, tile) {
+function fill(
+  grid,
+  x,
+  y,
+  width,
+  height,
+  tile
+) {
 
-  for (let yy = y; yy < y + h; yy++) {
+  for (
+    let yy = y;
+    yy < y + height;
+    yy++
+  ) {
 
-    for (let xx = x; xx < x + w; xx++) {
+    for (
+      let xx = x;
+      xx < x + width;
+      xx++
+    ) {
 
       if (
         yy >= 0 &&
@@ -41,7 +62,9 @@ function fill(grid, x, y, w, h, tile) {
         yy < grid.length &&
         xx < grid[0].length
       ) {
+
         grid[yy][xx] = tile;
+
       }
 
     }
@@ -51,415 +74,820 @@ function fill(grid, x, y, w, h, tile) {
 }
 
 
-function border(grid, tile = T.BUILDING) {
+// ======================================================
+// FOOD STREET
+// ======================================================
 
-  const h = grid.length;
-  const w = grid[0].length;
-
-  for (let x = 0; x < w; x++) {
-    grid[0][x] = tile;
-    grid[h - 1][x] = tile;
-  }
-
-  for (let y = 0; y < h; y++) {
-    grid[y][0] = tile;
-    grid[y][w - 1] = tile;
-  }
-
-}
+const foodGrid =
+  createGrid(
+    48,
+    34,
+    T.FLOOR
+  );
 
 
-// ========================================================
-// 01 武林夜市・小吃街
-// ========================================================
+// buildings
 
-const foodMap = createGrid(46, 32, T.FLOOR);
+fill(
+  foodGrid,
+  2,2,
+  12,7,
+  T.BUILDING
+);
 
-border(foodMap);
+fill(
+  foodGrid,
+  34,2,
+  12,7,
+  T.BUILDING
+);
 
-fill(foodMap, 17, 1, 12, 30, T.ROAD);
-fill(foodMap, 2, 6, 42, 5, T.ROAD);
-fill(foodMap, 2, 20, 42, 5, T.ROAD);
+fill(
+  foodGrid,
+  2,13,
+  10,8,
+  T.BUILDING
+);
 
-fill(foodMap, 2, 2, 10, 4, T.BUILDING);
-fill(foodMap, 13, 2, 4, 4, T.BUILDING);
-
-fill(foodMap, 29, 2, 6, 4, T.BUILDING);
-fill(foodMap, 36, 2, 8, 4, T.BUILDING);
-
-fill(foodMap, 2, 12, 10, 7, T.BUILDING);
-fill(foodMap, 34, 12, 10, 7, T.BUILDING);
-
-fill(foodMap, 2, 26, 10, 5, T.BUILDING);
-fill(foodMap, 34, 26, 10, 5, T.BUILDING);
-
-// 茶館のドア
-foodMap[5][7] = T.DOOR;
-
-
-// ========================================================
-// 02 雑貨街
-// ========================================================
-
-const marketMap = createGrid(46, 32, T.FLOOR);
-
-border(marketMap);
-
-fill(marketMap, 17, 1, 12, 30, T.ROAD);
-fill(marketMap, 2, 8, 42, 5, T.ROAD);
-fill(marketMap, 2, 21, 42, 5, T.ROAD);
-
-fill(marketMap, 2, 2, 12, 6, T.BUILDING);
-fill(marketMap, 32, 2, 12, 6, T.BUILDING);
-
-fill(marketMap, 2, 14, 9, 6, T.BUILDING);
-fill(marketMap, 35, 14, 9, 6, T.BUILDING);
-
-fill(marketMap, 2, 27, 12, 4, T.BUILDING);
-fill(marketMap, 32, 27, 12, 4, T.BUILDING);
+fill(
+  foodGrid,
+  36,13,
+  10,8,
+  T.BUILDING
+);
 
 
-// ========================================================
-// 03 ホテル街
-// ========================================================
+// main street
 
-const hotelMap = createGrid(46, 32, T.ROAD);
+fill(
+  foodGrid,
+  17,0,
+  14,34,
+  T.ROAD
+);
 
-border(hotelMap);
+fill(
+  foodGrid,
+  2,9,
+  44,4,
+  T.ROAD
+);
 
-fill(hotelMap, 2, 2, 13, 11, T.BUILDING);
-fill(hotelMap, 31, 2, 13, 11, T.BUILDING);
-
-fill(hotelMap, 2, 19, 13, 11, T.BUILDING);
-fill(hotelMap, 31, 19, 13, 11, T.BUILDING);
-
-fill(hotelMap, 19, 1, 8, 30, T.PLAZA);
-
-hotelMap[12][8] = T.DOOR;
-hotelMap[12][37] = T.DOOR;
-
-
-// ========================================================
-// 04 西湖方面
-// ========================================================
-
-const westLakeMap = createGrid(46, 32, T.ROAD);
-
-border(westLakeMap);
-
-fill(westLakeMap, 1, 1, 13, 30, T.WATER);
-fill(westLakeMap, 14, 1, 5, 30, T.GRASS);
-fill(westLakeMap, 19, 1, 12, 30, T.PLAZA);
-
-fill(westLakeMap, 33, 2, 11, 7, T.BUILDING);
-fill(westLakeMap, 34, 20, 10, 10, T.BUILDING);
+fill(
+  foodGrid,
+  2,22,
+  44,5,
+  T.ROAD
+);
 
 
-// ========================================================
-// 05 茶館内部
-// ========================================================
+// plaza
 
-const teaHouseMap = createGrid(24, 18, T.INDOOR);
-
-border(teaHouseMap, T.WALL);
-
-fill(teaHouseMap, 3, 3, 18, 1, T.WALL);
-
-fill(teaHouseMap, 4, 5, 6, 2, T.COUNTER);
-
-fill(teaHouseMap, 14, 5, 5, 2, T.COUNTER);
-
-teaHouseMap[17][12] = T.DOOR;
+fill(
+  foodGrid,
+  16,15,
+  16,6,
+  T.PLAZA
+);
 
 
-// ========================================================
-// MAP DATA
-// ========================================================
+// ======================================================
+// MARKET
+// ======================================================
+
+const marketGrid =
+  createGrid(
+    48,
+    34,
+    T.FLOOR
+  );
+
+
+fill(
+  marketGrid,
+  2,3,
+  12,7,
+  T.BUILDING
+);
+
+fill(
+  marketGrid,
+  34,3,
+  12,7,
+  T.BUILDING
+);
+
+fill(
+  marketGrid,
+  2,16,
+  10,7,
+  T.BUILDING
+);
+
+fill(
+  marketGrid,
+  36,16,
+  10,7,
+  T.BUILDING
+);
+
+
+fill(
+  marketGrid,
+  17,0,
+  14,34,
+  T.ROAD
+);
+
+
+fill(
+  marketGrid,
+  2,11,
+  44,4,
+  T.ROAD
+);
+
+
+fill(
+  marketGrid,
+  2,25,
+  44,5,
+  T.ROAD
+);
+
+
+// ======================================================
+// HOTEL
+// ======================================================
+
+const hotelGrid =
+  createGrid(
+    48,
+    34,
+    T.ROAD
+  );
+
+
+fill(
+  hotelGrid,
+  2,2,
+  13,12,
+  T.BUILDING
+);
+
+fill(
+  hotelGrid,
+  33,2,
+  13,12,
+  T.BUILDING
+);
+
+fill(
+  hotelGrid,
+  2,20,
+  13,12,
+  T.BUILDING
+);
+
+fill(
+  hotelGrid,
+  33,20,
+  13,12,
+  T.BUILDING
+);
+
+
+fill(
+  hotelGrid,
+  18,0,
+  12,34,
+  T.PLAZA
+);
+
+
+// ======================================================
+// WEST LAKE
+// ======================================================
+
+const lakeGrid =
+  createGrid(
+    48,
+    34,
+    T.ROAD
+  );
+
+
+fill(
+  lakeGrid,
+  0,0,
+  15,34,
+  T.WATER
+);
+
+
+fill(
+  lakeGrid,
+  15,0,
+  5,34,
+  T.GRASS
+);
+
+
+fill(
+  lakeGrid,
+  20,0,
+  12,34,
+  T.PLAZA
+);
+
+
+fill(
+  lakeGrid,
+  35,3,
+  11,8,
+  T.BUILDING
+);
+
+
+fill(
+  lakeGrid,
+  35,22,
+  11,10,
+  T.BUILDING
+);
+
+
+// ======================================================
+// TEA HOUSE
+// ======================================================
+
+const teaGrid =
+  createGrid(
+    26,
+    20,
+    T.INDOOR
+  );
+
+
+fill(
+  teaGrid,
+  0,0,
+  26,1,
+  T.WALL
+);
+
+fill(
+  teaGrid,
+  0,19,
+  26,1,
+  T.WALL
+);
+
+fill(
+  teaGrid,
+  0,0,
+  1,20,
+  T.WALL
+);
+
+fill(
+  teaGrid,
+  25,0,
+  1,20,
+  T.WALL
+);
+
+
+fill(
+  teaGrid,
+  3,3,
+  20,1,
+  T.WALL
+);
+
+
+fill(
+  teaGrid,
+  4,5,
+  7,2,
+  T.COUNTER
+);
+
+
+fill(
+  teaGrid,
+  15,5,
+  6,2,
+  T.COUNTER
+);
+
+
+// ======================================================
+// MAP DEFINITIONS
+// ======================================================
 
 const MAPS = {
 
+
+  // ----------------------------------------------------
+  // FOOD STREET
+  // ----------------------------------------------------
+
   food: {
 
-    id: "food",
+    name:
+      "武林夜市・小吃街",
 
-    name: "武林夜市・小吃街",
-    subtitle: "烧烤 · 小笼包 · 杭州小吃",
+    subtitle:
+      "烧烤 · 小笼包 · 杭州小吃",
 
-    grid: foodMap,
+    ambient:
+      "night",
 
-    ambient: "night",
+    grid:
+      foodGrid,
+
 
     spawn: {
-      x: 23 * TILE,
-      y: 27 * TILE
+      x:24,
+      y:18
     },
+
+
+    doors: [
+
+      {
+        x:7,
+        y:9,
+
+        width:1,
+
+        label:
+          "茶館に入る",
+
+        sign:
+          "茶馆",
+
+        target:
+          "tea",
+
+        targetX:13,
+        targetY:16
+      }
+
+    ],
+
+
+    exits: [
+
+      {
+        x:20,
+        y:31,
+
+        width:8,
+        height:2,
+
+        direction:
+          "down",
+
+        label:
+          "↓ 夜市深处・雑貨街",
+
+        target:
+          "market",
+
+        targetX:24,
+        targetY:3
+      }
+
+    ],
+
 
     stalls: [
 
       {
-        x: 13,
-        y: 8,
-        w: 2,
-        sign: "烧烤",
-        type: "shaokao"
+        x:13,
+        y:10,
+
+        width:3,
+
+        sign:
+          "烧烤",
+
+        type:
+          "shaokao"
       },
 
-      {
-        x: 31,
-        y: 8,
-        w: 2,
-        sign: "小笼包",
-        type: "xiaolongbao"
-      },
 
       {
-        x: 13,
-        y: 22,
-        w: 2,
-        sign: "臭豆腐",
-        type: "choudoufu"
+        x:32,
+        y:10,
+
+        width:3,
+
+        sign:
+          "小笼包",
+
+        type:
+          "xiaolongbao"
       },
 
+
       {
-        x: 31,
-        y: 22,
-        w: 2,
-        sign: "杭州小吃",
-        type: "snack"
+        x:13,
+        y:23,
+
+        width:3,
+
+        sign:
+          "臭豆腐",
+
+        type:
+          "choudoufu"
+      },
+
+
+      {
+        x:32,
+        y:23,
+
+        width:3,
+
+        sign:
+          "杭州小吃",
+
+        type:
+          "snack"
       }
 
     ],
+
 
     signs: [
 
       {
-        x: 3,
-        y: 4,
-        text: "茶馆"
+        x:3,
+        y:7,
+
+        text:
+          "茶馆"
       },
 
+
       {
-        x: 36,
-        y: 4,
-        text: "老杭州"
+        x:37,
+        y:7,
+
+        text:
+          "老杭州"
       },
 
+
       {
-        x: 3,
-        y: 17,
-        text: "面馆"
+        x:3,
+        y:19,
+
+        text:
+          "面馆"
       },
 
-      {
-        x: 35,
-        y: 17,
-        text: "夜市食堂"
-      }
-
-    ],
-
-    portals: [
 
       {
-        x: 7,
-        y: 5,
-        target: "tea",
-        targetX: 12,
-        targetY: 15,
-        label: "茶館に入る"
-      },
+        x:37,
+        y:19,
 
-      {
-        edge: "bottom",
-        target: "market",
-        targetX: 23,
-        targetY: 2
+        text:
+          "夜市食堂"
       }
 
     ]
 
   },
 
+
+  // ----------------------------------------------------
+  // MARKET
+  // ----------------------------------------------------
 
   market: {
 
-    id: "market",
+    name:
+      "武林夜市・雑貨街",
 
-    name: "武林夜市・雑貨街",
-    subtitle: "饰品 · 茶饮 · 夜市杂货",
+    subtitle:
+      "饰品 · 茶饮 · 夜市杂货",
 
-    grid: marketMap,
+    ambient:
+      "night",
 
-    ambient: "night",
+    grid:
+      marketGrid,
+
 
     spawn: {
-      x: 23 * TILE,
-      y: 3 * TILE
+      x:24,
+      y:4
     },
+
+
+    doors: [],
+
+
+    exits: [
+
+      {
+        x:20,
+        y:1,
+
+        width:8,
+        height:2,
+
+        direction:
+          "up",
+
+        label:
+          "↑ 小吃街",
+
+        target:
+          "food",
+
+        targetX:24,
+        targetY:29
+      },
+
+
+      {
+        x:20,
+        y:31,
+
+        width:8,
+        height:2,
+
+        direction:
+          "down",
+
+        label:
+          "↓ 酒店街",
+
+        target:
+          "hotel",
+
+        targetX:24,
+        targetY:4
+      }
+
+    ],
+
 
     stalls: [
 
       {
-        x: 13,
-        y: 10,
-        w: 2,
-        sign: "奶茶",
-        type: "milkTea"
+        x:13,
+        y:12,
+
+        width:3,
+
+        sign:
+          "奶茶",
+
+        type:
+          "milkTea"
       },
 
-      {
-        x: 31,
-        y: 10,
-        w: 2,
-        sign: "饰品",
-        type: "jewelry"
-      },
 
       {
-        x: 13,
-        y: 23,
-        w: 2,
-        sign: "鲜果",
-        type: "fruit"
+        x:32,
+        y:12,
+
+        width:3,
+
+        sign:
+          "饰品",
+
+        type:
+          "jewelry"
       },
 
+
       {
-        x: 31,
-        y: 23,
-        w: 2,
-        sign: "文创",
-        type: "souvenir"
+        x:13,
+        y:26,
+
+        width:3,
+
+        sign:
+          "鲜果",
+
+        type:
+          "fruit"
+      },
+
+
+      {
+        x:32,
+        y:26,
+
+        width:3,
+
+        sign:
+          "杭州文创",
+
+        type:
+          "souvenir"
       }
 
     ],
+
 
     signs: [
 
       {
-        x: 3,
-        y: 6,
-        text: "武林百货"
+        x:3,
+        y:8,
+
+        text:
+          "武林百货"
       },
 
-      {
-        x: 33,
-        y: 6,
-        text: "杭州文创"
-      }
-
-    ],
-
-    portals: [
 
       {
-        edge: "top",
-        target: "food",
-        targetX: 23,
-        targetY: 29
-      },
+        x:35,
+        y:8,
 
-      {
-        edge: "bottom",
-        target: "hotel",
-        targetX: 23,
-        targetY: 2
+        text:
+          "杭州文创"
       }
 
     ]
 
   },
 
+
+  // ----------------------------------------------------
+  // HOTEL
+  // ----------------------------------------------------
 
   hotel: {
 
-    id: "hotel",
+    name:
+      "武林・ホテル街",
 
-    name: "武林・ホテル街",
-    subtitle: "城市夜景 · 酒店 · 街道",
+    subtitle:
+      "酒店 · 城市夜景",
 
-    grid: hotelMap,
+    ambient:
+      "city",
 
-    ambient: "city",
+    grid:
+      hotelGrid,
+
 
     spawn: {
-      x: 23 * TILE,
-      y: 3 * TILE
+      x:24,
+      y:4
     },
 
-    stalls: [],
 
-    signs: [
+    doors: [],
+
+
+    exits: [
 
       {
-        x: 4,
-        y: 10,
-        text: "武林酒店"
+        x:20,
+        y:1,
+
+        width:8,
+        height:2,
+
+        direction:
+          "up",
+
+        label:
+          "↑ 武林夜市",
+
+        target:
+          "market",
+
+        targetX:24,
+        targetY:29
       },
 
+
       {
-        x: 33,
-        y: 10,
-        text: "杭州宾馆"
+        x:20,
+        y:31,
+
+        width:8,
+        height:2,
+
+        direction:
+          "down",
+
+        label:
+          "↓ 西湖方向",
+
+        target:
+          "lake",
+
+        targetX:25,
+        targetY:4
       }
 
     ],
 
-    portals: [
+
+    stalls: [],
+
+
+    signs: [
 
       {
-        edge: "top",
-        target: "market",
-        targetX: 23,
-        targetY: 29
+        x:4,
+        y:12,
+
+        text:
+          "武林酒店"
       },
 
+
       {
-        edge: "bottom",
-        target: "lake",
-        targetX: 24,
-        targetY: 2
+        x:35,
+        y:12,
+
+        text:
+          "杭州宾馆"
       }
 
     ]
 
   },
 
+
+  // ----------------------------------------------------
+  // LAKE
+  // ----------------------------------------------------
 
   lake: {
 
-    id: "lake",
+    name:
+      "西湖・湖滨",
 
-    name: "西湖・湖滨",
-    subtitle: "西湖夜色 · 湖滨步道",
+    subtitle:
+      "西湖夜色 · 湖滨步道",
 
-    grid: westLakeMap,
+    ambient:
+      "lake",
 
-    ambient: "lake",
+    grid:
+      lakeGrid,
+
 
     spawn: {
-      x: 24 * TILE,
-      y: 3 * TILE
+      x:25,
+      y:4
     },
 
-    stalls: [],
 
-    signs: [
+    doors: [],
+
+
+    exits: [
 
       {
-        x: 34,
-        y: 7,
-        text: "湖滨"
+        x:21,
+        y:1,
+
+        width:9,
+        height:2,
+
+        direction:
+          "up",
+
+        label:
+          "↑ 武林方向",
+
+        target:
+          "hotel",
+
+        targetX:24,
+        targetY:29
       }
 
     ],
 
-    portals: [
+
+    stalls: [],
+
+
+    signs: [
 
       {
-        edge: "top",
-        target: "hotel",
-        targetX: 23,
-        targetY: 29
+        x:35,
+        y:10,
+
+        text:
+          "湖滨"
       }
 
     ]
@@ -467,50 +895,78 @@ const MAPS = {
   },
 
 
+  // ----------------------------------------------------
+  // TEA HOUSE
+  // ----------------------------------------------------
+
   tea: {
 
-    id: "tea",
+    name:
+      "老杭州茶館",
 
-    name: "老杭州茶館",
-    subtitle: "一杯茶，一座城",
+    subtitle:
+      "一杯茶，一座城",
 
-    grid: teaHouseMap,
+    ambient:
+      "indoor",
 
-    ambient: "indoor",
+    grid:
+      teaGrid,
+
 
     spawn: {
-      x: 12 * TILE,
-      y: 15 * TILE
+      x:13,
+      y:16
     },
+
+
+    doors: [],
+
+
+    exits: [
+
+      {
+        x:11,
+        y:18,
+
+        width:4,
+        height:1,
+
+        direction:
+          "down",
+
+        label:
+          "外へ出る",
+
+        target:
+          "food",
+
+        targetX:7,
+        targetY:11
+      }
+
+    ],
+
 
     stalls: [],
 
-    signs: [],
-
-    portals: [
-
-      {
-        x: 12,
-        y: 17,
-        target: "food",
-        targetX: 7,
-        targetY: 7,
-        label: "外へ出る"
-      }
-
-    ]
+    signs: []
 
   }
 
 };
 
 
-// ========================================================
-// COLLISION
-// ========================================================
+// ======================================================
+// HELPERS
+// ======================================================
 
 function getCurrentMap() {
-  return MAPS[currentMapId];
+
+  return MAPS[
+    currentMapId
+  ];
+
 }
 
 
@@ -519,8 +975,6 @@ function isSolidTile(tile) {
   return (
     tile === T.BUILDING ||
     tile === T.WALL ||
-    tile === T.TREE ||
-    tile === T.LANTERN ||
     tile === T.WATER ||
     tile === T.COUNTER
   );
@@ -528,12 +982,91 @@ function isSolidTile(tile) {
 }
 
 
-function isSolidAtPixel(px, py) {
+function isInsideRect(
+  px,
+  py,
+  rect
+) {
 
-  const map = getCurrentMap();
+  return (
+    px >= rect.x*TILE &&
+    px < (rect.x+rect.width)*TILE &&
+    py >= rect.y*TILE &&
+    py < (rect.y+rect.height)*TILE
+  );
 
-  const tx = Math.floor(px / TILE);
-  const ty = Math.floor(py / TILE);
+}
+
+
+// ======================================================
+// STALL COLLISION
+// ======================================================
+
+function isInsideStall(
+  px,
+  py
+) {
+
+  const map =
+    getCurrentMap();
+
+
+  for (
+    const stall
+    of map.stalls
+  ) {
+
+    if (
+      px >= stall.x*TILE &&
+      px <
+      (
+        stall.x+
+        stall.width
+      )*TILE &&
+
+      py >= stall.y*TILE &&
+      py <
+      (
+        stall.y+1
+      )*TILE
+    ) {
+
+      return true;
+
+    }
+
+  }
+
+
+  return false;
+
+}
+
+
+// ======================================================
+// WORLD COLLISION
+// ======================================================
+
+function isSolidAtPixel(
+  px,
+  py
+) {
+
+  const map =
+    getCurrentMap();
+
+
+  const tx =
+    Math.floor(
+      px/TILE
+    );
+
+
+  const ty =
+    Math.floor(
+      py/TILE
+    );
+
 
   if (
     tx < 0 ||
@@ -541,11 +1074,35 @@ function isSolidAtPixel(px, py) {
     ty >= map.grid.length ||
     tx >= map.grid[0].length
   ) {
+
     return true;
+
   }
 
-  return isSolidTile(
-    map.grid[ty][tx]
-  );
+
+  if (
+    isSolidTile(
+      map.grid[ty][tx]
+    )
+  ) {
+
+    return true;
+
+  }
+
+
+  if (
+    isInsideStall(
+      px,
+      py
+    )
+  ) {
+
+    return true;
+
+  }
+
+
+  return false;
 
 }
