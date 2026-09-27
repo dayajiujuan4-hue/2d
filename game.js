@@ -1,14 +1,17 @@
 "use strict";
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas =
+  document.getElementById("gameCanvas");
+
+const ctx =
+  canvas.getContext("2d");
 
 ctx.imageSmoothingEnabled = false;
 
 
-// ========================================
+// =====================================
 // UI
-// ========================================
+// =====================================
 
 const dialogueBox =
   document.getElementById("dialogueBox");
@@ -25,20 +28,32 @@ const portraitFace =
 const interactionHint =
   document.getElementById("interactionHint");
 
+const areaHeader =
+  document.getElementById("areaHeader");
 
-// ========================================
+const areaBanner =
+  document.getElementById("areaBanner");
+
+const areaBannerName =
+  document.getElementById("areaBannerName");
+
+const clockElement =
+  document.getElementById("clock");
+
+
+// =====================================
 // PLAYER
-// ========================================
+// =====================================
 
 const player = {
 
-  x: 20 * TILE,
-  y: 24 * TILE,
+  x: 26 * TILE,
+  y: 35 * TILE,
 
   width: 20,
-  height: 24,
+  height: 25,
 
-  speed: 150,
+  speed: 145,
 
   direction: "up",
 
@@ -49,78 +64,87 @@ const player = {
 };
 
 
-// ========================================
+// =====================================
 // CAMERA
-// ========================================
+// =====================================
 
 const camera = {
-
   x: 0,
   y: 0
-
 };
 
 
-// ========================================
+// =====================================
 // INPUT
-// ========================================
+// =====================================
 
 const keys = {};
 
-window.addEventListener("keydown", event => {
 
-  const key = event.key.toLowerCase();
+window.addEventListener(
+  "keydown",
+  event => {
 
-  keys[key] = true;
+    const key =
+      event.key.toLowerCase();
 
-  if (
-    key === "arrowup" ||
-    key === "arrowdown" ||
-    key === "arrowleft" ||
-    key === "arrowright" ||
-    key === " "
-  ) {
-    event.preventDefault();
-  }
+    keys[key] = true;
 
 
-  if (
-    !event.repeat &&
-    (
-      key === "e" ||
-      key === "enter"
-    )
-  ) {
-
-    if (dialogue.active) {
-      advanceDialogue();
-    }
-    else {
-      tryInteraction();
+    if (
+      [
+        "arrowup",
+        "arrowdown",
+        "arrowleft",
+        "arrowright",
+        " "
+      ].includes(key)
+    ) {
+      event.preventDefault();
     }
 
+
+    if (
+      !event.repeat &&
+      (
+        key === "e" ||
+        key === "enter"
+      )
+    ) {
+
+      if (dialogue.active) {
+        advanceDialogue();
+      }
+      else {
+        tryInteraction();
+      }
+
+    }
+
   }
-
-});
-
-
-window.addEventListener("keyup", event => {
-
-  keys[event.key.toLowerCase()] = false;
-
-});
+);
 
 
-// ========================================
-// DIALOGUE STATE
-// ========================================
+window.addEventListener(
+  "keyup",
+  event => {
+
+    keys[
+      event.key.toLowerCase()
+    ] = false;
+
+  }
+);
+
+
+// =====================================
+// DIALOGUE
+// =====================================
 
 const dialogue = {
 
   active: false,
-
   npc: null,
-
   index: 0
 
 };
@@ -129,16 +153,33 @@ const dialogue = {
 function startDialogue(npc) {
 
   dialogue.active = true;
+
   dialogue.npc = npc;
+
   dialogue.index = 0;
 
-  dialogueBox.classList.remove("hidden");
-  interactionHint.classList.add("hidden");
 
-  speakerName.textContent = npc.name;
+  dialogueBox.classList.remove(
+    "hidden"
+  );
 
-  portraitFace.textContent = npc.label;
-  portraitFace.style.background = npc.color;
+
+  interactionHint.classList.add(
+    "hidden"
+  );
+
+
+  speakerName.textContent =
+    npc.name;
+
+
+  portraitFace.textContent =
+    npc.label;
+
+
+  portraitFace.style.background =
+    npc.color;
+
 
   dialogueText.textContent =
     npc.dialogue[0];
@@ -148,9 +189,8 @@ function startDialogue(npc) {
 
 function advanceDialogue() {
 
-  if (!dialogue.active) return;
-
   dialogue.index++;
+
 
   if (
     dialogue.index >=
@@ -158,9 +198,10 @@ function advanceDialogue() {
   ) {
 
     closeDialogue();
-    return;
 
+    return;
   }
+
 
   dialogueText.textContent =
     dialogue.npc.dialogue[
@@ -173,16 +214,75 @@ function advanceDialogue() {
 function closeDialogue() {
 
   dialogue.active = false;
+
   dialogue.npc = null;
 
-  dialogueBox.classList.add("hidden");
+
+  dialogueBox.classList.add(
+    "hidden"
+  );
+
+}
+
+
+// =====================================
+// NPC INTERACTION
+// =====================================
+
+function getNearbyNPC() {
+
+  const px =
+    player.x +
+    player.width / 2;
+
+  const py =
+    player.y +
+    player.height / 2;
+
+
+  let nearest = null;
+
+  let nearestDistance = 58;
+
+
+  for (const npc of NPCS) {
+
+    const dx =
+      npc.x + 10 - px;
+
+    const dy =
+      npc.y + 12 - py;
+
+
+    const distance =
+      Math.hypot(dx,dy);
+
+
+    if (
+      distance <
+      nearestDistance
+    ) {
+
+      nearest = npc;
+
+      nearestDistance =
+        distance;
+
+    }
+
+  }
+
+
+  return nearest;
 
 }
 
 
 function tryInteraction() {
 
-  const npc = getNearbyNPC();
+  const npc =
+    getNearbyNPC();
+
 
   if (npc) {
     startDialogue(npc);
@@ -191,71 +291,34 @@ function tryInteraction() {
 }
 
 
-// ========================================
-// NPC DISTANCE
-// ========================================
-
-function getNearbyNPC() {
-
-  const playerCenterX =
-    player.x + player.width / 2;
-
-  const playerCenterY =
-    player.y + player.height / 2;
-
-  let nearest = null;
-  let nearestDistance = 55;
-
-  for (const npc of NPCS) {
-
-    const dx =
-      npc.x + 10 - playerCenterX;
-
-    const dy =
-      npc.y + 12 - playerCenterY;
-
-    const distance =
-      Math.hypot(dx, dy);
-
-    if (distance < nearestDistance) {
-
-      nearestDistance = distance;
-      nearest = npc;
-
-    }
-
-  }
-
-  return nearest;
-}
-
-
-// ========================================
+// =====================================
 // COLLISION
-// ========================================
+// =====================================
 
-function playerCollides(x, y) {
-
-  const margin = 4;
+function playerCollides(x,y) {
 
   const left =
-    x + margin;
+    x + 4;
 
   const right =
-    x + player.width - margin;
+    x +
+    player.width -
+    4;
 
   const top =
     y + 8;
 
   const bottom =
-    y + player.height - 2;
+    y +
+    player.height -
+    2;
 
 
   if (
-    isSolidAtPixel(left, top) ||
-    isSolidAtPixel(right, top) ||
-    isSolidAtPixel(left, bottom) ||
-    isSolidAtPixel(right, bottom)
+    isSolidAtPixel(left,top) ||
+    isSolidAtPixel(right,top) ||
+    isSolidAtPixel(left,bottom) ||
+    isSolidAtPixel(right,bottom)
   ) {
     return true;
   }
@@ -267,10 +330,10 @@ function playerCollides(x, y) {
       npc.x + 5;
 
     const npcRight =
-      npc.x + 25;
+      npc.x + 26;
 
     const npcTop =
-      npc.y + 5;
+      npc.y + 6;
 
     const npcBottom =
       npc.y + 29;
@@ -287,22 +350,25 @@ function playerCollides(x, y) {
 
   }
 
+
   return false;
+
 }
 
 
-// ========================================
-// UPDATE PLAYER
-// ========================================
+// =====================================
+// PLAYER UPDATE
+// =====================================
 
 function updatePlayer(dt) {
 
   if (dialogue.active) {
 
     player.moving = false;
-    return;
 
+    return;
   }
+
 
   let dx = 0;
   let dy = 0;
@@ -313,8 +379,10 @@ function updatePlayer(dt) {
     keys["arrowup"]
   ) {
 
-    dy -= 1;
-    player.direction = "up";
+    dy--;
+
+    player.direction =
+      "up";
 
   }
 
@@ -324,8 +392,10 @@ function updatePlayer(dt) {
     keys["arrowdown"]
   ) {
 
-    dy += 1;
-    player.direction = "down";
+    dy++;
+
+    player.direction =
+      "down";
 
   }
 
@@ -335,8 +405,10 @@ function updatePlayer(dt) {
     keys["arrowleft"]
   ) {
 
-    dx -= 1;
-    player.direction = "left";
+    dx--;
+
+    player.direction =
+      "left";
 
   }
 
@@ -346,8 +418,10 @@ function updatePlayer(dt) {
     keys["arrowright"]
   ) {
 
-    dx += 1;
-    player.direction = "right";
+    dx++;
+
+    player.direction =
+      "right";
 
   }
 
@@ -359,18 +433,24 @@ function updatePlayer(dt) {
 
     player.moving = true;
 
+
     const length =
-      Math.hypot(dx, dy);
+      Math.hypot(dx,dy);
+
 
     dx /= length;
     dy /= length;
 
 
     const moveX =
-      dx * player.speed * dt;
+      dx *
+      player.speed *
+      dt;
 
     const moveY =
-      dy * player.speed * dt;
+      dy *
+      player.speed *
+      dt;
 
 
     if (
@@ -403,16 +483,154 @@ function updatePlayer(dt) {
   else {
 
     player.moving = false;
-    player.animationTime = 0;
 
   }
 
 }
 
 
-// ========================================
+// =====================================
+// WANDERING NPCS
+// =====================================
+
+for (const npc of NPCS) {
+
+  npc.homeX = npc.x;
+  npc.homeY = npc.y;
+
+  npc.walkTimer =
+    Math.random() * 3;
+
+  npc.walkDX = 0;
+  npc.walkDY = 0;
+
+}
+
+
+function updateNPCs(dt) {
+
+  if (dialogue.active) {
+    return;
+  }
+
+
+  for (const npc of NPCS) {
+
+    if (
+      npc.behavior !==
+      "wander"
+    ) {
+      continue;
+    }
+
+
+    npc.walkTimer -= dt;
+
+
+    if (
+      npc.walkTimer <= 0
+    ) {
+
+      npc.walkTimer =
+        1.5 +
+        Math.random() * 3;
+
+
+      const choices = [
+
+        [0,0],
+        [0,0],
+
+        [1,0],
+        [-1,0],
+
+        [0,1],
+        [0,-1]
+
+      ];
+
+
+      const choice =
+        choices[
+          Math.floor(
+            Math.random() *
+            choices.length
+          )
+        ];
+
+
+      npc.walkDX =
+        choice[0];
+
+      npc.walkDY =
+        choice[1];
+
+
+      if (npc.walkDX > 0)
+        npc.direction = "right";
+
+      if (npc.walkDX < 0)
+        npc.direction = "left";
+
+      if (npc.walkDY > 0)
+        npc.direction = "down";
+
+      if (npc.walkDY < 0)
+        npc.direction = "up";
+
+    }
+
+
+    const speed = 18;
+
+
+    const newX =
+      npc.x +
+      npc.walkDX *
+      speed *
+      dt;
+
+    const newY =
+      npc.y +
+      npc.walkDY *
+      speed *
+      dt;
+
+
+    const distanceHome =
+      Math.hypot(
+        newX - npc.homeX,
+        newY - npc.homeY
+      );
+
+
+    if (
+      distanceHome < 65 &&
+      !isSolidAtPixel(
+        newX + 16,
+        newY + 24
+      )
+    ) {
+
+      npc.x = newX;
+      npc.y = newY;
+
+    }
+    else {
+
+      npc.walkDX = 0;
+      npc.walkDY = 0;
+
+    }
+
+  }
+
+}
+
+
+// =====================================
 // CAMERA
-// ========================================
+// =====================================
 
 function updateCamera() {
 
@@ -426,19 +644,12 @@ function updateCamera() {
 
 
   camera.x +=
-    (targetX - camera.x) * 0.08;
+    (targetX-camera.x) *
+    .085;
 
   camera.y +=
-    (targetY - camera.y) * 0.08;
-
-
-  const maxX =
-    MAP_WIDTH * TILE -
-    canvas.width;
-
-  const maxY =
-    MAP_HEIGHT * TILE -
-    canvas.height;
+    (targetY-camera.y) *
+    .085;
 
 
   camera.x =
@@ -446,7 +657,8 @@ function updateCamera() {
       0,
       Math.min(
         camera.x,
-        maxX
+        MAP_WIDTH*TILE -
+        canvas.width
       )
     );
 
@@ -456,320 +668,145 @@ function updateCamera() {
       0,
       Math.min(
         camera.y,
-        maxY
+        MAP_HEIGHT*TILE -
+        canvas.height
       )
     );
 
 }
 
 
-// ========================================
-// DRAW TILE
-// ========================================
-
-function drawTile(
-  tile,
-  screenX,
-  screenY,
-  mapX,
-  mapY
-) {
-
-  switch (tile) {
-
-    // ------------------------------
-    // 石畳
-    // ------------------------------
-
-    case 0:
-
-      ctx.fillStyle = "#39333c";
-      ctx.fillRect(
-        screenX,
-        screenY,
-        TILE,
-        TILE
-      );
-
-      ctx.strokeStyle = "#49414b";
-      ctx.lineWidth = 1;
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        screenX,
-        screenY + 16
-      );
-
-      ctx.lineTo(
-        screenX + TILE,
-        screenY + 16
-      );
-
-      ctx.moveTo(
-        screenX + 16,
-        screenY
-      );
-
-      ctx.lineTo(
-        screenX + 16,
-        screenY + TILE
-      );
-
-      ctx.stroke();
-
-      break;
-
-
-    // ------------------------------
-    // メイン道路
-    // ------------------------------
-
-    case 1:
-
-      ctx.fillStyle = "#403942";
-
-      ctx.fillRect(
-        screenX,
-        screenY,
-        TILE,
-        TILE
-      );
-
-
-      ctx.fillStyle = "#49414a";
-
-      ctx.fillRect(
-        screenX + 2,
-        screenY + 7,
-        13,
-        7
-      );
-
-      ctx.fillRect(
-        screenX + 18,
-        screenY + 18,
-        12,
-        7
-      );
-
-      break;
-
-
-    // ------------------------------
-    // 建物
-    // ------------------------------
-
-    case 2:
-
-      drawBuildingTile(
-        screenX,
-        screenY,
-        mapX,
-        mapY
-      );
-
-      break;
-
-
-    // ------------------------------
-    // 屋台
-    // ------------------------------
-
-    case 3:
-
-      drawGround(
-        screenX,
-        screenY
-      );
-
-      drawStall(
-        screenX,
-        screenY
-      );
-
-      break;
-
-
-    // ------------------------------
-    // 木
-    // ------------------------------
-
-    case 4:
-
-      drawGround(
-        screenX,
-        screenY
-      );
-
-      drawTree(
-        screenX,
-        screenY
-      );
-
-      break;
-
-
-    // ------------------------------
-    // 提灯
-    // ------------------------------
-
-    case 5:
-
-      drawGround(
-        screenX,
-        screenY
-      );
-
-      drawLanternPost(
-        screenX,
-        screenY
-      );
-
-      break;
-
-
-    // ------------------------------
-    // 路地
-    // ------------------------------
-
-    case 6:
-
-      ctx.fillStyle = "#27242a";
-
-      ctx.fillRect(
-        screenX,
-        screenY,
-        TILE,
-        TILE
-      );
-
-      break;
-
-
-    // ------------------------------
-    // 広場
-    // ------------------------------
-
-    case 7:
-
-      ctx.fillStyle = "#51454a";
-
-      ctx.fillRect(
-        screenX,
-        screenY,
-        TILE,
-        TILE
-      );
-
-
-      ctx.fillStyle = "#5b4c50";
-
-      ctx.fillRect(
-        screenX + 3,
-        screenY + 3,
-        12,
-        12
-      );
-
-      ctx.fillRect(
-        screenX + 18,
-        screenY + 18,
-        11,
-        11
-      );
-
-      break;
-
-  }
-
-}
-
-
-// ========================================
+// =====================================
 // GROUND
-// ========================================
+// =====================================
 
-function drawGround(x, y) {
+function drawStone(x,y,variant=0) {
 
-  ctx.fillStyle = "#39333c";
+  ctx.fillStyle =
+    variant === 7
+      ? "#51464c"
+      : "#39343c";
+
 
   ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
-  );
-
-}
-
-
-// ========================================
-// BUILDINGS
-// ========================================
-
-function drawBuildingTile(
-  x,
-  y,
-  mapX,
-  mapY
-) {
-
-  ctx.fillStyle = "#241d25";
-
-  ctx.fillRect(
-    x,
-    y,
-    TILE,
-    TILE
+    x,y,TILE,TILE
   );
 
 
-  // レンガ
+  ctx.fillStyle =
+    variant === 7
+      ? "#5d5055"
+      : "#443e46";
 
-  ctx.fillStyle = "#332630";
 
   ctx.fillRect(
-    x + 2,
-    y + 3,
-    28,
-    12
-  );
-
-
-  ctx.fillStyle = "#4a3237";
-
-  ctx.fillRect(
-    x + 4,
-    y + 19,
-    24,
+    x+2,
+    y+3,
+    13,
     11
   );
 
 
-  // 時々ネオン窓
+  ctx.fillRect(
+    x+17,
+    y+17,
+    13,
+    12
+  );
+
+
+  ctx.fillStyle =
+    "#302c33";
+
+
+  ctx.fillRect(
+    x,
+    y+15,
+    TILE,
+    1
+  );
+
+
+  ctx.fillRect(
+    x+16,
+    y,
+    1,
+    15
+  );
+
+}
+
+
+// =====================================
+// BUILDING
+// =====================================
+
+function drawBuilding(x,y,mx,my) {
+
+  ctx.fillStyle =
+    "#201a22";
+
+  ctx.fillRect(
+    x,y,TILE,TILE
+  );
+
+
+  ctx.fillStyle =
+    "#33262e";
+
+  ctx.fillRect(
+    x+1,
+    y+2,
+    30,
+    29
+  );
+
+
+  ctx.fillStyle =
+    "#432e34";
+
+  ctx.fillRect(
+    x+2,
+    y+19,
+    28,
+    11
+  );
+
 
   if (
-    (mapX + mapY) % 3 === 0
+    (mx+my)%3 === 0
   ) {
 
-    ctx.fillStyle = "#d39452";
+    ctx.fillStyle =
+      "#6e4b3a";
 
     ctx.fillRect(
-      x + 9,
-      y + 8,
-      14,
-      8
+      x+8,
+      y+6,
+      16,
+      10
     );
 
 
-    ctx.fillStyle = "#6e342d";
+    ctx.fillStyle =
+      "#d79a51";
 
     ctx.fillRect(
-      x + 10,
-      y + 9,
+      x+10,
+      y+8,
       12,
-      2
+      6
+    );
+
+
+    ctx.fillStyle =
+      "#4b2a29";
+
+    ctx.fillRect(
+      x+15,
+      y+8,
+      2,
+      6
     );
 
   }
@@ -777,252 +814,699 @@ function drawBuildingTile(
 }
 
 
-// ========================================
+// =====================================
+// ENTRANCE
+// =====================================
+
+function drawEntrance(x,y) {
+
+  drawStone(x,y);
+
+
+  ctx.fillStyle =
+    "#251b20";
+
+  ctx.fillRect(
+    x+5,
+    y,
+    22,
+    31
+  );
+
+
+  ctx.fillStyle =
+    "#714b35";
+
+  ctx.fillRect(
+    x+7,
+    y+3,
+    18,
+    28
+  );
+
+
+  ctx.fillStyle =
+    "#1e1718";
+
+  ctx.fillRect(
+    x+10,
+    y+7,
+    12,
+    24
+  );
+
+
+  ctx.fillStyle =
+    "#e5a951";
+
+  ctx.fillRect(
+    x+20,
+    y+17,
+    2,
+    2
+  );
+
+}
+
+
+// =====================================
 // STALL
-// ========================================
+// =====================================
 
-function drawStall(x, y) {
+function getStallAt(mx,my) {
 
-  // 柱
+  return stalls.find(
+    s =>
+      s.x === mx &&
+      s.y === my
+  );
 
-  ctx.fillStyle = "#56382c";
+}
+
+
+function drawStall(
+  x,
+  y,
+  stall,
+  time
+) {
+
+  drawStone(x,y);
+
+
+  // 支柱
+
+  ctx.fillStyle =
+    "#57392b";
 
   ctx.fillRect(
-    x + 4,
-    y + 11,
+    x+3,
+    y+11,
     3,
-    19
+    20
   );
 
   ctx.fillRect(
-    x + 25,
-    y + 11,
+    x+26,
+    y+11,
     3,
-    19
+    20
   );
 
 
-  // 赤い屋根
+  // 屋根
 
-  ctx.fillStyle = "#a73c36";
+  ctx.fillStyle =
+    "#9e3932";
 
   ctx.fillRect(
-    x + 2,
-    y + 5,
-    28,
-    8
+    x+1,
+    y+4,
+    30,
+    9
   );
 
 
-  ctx.fillStyle = "#d9a75c";
+  ctx.fillStyle =
+    "#d6a250";
 
   ctx.fillRect(
-    x + 4,
-    y + 13,
-    24,
+    x+3,
+    y+12,
+    26,
     3
   );
 
 
-  // 台
+  // カウンター
 
-  ctx.fillStyle = "#714c32";
+  ctx.fillStyle =
+    "#69442e";
 
   ctx.fillRect(
-    x + 5,
-    y + 22,
+    x+4,
+    y+23,
+    24,
+    8
+  );
+
+
+  // 看板
+
+  ctx.fillStyle =
+    "#401c1b";
+
+  ctx.fillRect(
+    x+5,
+    y+5,
     22,
     8
   );
 
 
-  // 灯り
+  ctx.fillStyle =
+    "#ffd177";
 
-  ctx.fillStyle = "#f0c36a";
+  ctx.font =
+    "bold 7px sans-serif";
+
+  ctx.textAlign =
+    "center";
+
+  ctx.fillText(
+    stall.sign,
+    x+16,
+    y+12
+  );
+
+
+  drawFood(
+    x,
+    y,
+    stall.type
+  );
+
+
+  // 湯気
+
+  if (
+    [
+      "shaokao",
+      "xiaolongbao",
+      "choudoufu",
+      "snack"
+    ].includes(stall.type)
+  ) {
+
+    drawSteam(
+      x+16,
+      y+20,
+      time
+    );
+
+  }
+
+}
+
+
+// =====================================
+// FOOD
+// =====================================
+
+function drawFood(x,y,type) {
+
+  if (
+    type === "shaokao"
+  ) {
+
+    ctx.fillStyle =
+      "#d07a3f";
+
+    for (
+      let i=0;
+      i<4;
+      i++
+    ) {
+
+      ctx.fillRect(
+        x+7+i*5,
+        y+20,
+        3,
+        2
+      );
+
+    }
+
+  }
+
+
+  if (
+    type === "xiaolongbao"
+  ) {
+
+    ctx.fillStyle =
+      "#e7cf9d";
+
+    for (
+      let i=0;
+      i<3;
+      i++
+    ) {
+
+      ctx.fillRect(
+        x+8+i*6,
+        y+19,
+        5,
+        4
+      );
+
+    }
+
+  }
+
+
+  if (
+    type === "fruit"
+  ) {
+
+    ctx.fillStyle =
+      "#b7463e";
+
+    ctx.fillRect(
+      x+7,
+      y+19,
+      5,
+      5
+    );
+
+
+    ctx.fillStyle =
+      "#d99b3d";
+
+    ctx.fillRect(
+      x+14,
+      y+18,
+      5,
+      5
+    );
+
+
+    ctx.fillStyle =
+      "#71934a";
+
+    ctx.fillRect(
+      x+21,
+      y+19,
+      5,
+      5
+    );
+
+  }
+
+
+  if (
+    type === "milkTea"
+  ) {
+
+    ctx.fillStyle =
+      "#d7b57c";
+
+    ctx.fillRect(
+      x+10,
+      y+17,
+      5,
+      7
+    );
+
+    ctx.fillRect(
+      x+19,
+      y+17,
+      5,
+      7
+    );
+
+
+    ctx.fillStyle =
+      "#eadcc0";
+
+    ctx.fillRect(
+      x+11,
+      y+16,
+      3,
+      1
+    );
+
+    ctx.fillRect(
+      x+20,
+      y+16,
+      3,
+      1
+    );
+
+  }
+
+
+  if (
+    type === "jewelry"
+  ) {
+
+    ctx.fillStyle =
+      "#d5b35e";
+
+    ctx.fillRect(
+      x+8,
+      y+20,
+      3,
+      3
+    );
+
+    ctx.fillRect(
+      x+15,
+      y+19,
+      3,
+      3
+    );
+
+    ctx.fillRect(
+      x+22,
+      y+20,
+      3,
+      3
+    );
+
+  }
+
+}
+
+
+// =====================================
+// STEAM
+// =====================================
+
+function drawSteam(x,y,time) {
+
+  const offset =
+    Math.floor(
+      (time*12)%10
+    );
+
+
+  ctx.fillStyle =
+    "rgba(230,220,205,.5)";
+
 
   ctx.fillRect(
-    x + 9,
-    y + 17,
-    4,
+    x-5,
+    y-8-offset,
+    2,
     4
   );
 
+
   ctx.fillRect(
-    x + 19,
-    y + 17,
-    4,
+    x+3,
+    y-4-offset,
+    2,
     4
   );
 
 }
 
 
-// ========================================
+// =====================================
 // TREE
-// ========================================
+// =====================================
 
-function drawTree(x, y) {
+function drawTree(x,y) {
 
-  ctx.fillStyle = "#453427";
+  drawStone(x,y);
+
+
+  ctx.fillStyle =
+    "#493426";
 
   ctx.fillRect(
-    x + 14,
-    y + 18,
+    x+14,
+    y+17,
     5,
-    13
+    14
   );
 
 
-  ctx.fillStyle = "#17382d";
+  ctx.fillStyle =
+    "#17382b";
 
   ctx.fillRect(
-    x + 6,
-    y + 5,
-    20,
+    x+5,
+    y+5,
+    22,
     17
   );
 
 
-  ctx.fillStyle = "#24523c";
+  ctx.fillStyle =
+    "#23513b";
 
   ctx.fillRect(
-    x + 10,
-    y + 2,
-    13,
-    7
+    x+9,
+    y+1,
+    14,
+    10
   );
 
-
-  ctx.fillStyle = "#31634a";
-
-  ctx.fillRect(
-    x + 7,
-    y + 8,
-    7,
-    6
-  );
-
-}
-
-
-// ========================================
-// LANTERN POST
-// ========================================
-
-function drawLanternPost(x, y) {
-
-  ctx.fillStyle = "#33251e";
-
-  ctx.fillRect(
-    x + 15,
-    y + 8,
-    3,
-    23
-  );
-
-
-  // glow
 
   ctx.fillStyle =
-    "rgba(238,111,55,0.20)";
+    "#31664a";
 
   ctx.fillRect(
-    x + 7,
-    y,
-    18,
-    18
-  );
-
-
-  ctx.fillStyle = "#c94a36";
-
-  ctx.fillRect(
-    x + 10,
-    y + 3,
-    13,
-    11
-  );
-
-
-  ctx.fillStyle = "#ffca6a";
-
-  ctx.fillRect(
-    x + 13,
-    y + 5,
-    7,
+    x+7,
+    y+8,
+    8,
     7
   );
 
 }
 
 
-// ========================================
-// MAP
-// ========================================
+// =====================================
+// LANTERN POST
+// =====================================
 
-function drawMap() {
+function drawLanternPost(
+  x,
+  y,
+  time
+) {
+
+  drawStone(x,y);
+
+
+  ctx.fillStyle =
+    "#35251d";
+
+  ctx.fillRect(
+    x+15,
+    y+7,
+    3,
+    24
+  );
+
+
+  const pulse =
+    .14 +
+    Math.sin(time*3) *
+    .03;
+
+
+  ctx.fillStyle =
+    `rgba(255,112,45,${pulse})`;
+
+
+  ctx.fillRect(
+    x+5,
+    y,
+    23,
+    21
+  );
+
+
+  ctx.fillStyle =
+    "#b83d32";
+
+  ctx.fillRect(
+    x+9,
+    y+2,
+    15,
+    13
+  );
+
+
+  ctx.fillStyle =
+    "#ffc665";
+
+  ctx.fillRect(
+    x+12,
+    y+5,
+    9,
+    7
+  );
+
+}
+
+
+// =====================================
+// TILE
+// =====================================
+
+function drawTile(
+  tile,
+  x,
+  y,
+  mx,
+  my,
+  time
+) {
+
+  if (tile === 0)
+    drawStone(x,y);
+
+  if (tile === 1) {
+
+    ctx.fillStyle =
+      "#343039";
+
+    ctx.fillRect(
+      x,y,TILE,TILE
+    );
+
+
+    ctx.fillStyle =
+      "#3e3942";
+
+    ctx.fillRect(
+      x+2,
+      y+5,
+      14,
+      9
+    );
+
+
+    ctx.fillRect(
+      x+18,
+      y+18,
+      12,
+      9
+    );
+
+  }
+
+
+  if (tile === 2)
+    drawBuilding(
+      x,y,mx,my
+    );
+
+
+  if (tile === 3) {
+
+    const stall =
+      getStallAt(mx,my);
+
+    drawStall(
+      x,
+      y,
+      stall || {
+        sign:"小吃",
+        type:"snack"
+      },
+      time
+    );
+
+  }
+
+
+  if (tile === 4)
+    drawTree(x,y);
+
+
+  if (tile === 5)
+    drawLanternPost(
+      x,y,time
+    );
+
+
+  if (tile === 6) {
+
+    ctx.fillStyle =
+      "#272329";
+
+    ctx.fillRect(
+      x,y,TILE,TILE
+    );
+
+  }
+
+
+  if (tile === 7)
+    drawStone(x,y,7);
+
+
+  if (tile === 8)
+    drawEntrance(x,y);
+
+}
+
+
+// =====================================
+// MAP
+// =====================================
+
+function drawMap(time) {
 
   const startX =
-    Math.floor(camera.x / TILE);
+    Math.floor(
+      camera.x/TILE
+    );
 
   const startY =
-    Math.floor(camera.y / TILE);
+    Math.floor(
+      camera.y/TILE
+    );
 
 
   const endX =
     Math.ceil(
-      (camera.x + canvas.width) /
-      TILE
+      (
+        camera.x+
+        canvas.width
+      )/TILE
     );
 
   const endY =
     Math.ceil(
-      (camera.y + canvas.height) /
-      TILE
+      (
+        camera.y+
+        canvas.height
+      )/TILE
     );
 
 
   for (
-    let y = startY;
-    y <= endY;
+    let y=startY;
+    y<=endY;
     y++
   ) {
 
     for (
-      let x = startX;
-      x <= endX;
+      let x=startX;
+      x<=endX;
       x++
     ) {
 
       if (
-        x < 0 ||
-        y < 0 ||
-        x >= MAP_WIDTH ||
-        y >= MAP_HEIGHT
+        x<0 ||
+        y<0 ||
+        x>=MAP_WIDTH ||
+        y>=MAP_HEIGHT
       ) {
         continue;
       }
 
 
-      const screenX =
-        Math.floor(
-          x * TILE -
-          camera.x
-        );
-
-      const screenY =
-        Math.floor(
-          y * TILE -
-          camera.y
-        );
-
-
       drawTile(
         gameMap[y][x],
-        screenX,
-        screenY,
+
+        Math.floor(
+          x*TILE-camera.x
+        ),
+
+        Math.floor(
+          y*TILE-camera.y
+        ),
+
         x,
-        y
+        y,
+        time
       );
 
     }
@@ -1032,287 +1516,474 @@ function drawMap() {
 }
 
 
-// ========================================
+// =====================================
+// BUILDING SIGNS
+// =====================================
+
+function drawBuildingSigns(time) {
+
+  for (
+    let i=0;
+    i<buildingSigns.length;
+    i++
+  ) {
+
+    const sign =
+      buildingSigns[i];
+
+
+    const x =
+      sign.x*TILE -
+      camera.x;
+
+    const y =
+      sign.y*TILE -
+      camera.y;
+
+
+    const flicker =
+      Math.sin(
+        time*3+i
+      ) > -.92;
+
+
+    ctx.fillStyle =
+      flicker
+        ? sign.color
+        : "#4b3434";
+
+
+    const width =
+      Math.max(
+        60,
+        sign.text.length*18
+      );
+
+
+    ctx.fillRect(
+      x,
+      y,
+      width,
+      23
+    );
+
+
+    ctx.fillStyle =
+      flicker
+        ? "#ffe0a0"
+        : "#89765e";
+
+
+    ctx.font =
+      "bold 14px sans-serif";
+
+
+    ctx.textAlign =
+      "center";
+
+
+    ctx.fillText(
+      sign.text,
+      x+width/2,
+      y+17
+    );
+
+  }
+
+}
+
+
+// =====================================
+// LANTERN STRINGS
+// =====================================
+
+function drawLanternStrings(time) {
+
+  for (
+    const line
+    of lanternStrings
+  ) {
+
+    const y =
+      line.y*TILE -
+      camera.y;
+
+
+    const x1 =
+      line.x1*TILE -
+      camera.x;
+
+
+    const x2 =
+      line.x2*TILE -
+      camera.x;
+
+
+    ctx.strokeStyle =
+      "#39231f";
+
+
+    ctx.lineWidth = 2;
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(x1,y);
+
+    ctx.lineTo(x2,y);
+
+    ctx.stroke();
+
+
+    for (
+      let x=x1+20;
+      x<x2;
+      x+=42
+    ) {
+
+      const sway =
+        Math.sin(
+          time*2+x*.02
+        );
+
+
+      ctx.fillStyle =
+        "rgba(255,95,42,.12)";
+
+
+      ctx.fillRect(
+        x-7+sway,
+        y-2,
+        15,
+        18
+      );
+
+
+      ctx.fillStyle =
+        "#b93d32";
+
+
+      ctx.fillRect(
+        x-4+sway,
+        y,
+        9,
+        11
+      );
+
+
+      ctx.fillStyle =
+        "#ffc25d";
+
+
+      ctx.fillRect(
+        x-2+sway,
+        y+2,
+        5,
+        6
+      );
+
+    }
+
+  }
+
+}
+
+
+// =====================================
+// DECORATIONS
+// =====================================
+
+function drawDecorations() {
+
+  for (
+    const d
+    of decorations
+  ) {
+
+    const x =
+      d.x-camera.x;
+
+    const y =
+      d.y-camera.y;
+
+
+    if (d.type==="bike") {
+
+      ctx.strokeStyle =
+        "#8c8b86";
+
+      ctx.lineWidth=2;
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        x+7,y+22,
+        6,0,Math.PI*2
+      );
+
+      ctx.arc(
+        x+23,y+22,
+        6,0,Math.PI*2
+      );
+
+      ctx.moveTo(
+        x+7,y+22
+      );
+
+      ctx.lineTo(
+        x+15,y+12
+      );
+
+      ctx.lineTo(
+        x+23,y+22
+      );
+
+      ctx.stroke();
+
+    }
+
+
+    if (
+      d.type==="scooter"
+    ) {
+
+      ctx.fillStyle =
+        "#724e55";
+
+      ctx.fillRect(
+        x+7,y+12,
+        17,9
+      );
+
+      ctx.fillStyle =
+        "#29282c";
+
+      ctx.fillRect(
+        x+6,y+21,
+        6,5
+      );
+
+      ctx.fillRect(
+        x+22,y+21,
+        6,5
+      );
+
+    }
+
+
+    if (
+      d.type==="trash"
+    ) {
+
+      ctx.fillStyle =
+        "#3c5450";
+
+      ctx.fillRect(
+        x+8,y+8,
+        16,22
+      );
+
+      ctx.fillStyle =
+        "#263b38";
+
+      ctx.fillRect(
+        x+6,y+6,
+        20,4
+      );
+
+    }
+
+
+    if (
+      d.type==="table"
+    ) {
+
+      ctx.fillStyle =
+        "#744d32";
+
+      ctx.fillRect(
+        x+6,y+12,
+        20,8
+      );
+
+      ctx.fillRect(
+        x+9,y+20,
+        3,10
+      );
+
+      ctx.fillRect(
+        x+21,y+20,
+        3,10
+      );
+
+    }
+
+  }
+
+}
+
+
+// =====================================
 // NPC
-// ========================================
+// =====================================
 
-function drawNPC(npc) {
+function drawPerson(
+  x,
+  y,
+  data,
+  moving=false,
+  time=0
+) {
 
-  const x =
-    Math.floor(
-      npc.x -
-      camera.x +
-      6
-    );
-
-  const y =
-    Math.floor(
-      npc.y -
-      camera.y +
-      4
-    );
+  const step =
+    moving
+      ? (
+        Math.sin(time*10)>0
+          ? 1
+          : -1
+      )
+      : 0;
 
 
   // shadow
 
   ctx.fillStyle =
-    "rgba(0,0,0,0.35)";
+    "rgba(0,0,0,.38)";
 
   ctx.fillRect(
-    x + 3,
-    y + 23,
-    14,
+    x+3,
+    y+24,
+    16,
     4
   );
 
 
   // legs
 
-  ctx.fillStyle = "#28232b";
+  ctx.fillStyle =
+    "#292630";
 
   ctx.fillRect(
-    x + 5,
-    y + 18,
-    4,
+    x+5,
+    y+18+step,
+    5,
     7
   );
 
   ctx.fillRect(
-    x + 12,
-    y + 18,
-    4,
+    x+12,
+    y+18-step,
+    5,
     7
   );
 
 
   // body
 
-  ctx.fillStyle = npc.color;
+  ctx.fillStyle =
+    data.color;
 
   ctx.fillRect(
-    x + 3,
-    y + 9,
-    15,
+    x+3,
+    y+9,
+    16,
     12
   );
 
 
-  // face
-
-  ctx.fillStyle = "#e1b08a";
-
-  ctx.fillRect(
-    x + 5,
-    y + 2,
-    11,
-    9
-  );
-
-
-  // hair
-
-  ctx.fillStyle = "#30252a";
-
-  ctx.fillRect(
-    x + 4,
-    y,
-    13,
-    4
-  );
-
-
-  // eyes
-
-  ctx.fillStyle = "#2b2020";
-
-  ctx.fillRect(
-    x + 7,
-    y + 6,
-    2,
-    2
-  );
-
-  ctx.fillRect(
-    x + 13,
-    y + 6,
-    2,
-    2
-  );
-
-}
-
-
-// ========================================
-// PLAYER
-// ========================================
-
-function drawPlayer() {
-
-  const x =
-    Math.floor(
-      player.x -
-      camera.x
-    );
-
-  const y =
-    Math.floor(
-      player.y -
-      camera.y
-    );
-
-
-  let bob = 0;
-
-
-  if (player.moving) {
-
-    bob =
-      Math.sin(
-        player.animationTime * 15
-      ) > 0
-        ? 1
-        : 0;
-
-  }
-
-
-  // shadow
+  // arms
 
   ctx.fillStyle =
-    "rgba(0,0,0,0.4)";
+    data.skin;
 
   ctx.fillRect(
-    x + 3,
-    y + 21,
-    14,
-    4
-  );
-
-
-  // legs
-
-  ctx.fillStyle = "#242331";
-
-  ctx.fillRect(
-    x + 4,
-    y + 17 + bob,
-    5,
-    7
+    x+1,
+    y+11,
+    3,
+    8
   );
 
   ctx.fillRect(
-    x + 12,
-    y + 17 - bob,
-    5,
-    7
-  );
-
-
-  // jacket
-
-  ctx.fillStyle = "#355b77";
-
-  ctx.fillRect(
-    x + 3,
-    y + 9,
-    15,
-    11
-  );
-
-
-  // shirt
-
-  ctx.fillStyle = "#d7c3a4";
-
-  ctx.fillRect(
-    x + 9,
-    y + 10,
-    4,
+    x+19,
+    y+11,
+    3,
     8
   );
 
 
-  // face
+  // head
 
-  ctx.fillStyle = "#e3b38f";
+  ctx.fillStyle =
+    data.skin;
 
   ctx.fillRect(
-    x + 5,
-    y + 2,
-    11,
+    x+5,
+    y+2,
+    12,
     9
   );
 
 
   // hair
 
-  ctx.fillStyle = "#231d22";
+  ctx.fillStyle =
+    data.hair;
 
   ctx.fillRect(
-    x + 4,
+    x+4,
     y,
-    13,
-    4
+    14,
+    5
   );
 
 
   ctx.fillRect(
-    x + 4,
-    y + 3,
+    x+4,
+    y+3,
     3,
     5
   );
 
 
-  // direction indication
+  // face direction
 
-  ctx.fillStyle = "#2a2020";
+  ctx.fillStyle =
+    "#2a2020";
 
 
   if (
-    player.direction === "down"
+    data.direction==="down"
   ) {
 
     ctx.fillRect(
-      x + 7,
-      y + 6,
-      2,
-      2
+      x+8,y+6,2,2
     );
 
     ctx.fillRect(
-      x + 13,
-      y + 6,
-      2,
-      2
+      x+14,y+6,2,2
     );
 
   }
 
 
   if (
-    player.direction === "left"
+    data.direction==="left"
   ) {
 
     ctx.fillRect(
-      x + 6,
-      y + 6,
-      2,
-      2
+      x+6,y+6,2,2
     );
 
   }
 
 
   if (
-    player.direction === "right"
+    data.direction==="right"
   ) {
 
     ctx.fillRect(
-      x + 14,
-      y + 6,
-      2,
-      2
+      x+15,y+6,2,2
     );
 
   }
@@ -1320,14 +1991,196 @@ function drawPlayer() {
 }
 
 
-// ========================================
-// NIGHT LIGHTING
-// ========================================
+function drawNPC(npc,time) {
+
+  const moving =
+    npc.walkDX !== 0 ||
+    npc.walkDY !== 0;
+
+
+  drawPerson(
+
+    Math.floor(
+      npc.x-camera.x+5
+    ),
+
+    Math.floor(
+      npc.y-camera.y+3
+    ),
+
+    npc,
+
+    moving,
+
+    time
+
+  );
+
+}
+
+
+// =====================================
+// PLAYER
+// =====================================
+
+function drawPlayer(time) {
+
+  drawPerson(
+
+    Math.floor(
+      player.x-camera.x
+    ),
+
+    Math.floor(
+      player.y-camera.y
+    ),
+
+    {
+      color:"#355f7d",
+      hair:"#211b20",
+      skin:"#e1ae87",
+      direction:
+        player.direction
+    },
+
+    player.moving,
+
+    time
+
+  );
+
+
+  // バッグ
+
+  const x =
+    Math.floor(
+      player.x-camera.x
+    );
+
+  const y =
+    Math.floor(
+      player.y-camera.y
+    );
+
+
+  ctx.fillStyle =
+    "#704932";
+
+
+  if (
+    player.direction !==
+    "up"
+  ) {
+
+    ctx.fillRect(
+      x+16,
+      y+12,
+      4,
+      8
+    );
+
+  }
+
+}
+
+
+// =====================================
+// ENTRANCE ARCH
+// =====================================
+
+function drawEntranceArch() {
+
+  const worldX =
+    26*TILE;
+
+  const worldY =
+    34*TILE;
+
+
+  const x =
+    worldX-camera.x;
+
+  const y =
+    worldY-camera.y;
+
+
+  if (
+    x < -200 ||
+    x > canvas.width+200 ||
+    y < -100 ||
+    y > canvas.height+100
+  ) {
+    return;
+  }
+
+
+  ctx.fillStyle =
+    "#4a2925";
+
+  ctx.fillRect(
+    x-110,
+    y,
+    7,
+    70
+  );
+
+  ctx.fillRect(
+    x+103,
+    y,
+    7,
+    70
+  );
+
+
+  ctx.fillStyle =
+    "#8e332d";
+
+  ctx.fillRect(
+    x-118,
+    y-9,
+    236,
+    25
+  );
+
+
+  ctx.fillStyle =
+    "#351c1b";
+
+  ctx.fillRect(
+    x-75,
+    y-6,
+    150,
+    22
+  );
+
+
+  ctx.fillStyle =
+    "#f2c36c";
+
+  ctx.font =
+    "bold 18px serif";
+
+  ctx.textAlign =
+    "center";
+
+  ctx.fillText(
+    "武 林 夜 市",
+    x,
+    y+10
+  );
+
+}
+
+
+// =====================================
+// NIGHT FILTER
+// =====================================
 
 function drawNightOverlay() {
 
   ctx.fillStyle =
-    "rgba(16,12,35,0.17)";
+    "rgba(14,10,32,.14)";
+
 
   ctx.fillRect(
     0,
@@ -1339,85 +2192,75 @@ function drawNightOverlay() {
 }
 
 
-// ========================================
-// SIGN
-// ========================================
+// =====================================
+// AREA
+// =====================================
 
-function drawTitleSign() {
+let currentArea = "";
 
-  const worldX =
-    20 * TILE;
-
-  const worldY =
-    7 * TILE;
+let bannerTimer = 0;
 
 
-  const x =
-    worldX -
-    camera.x;
+function updateArea(dt) {
 
-  const y =
-    worldY -
-    camera.y;
+  const newArea =
+    getAreaName(
+      player.y
+    );
 
 
   if (
-    x < -150 ||
-    x > canvas.width + 150 ||
-    y < -80 ||
-    y > canvas.height + 80
+    newArea !==
+    currentArea
   ) {
-    return;
+
+    currentArea =
+      newArea;
+
+
+    areaHeader.textContent =
+      newArea;
+
+
+    areaBannerName.textContent =
+      newArea;
+
+
+    areaBanner.classList.remove(
+      "hidden"
+    );
+
+
+    bannerTimer = 2.5;
+
   }
 
 
-  ctx.save();
+  if (
+    bannerTimer > 0
+  ) {
+
+    bannerTimer -= dt;
 
 
-  ctx.fillStyle =
-    "rgba(20,10,15,0.88)";
+    if (
+      bannerTimer <= 0
+    ) {
 
-  ctx.fillRect(
-    x - 78,
-    y - 25,
-    156,
-    30
-  );
+      areaBanner.classList.add(
+        "hidden"
+      );
 
+    }
 
-  ctx.strokeStyle = "#a94135";
-  ctx.lineWidth = 2;
-
-  ctx.strokeRect(
-    x - 78,
-    y - 25,
-    156,
-    30
-  );
-
-
-  ctx.fillStyle = "#f0c56f";
-
-  ctx.font =
-    "bold 17px serif";
-
-  ctx.textAlign = "center";
-
-  ctx.fillText(
-    "武 林 夜 市",
-    x,
-    y - 4
-  );
-
-
-  ctx.restore();
+  }
 
 }
 
 
-// ========================================
-// HUD HINT
-// ========================================
+// =====================================
+// INTERACTION HINT
+// =====================================
 
 function updateInteractionHint() {
 
@@ -1428,7 +2271,6 @@ function updateInteractionHint() {
     );
 
     return;
-
   }
 
 
@@ -1436,31 +2278,58 @@ function updateInteractionHint() {
     getNearbyNPC();
 
 
-  if (npc) {
-
-    interactionHint.classList.remove(
-      "hidden"
-    );
-
-  }
-  else {
-
-    interactionHint.classList.add(
-      "hidden"
-    );
-
-  }
+  interactionHint.classList.toggle(
+    "hidden",
+    !npc
+  );
 
 }
 
 
-// ========================================
+// =====================================
+// CLOCK
+// =====================================
+
+let fakeMinutes =
+  19*60+42;
+
+
+function updateClock(dt) {
+
+  fakeMinutes +=
+    dt*.18;
+
+
+  const total =
+    Math.floor(
+      fakeMinutes
+    );
+
+
+  const h =
+    Math.floor(
+      total/60
+    )%24;
+
+
+  const m =
+    total%60;
+
+
+  clockElement.textContent =
+    `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+
+}
+
+
+// =====================================
 // DRAW
-// ========================================
+// =====================================
 
-function draw() {
+function draw(time) {
 
-  ctx.fillStyle = "#111018";
+  ctx.fillStyle =
+    "#100d14";
 
   ctx.fillRect(
     0,
@@ -1470,42 +2339,50 @@ function draw() {
   );
 
 
-  drawMap();
-
-  drawTitleSign();
+  drawMap(time);
 
 
-  /*
-    Y座標順に描画すると
-    RPGらしい前後関係になる
-  */
+  drawBuildingSigns(time);
+
+  drawDecorations();
+
+  drawEntranceArch();
+
+  drawLanternStrings(time);
+
+
+  // NPCとプレイヤーを
+  // Y座標で並び替える
 
   const entities = [
 
     ...NPCS.map(
       npc => ({
-        y: npc.y,
-        draw: () =>
-          drawNPC(npc)
+        y:npc.y,
+        draw:() =>
+          drawNPC(npc,time)
       })
     ),
 
     {
-      y: player.y,
-      draw: drawPlayer
+      y:player.y,
+
+      draw:() =>
+        drawPlayer(time)
     }
 
   ];
 
 
   entities.sort(
-    (a, b) =>
-      a.y - b.y
+    (a,b)=>
+      a.y-b.y
   );
 
 
   for (
-    const entity of entities
+    const entity
+    of entities
   ) {
 
     entity.draw();
@@ -1518,80 +2395,51 @@ function draw() {
 }
 
 
-// ========================================
-// CLOCK
-// ========================================
-
-const clockElement =
-  document.getElementById("clock");
-
-let fakeMinutes =
-  19 * 60 + 42;
-
-
-function updateClock(dt) {
-
-  fakeMinutes +=
-    dt * 0.25;
-
-
-  const total =
-    Math.floor(fakeMinutes);
-
-
-  const hours =
-    Math.floor(
-      total / 60
-    ) % 24;
-
-
-  const minutes =
-    total % 60;
-
-
-  clockElement.textContent =
-    `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
-
-}
-
-
-// ========================================
-// GAME LOOP
-// ========================================
+// =====================================
+// LOOP
+// =====================================
 
 let previousTime =
   performance.now();
 
 
-function gameLoop(currentTime) {
+function gameLoop(now) {
 
   let dt =
-    (currentTime - previousTime) /
-    1000;
+    (
+      now-
+      previousTime
+    )/1000;
 
 
   previousTime =
-    currentTime;
+    now;
 
-
-  // タブ復帰時などの暴走防止
 
   dt =
     Math.min(
       dt,
-      0.05
+      .05
     );
+
+
+  const time =
+    now/1000;
 
 
   updatePlayer(dt);
 
+  updateNPCs(dt);
+
   updateCamera();
+
+  updateArea(dt);
 
   updateInteractionHint();
 
   updateClock(dt);
 
-  draw();
+  draw(time);
 
 
   requestAnimationFrame(
@@ -1601,9 +2449,9 @@ function gameLoop(currentTime) {
 }
 
 
-// ========================================
+// =====================================
 // START
-// ========================================
+// =====================================
 
 updateCamera();
 
