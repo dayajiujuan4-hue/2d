@@ -19,6 +19,7 @@
 
     <div class="header-right">
       <span id="areaHeader">武林夜市・小吃街</span>
+      <span id="collectionHeader">词语 0 / 40</span>
       <span id="clock">19:42</span>
     </div>
   </header>
@@ -31,17 +32,20 @@
       height="576"
     ></canvas>
 
+    <!-- AREA -->
     <div id="areaBanner" class="area-banner hidden">
       <small>AREA</small>
       <strong id="areaBannerName"></strong>
       <span id="areaBannerSub"></span>
     </div>
 
+    <!-- INTERACTION -->
     <div id="interactionHint" class="interaction-hint hidden">
       <span class="key">E</span>
       <span id="interactionText">話す</span>
     </div>
 
+    <!-- DIALOGUE -->
     <div id="dialogueBox" class="dialogue-box hidden">
 
       <div class="portrait">
@@ -52,6 +56,85 @@
         <div id="speakerName" class="speaker-name"></div>
         <div id="dialogueText" class="dialogue-text"></div>
         <div class="dialogue-footer">E / ENTER</div>
+      </div>
+
+    </div>
+
+    <!-- WORD GET -->
+    <div id="wordGet" class="word-get hidden">
+
+      <div class="word-get-label">
+        NEW WORD GET!
+      </div>
+
+      <div id="wordGetChinese" class="word-get-chinese">
+        摊位
+      </div>
+
+      <div id="wordGetPinyin" class="word-get-pinyin">
+        tānwèi
+      </div>
+
+      <div id="wordGetMeaning" class="word-get-meaning">
+        露店・屋台の売り場
+      </div>
+
+      <div id="wordGetCategory" class="word-get-category">
+        夜市・街歩き
+      </div>
+
+      <div class="word-get-close">
+        E / ENTER
+      </div>
+
+    </div>
+
+    <!-- VOCAB LIBRARY -->
+    <div id="libraryPanel" class="library-panel hidden">
+
+      <div class="library-window">
+
+        <div class="library-top">
+
+          <div>
+            <div class="library-eyebrow">
+              HANGZHOU LANGUAGE ARCHIVE
+            </div>
+
+            <h2>词语图鉴</h2>
+
+            <p id="libraryProgress">
+              0 / 40 WORDS
+            </p>
+          </div>
+
+          <div class="library-controls">
+            <span class="key">← →</span>
+            カテゴリー
+            <span class="key">↑ ↓</span>
+            選択
+            <span class="key">L</span>
+            閉じる
+          </div>
+
+        </div>
+
+        <div id="libraryTabs" class="library-tabs"></div>
+
+        <div class="library-body">
+
+          <div id="libraryList" class="library-list"></div>
+
+          <div id="libraryDetail" class="library-detail">
+
+            <div class="empty-library">
+              単語を選択してください
+            </div>
+
+          </div>
+
+        </div>
+
       </div>
 
     </div>
@@ -70,7 +153,12 @@
 
     <div>
       <span class="key">E</span>
-      話す・入る
+      話す・調べる・入る
+    </div>
+
+    <div>
+      <span class="key">L</span>
+      词语图鉴
     </div>
 
     <div class="footer-location">
@@ -82,6 +170,7 @@
 </main>
 
 <script src="map.js"></script>
+<script src="vocabulary.js"></script>
 <script src="dialogue.js"></script>
 <script src="game.js"></script>
 
