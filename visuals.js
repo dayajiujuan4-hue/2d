@@ -1,2452 +1,1213 @@
 "use strict";
 
-/* =========================================================
-   武林夜市 VISUAL OVERHAUL v2
-
-   現在の map.js の
-   T.FLOOR / T.ROAD / T.PLAZA / T.WATER /
-   T.GRASS / T.INDOOR / T.WALL / T.COUNTER
-   に完全対応。
-
-   ・夜市の紫灰色石畳
-   ・大判石畳の広場
-   ・西湖の水面
-   ・湖面反射
-   ・湖岸
-   ・店舗別内装
-   ・中国風木造建築
-   ・瓦屋根
-   ・暖色窓
-   ・提灯
-========================================================= */
-
-(() => {
-
-  /* =====================================================
-     基本
-  ===================================================== */
-
-  function SX(wx) {
-    return Math.floor(wx - camera.x);
-  }
-
-  function SY(wy) {
-    return Math.floor(wy - camera.y);
-  }
-
-  function fillRect(x, y, w, h, color) {
-    ctx.fillStyle = color;
-    ctx.fillRect(
-      Math.floor(x),
-      Math.floor(y),
-      Math.ceil(w),
-      Math.ceil(h)
-    );
-  }
-
-  function strokeLine(x1, y1, x2, y2, color, width = 1) {
-    ctx.save();
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = width;
-
-    ctx.beginPath();
-    ctx.moveTo(
-      Math.floor(x1) + 0.5,
-      Math.floor(y1) + 0.5
-    );
-    ctx.lineTo(
-      Math.floor(x2) + 0.5,
-      Math.floor(y2) + 0.5
-    );
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function hash(x, y, salt = 0) {
-
-    let n =
-      Math.imul((x | 0) + salt * 31, 374761393) +
-      Math.imul((y | 0) + salt * 17, 668265263);
-
-    n = (n ^ (n >>> 13)) >>> 0;
-    n = Math.imul(n, 1274126177) >>> 0;
-
-    return (
-      ((n ^ (n >>> 16)) >>> 0) /
-      4294967295
-    );
-  }
-
-  function glow(x, y, radius, color, alpha = 0.2) {
-
-    const g =
-      ctx.createRadialGradient(
-        x, y, 0,
-        x, y, radius
-      );
-
-    g.addColorStop(0, color);
-    g.addColorStop(0.25, color);
-    g.addColorStop(1, "rgba(0,0,0,0)");
-
-    ctx.save();
-
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = g;
-
-    ctx.fillRect(
-      x - radius,
-      y - radius,
-      radius * 2,
-      radius * 2
-    );
-
-    ctx.restore();
-  }
-
-
-  /* =====================================================
-     FLOOR
-  ===================================================== */
-
-  function drawFloorTile(px, py, tx, ty) {
-
-    const r = hash(tx, ty, 1);
-
-    let color = "#302d3a";
-
-    if (r < 0.22) color = "#292735";
-    else if (r < 0.52) color = "#302d3a";
-    else if (r < 0.80) color = "#35313f";
-    else color = "#3a3543";
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      TILE,
-      color
-    );
-
-    // 石畳の横目地
-    strokeLine(
-      px,
-      py + TILE - 1,
-      px + TILE,
-      py + TILE - 1,
-      "rgba(13,12,22,.42)"
-    );
-
-    // 縦目地
-    const offset =
-      ty % 2 === 0
-        ? TILE * 0.30
-        : TILE * 0.68;
-
-    strokeLine(
-      px + offset,
-      py,
-      px + offset,
-      py + 8,
-      "rgba(14,13,22,.28)"
-    );
-
-    // 上側ハイライト
-    strokeLine(
-      px + 2,
-      py + 2,
-      px + TILE - 3,
-      py + 2,
-      "rgba(255,255,255,.025)"
-    );
-
-    // 時々石に傷
-    if (r > 0.88) {
-
-      strokeLine(
-        px + 7,
-        py + 18,
-        px + 15,
-        py + 15,
-        "rgba(12,11,18,.20)"
-      );
-
-      strokeLine(
-        px + 15,
-        py + 15,
-        px + 19,
-        py + 20,
-        "rgba(12,11,18,.20)"
-      );
-    }
-  }
-
-
-  /* =====================================================
-     ROAD
-  ===================================================== */
-
-  function drawRoadTile(px, py, tx, ty) {
-
-    const r = hash(tx, ty, 2);
-
-    let color;
-
-    if (r < 0.30) color = "#282735";
-    else if (r < 0.72) color = "#2d2b39";
-    else color = "#32303e";
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      TILE,
-      color
-    );
-
-    strokeLine(
-      px,
-      py + TILE - 1,
-      px + TILE,
-      py + TILE - 1,
-      "rgba(10,10,18,.32)"
-    );
-
-    if ((tx + ty) % 2 === 0) {
-
-      strokeLine(
-        px + TILE - 1,
-        py + 7,
-        px + TILE - 1,
-        py + TILE - 6,
-        "rgba(10,10,18,.20)"
-      );
-    }
-
-    if (r > 0.86) {
-
-      fillRect(
-        px + 6,
-        py + 7,
-        18,
-        2,
-        "rgba(255,255,255,.018)"
-      );
-    }
-  }
-
-
-  /* =====================================================
-     PLAZA
-
-     参考画像中央の大判石畳
-  ===================================================== */
-
-  function drawPlazaTile(px, py, tx, ty) {
-
-    const r = hash(tx, ty, 3);
-
-    let color;
-
-    if (r < 0.20) color = "#403a46";
-    else if (r < 0.52) color = "#46404c";
-    else if (r < 0.82) color = "#4b4551";
-    else color = "#514a56";
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      TILE,
-      color
-    );
-
-    strokeLine(
-      px,
-      py + TILE - 1,
-      px + TILE,
-      py + TILE - 1,
-      "rgba(21,17,26,.46)"
-    );
-
-    strokeLine(
-      px + TILE - 1,
-      py,
-      px + TILE - 1,
-      py + TILE,
-      "rgba(21,17,26,.40)"
-    );
-
-    // 石の内側に微妙な明暗
-    strokeLine(
-      px + 2,
-      py + 2,
-      px + TILE - 3,
-      py + 2,
-      "rgba(255,255,255,.035)"
-    );
-
-    strokeLine(
-      px + 2,
-      py + TILE - 3,
-      px + TILE - 3,
-      py + TILE - 3,
-      "rgba(10,8,15,.08)"
-    );
-  }
-
-
-  /* =====================================================
-     GRASS
-  ===================================================== */
-
-  function drawGrassTile(px, py, tx, ty) {
-
-    const r = hash(tx, ty, 4);
-
-    let color =
-      r > 0.55
-        ? "#18332e"
-        : "#142c28";
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      TILE,
-      color
-    );
-
-    if (r > 0.28) {
-
-      fillRect(
-        px + 8,
-        py + 11,
-        2,
-        7,
-        "#275044"
-      );
-
-      fillRect(
-        px + 10,
-        py + 8,
-        2,
-        5,
-        "#20483d"
-      );
-    }
-
-    if (r > 0.63) {
-
-      fillRect(
-        px + 21,
-        py + 19,
-        2,
-        6,
-        "#2a5748"
-      );
-
-      fillRect(
-        px + 18,
-        py + 17,
-        2,
-        5,
-        "#21473d"
-      );
-    }
-  }
-
-
-  /* =====================================================
-     WEST LAKE WATER
-  ===================================================== */
-
-  function drawWaterTile(px, py, tx, ty, time) {
-
-    const r = hash(tx, ty, 5);
-
-    let base;
-
-    if (r < 0.30) base = "#153148";
-    else if (r < 0.65) base = "#17374f";
-    else base = "#1a3c55";
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      TILE,
-      base
-    );
-
-    // 水面の縦方向グラデーション風
-    fillRect(
-      px,
-      py,
-      TILE,
-      5,
-      "rgba(74,126,154,.045)"
-    );
-
-    fillRect(
-      px,
-      py + TILE - 6,
-      TILE,
-      6,
-      "rgba(4,18,30,.10)"
-    );
-
-    const wave1 =
-      Math.sin(
-        time * 0.0015 +
-        tx * 0.9 +
-        ty * 0.4
-      );
-
-    const wave2 =
-      Math.sin(
-        time * 0.0010 +
-        tx * 0.55 -
-        ty * 0.7
-      );
-
-    const wx1 =
-      px + 4 + wave1 * 3;
-
-    const wx2 =
-      px + 11 + wave2 * 3;
-
-    strokeLine(
-      wx1,
-      py + 9,
-      wx1 + 13,
-      py + 9,
-      "rgba(104,176,201,.23)"
-    );
-
-    strokeLine(
-      wx2,
-      py + 21,
-      wx2 + 12,
-      py + 21,
-      "rgba(95,158,188,.18)"
-    );
-
-    if (r > 0.60) {
-
-      strokeLine(
-        px + 3,
-        py + 28,
-        px + 10,
-        py + 28,
-        "rgba(126,189,208,.11)"
-      );
-    }
-  }
-
-
-  /* =====================================================
-     湖岸
-
-     T.WATER と陸地の境界を描く
-  ===================================================== */
-
-  function drawLakeShore(map) {
-
-    if (currentMapId !== "lake") {
-      return;
-    }
-
-    const shoreWorldX = 16 * TILE;
-
-    const x =
-      Math.floor(
-        shoreWorldX -
-        camera.x
-      );
-
-    if (
-      x < -30 ||
-      x > canvas.width + 30
-    ) {
-      return;
-    }
-
-    // 湖岸の影
-    fillRect(
-      x - 5,
+/*
+==========================================================
+ 杭州探索録
+ VISUAL ENHANCEMENT LAYER
+
+ Ver. 安定版
+
+ IMPORTANT
+ ---------------------------------------------------------
+ このファイルでは game.js の drawMap() を上書きしません。
+
+ game.js が持っている
+
+ ・地面
+ ・西湖
+ ・室内床
+ ・壁
+ ・カウンター
+
+ の基本描画をそのまま利用し、
+ その「上」に質感だけを追加します。
+
+ これにより、
+
+ ・地面が黒くなる
+ ・西湖が消える
+ ・室内が黒くなる
+
+ といった問題を防ぎます。
+==========================================================
+*/
+
+
+// ======================================================
+// ORIGINAL DRAW
+// ======================================================
+
+const originalDraw =
+  draw;
+
+
+// ======================================================
+// MAIN DRAW WRAPPER
+// ======================================================
+
+draw = function(time){
+
+  /*
+  --------------------------------------------------------
+  まず game.js の描画を完全に実行
+  --------------------------------------------------------
+  */
+
+  originalDraw(time);
+
+
+  /*
+  --------------------------------------------------------
+  そのあと、ごく軽い画面効果だけを追加
+  --------------------------------------------------------
+  */
+
+  drawScreenAtmosphere(time);
+
+};
+
+
+
+// ======================================================
+// MAP DETAIL
+// ======================================================
+
+/*
+ game.js の drawMap() を直接上書きすると
+ 他のシステムとの整合性が崩れやすいため、
+
+ drawMap の直後に追加処理を入れる方式にします。
+*/
+
+const originalDrawMap =
+  drawMap;
+
+
+drawMap = function(time){
+
+  /*
+  game.js 本来のタイルを描画
+  */
+
+  originalDrawMap(time);
+
+
+  /*
+  タイルの上に模様を追加
+  */
+
+  drawGroundDetails(time);
+
+};
+
+
+
+// ======================================================
+// GROUND DETAILS
+// ======================================================
+
+function drawGroundDetails(time){
+
+  const map =
+    getCurrentMap();
+
+
+  const rows =
+    map.grid.length;
+
+
+  const cols =
+    map.grid[0].length;
+
+
+  /*
+  カメラに映る範囲だけ描画します。
+  */
+
+  const startX =
+    Math.max(
       0,
-      5,
-      canvas.height,
-      "rgba(5,14,23,.40)"
+      Math.floor(camera.x / TILE) - 1
     );
 
-    // 石積み
-    fillRect(
-      x,
+
+  const endX =
+    Math.min(
+      cols,
+      Math.ceil(
+        (camera.x + canvas.width) / TILE
+      ) + 1
+    );
+
+
+  const startY =
+    Math.max(
       0,
-      7,
-      canvas.height,
-      "#4b4a4c"
+      Math.floor(camera.y / TILE) - 1
     );
 
-    fillRect(
-      x + 7,
-      0,
-      3,
-      canvas.height,
-      "#292b31"
+
+  const endY =
+    Math.min(
+      rows,
+      Math.ceil(
+        (camera.y + canvas.height) / TILE
+      ) + 1
     );
 
-    // 石積みの区切り
-    const offset =
-      -camera.y % TILE;
 
-    for (
-      let y = offset;
-      y < canvas.height;
-      y += TILE
-    ) {
 
-      strokeLine(
-        x,
-        y,
-        x + 8,
-        y,
-        "rgba(20,20,24,.50)"
-      );
+  for(
+    let y=startY;
+    y<endY;
+    y++
+  ){
+
+    for(
+      let x=startX;
+      x<endX;
+      x++
+    ){
+
+      const tile =
+        map.grid[y][x];
+
+
+      const sx =
+        Math.floor(
+          x*TILE-camera.x
+        );
+
+
+      const sy =
+        Math.floor(
+          y*TILE-camera.y
+        );
+
+
+      // ================================================
+      // FLOOR
+      // ================================================
+
+      if(tile===T.FLOOR){
+
+        drawDarkStone(
+          sx,
+          sy,
+          x,
+          y,
+          false
+        );
+
+      }
+
+
+      // ================================================
+      // ROAD
+      // ================================================
+
+      else if(tile===T.ROAD){
+
+        drawDarkStone(
+          sx,
+          sy,
+          x,
+          y,
+          true
+        );
+
+      }
+
+
+      // ================================================
+      // PLAZA
+      // ================================================
+
+      else if(tile===T.PLAZA){
+
+        drawPlazaStone(
+          sx,
+          sy,
+          x,
+          y
+        );
+
+      }
+
+
+      // ================================================
+      // WATER
+      // ================================================
+
+      else if(tile===T.WATER){
+
+        drawWaterTile(
+          sx,
+          sy,
+          x,
+          y,
+          time
+        );
+
+      }
+
+
+      // ================================================
+      // GRASS
+      // ================================================
+
+      else if(tile===T.GRASS){
+
+        drawGrassTile(
+          sx,
+          sy,
+          x,
+          y
+        );
+
+      }
+
+
+      // ================================================
+      // INDOOR
+      // ================================================
+
+      else if(tile===T.INDOOR){
+
+        drawInteriorFloor(
+          sx,
+          sy,
+          x,
+          y,
+          map
+        );
+
+      }
+
+
+      // ================================================
+      // WALL
+      // ================================================
+
+      else if(tile===T.WALL){
+
+        drawInteriorWall(
+          sx,
+          sy,
+          x,
+          y,
+          map
+        );
+
+      }
+
+
+      // ================================================
+      // COUNTER
+      // ================================================
+
+      else if(tile===T.COUNTER){
+
+        drawCounterTexture(
+          sx,
+          sy,
+          x,
+          y
+        );
+
+      }
+
     }
 
-    // 水際の反射
-    fillRect(
-      x - 3,
-      0,
-      2,
-      canvas.height,
-      "rgba(107,173,194,.18)"
-    );
   }
 
+}
 
-  /* =====================================================
-     INTERIOR FLOOR
-  ===================================================== */
 
-  function getInteriorTheme() {
 
-    const map = getCurrentMap();
+// ======================================================
+// DARK STONE
+// ======================================================
 
-    return (
-      map.theme ||
-      map.interiorType ||
-      "default"
-    );
-  }
+function drawDarkStone(
+  x,
+  y,
+  tileX,
+  tileY,
+  road
+){
 
+  /*
+  game.js の地面色を残したまま
+  石の境界線だけ追加。
+  */
 
-  function drawIndoorTile(px, py, tx, ty) {
 
-    const theme =
-      getInteriorTheme();
+  ctx.strokeStyle =
+    road
+    ? "rgba(135,128,142,.11)"
+    : "rgba(137,117,120,.12)";
 
-    const r =
-      hash(tx, ty, 20);
 
-    switch (theme) {
+  ctx.lineWidth=1;
 
-      /* -------------------------
-         茶館
-      ------------------------- */
 
-      case "tea":
-      case "lakeTea": {
+  ctx.strokeRect(
+    x+.5,
+    y+.5,
+    TILE-1,
+    TILE-1
+  );
 
-        const c =
-          r > 0.50
-            ? "#594337"
-            : "#503b31";
 
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
+  /*
+  石材のハイライト
+  */
 
-        // 木板
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(33,20,17,.42)"
-        );
+  ctx.fillStyle =
+    road
+    ? "rgba(255,236,214,.018)"
+    : "rgba(255,222,192,.022)";
 
-        strokeLine(
-          px + TILE / 2,
-          py,
-          px + TILE / 2,
-          py + TILE,
-          "rgba(42,26,20,.17)"
-        );
 
-        strokeLine(
-          px + 2,
-          py + 3,
-          px + TILE - 2,
-          py + 3,
-          "rgba(255,210,155,.025)"
-        );
+  ctx.fillRect(
+    x+2,
+    y+2,
+    TILE-4,
+    2
+  );
 
-        break;
-      }
 
+  /*
+  ランダム風の傷。
+  Math.random()は使わず座標から決定。
+  */
 
-      /* -------------------------
-         麺館・食堂
-      ------------------------- */
+  const seed =
+    (
+      tileX*17+
+      tileY*31
+    )%5;
 
-      case "noodle":
-      case "restaurant": {
 
-        const c =
-          r > 0.50
-            ? "#5b4a43"
-            : "#52423c";
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(30,24,24,.38)"
-        );
-
-        strokeLine(
-          px + TILE - 1,
-          py,
-          px + TILE - 1,
-          py + TILE,
-          "rgba(30,24,24,.34)"
-        );
-
-        break;
-      }
-
-
-      /* -------------------------
-         コンビニ
-      ------------------------- */
-
-      case "convenience": {
-
-        const c =
-          (tx + ty) % 2 === 0
-            ? "#697076"
-            : "#62696f";
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(31,37,42,.32)"
-        );
-
-        strokeLine(
-          px + TILE - 1,
-          py,
-          px + TILE - 1,
-          py + TILE,
-          "rgba(31,37,42,.32)"
-        );
-
-        break;
-      }
-
-
-      /* -------------------------
-         百貨店
-      ------------------------- */
-
-      case "department": {
-
-        const c =
-          (tx + ty) % 2
-            ? "#665d68"
-            : "#706773";
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(30,27,33,.28)"
-        );
-
-        break;
-      }
-
-
-      /* -------------------------
-         文創
-      ------------------------- */
-
-      case "culture": {
-
-        const c =
-          r > 0.5
-            ? "#55443d"
-            : "#4e3e39";
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(28,18,18,.30)"
-        );
-
-        break;
-      }
-
-
-      /* -------------------------
-         アクセサリー
-      ------------------------- */
-
-      case "accessory": {
-
-        const c =
-          (tx + ty) % 2
-            ? "#5b505d"
-            : "#625663";
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(28,22,30,.28)"
-        );
-
-        break;
-      }
-
-
-      /* -------------------------
-         茶飲店
-      ------------------------- */
-
-      case "drink": {
-
-        const c =
-          (tx + ty) % 2
-            ? "#49605b"
-            : "#506862";
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(22,35,31,.32)"
-        );
-
-        break;
-      }
-
-
-      /* -------------------------
-         HOTEL
-      ------------------------- */
-
-      case "hotel": {
-
-        const checker =
-          (tx + ty) % 2;
-
-        const c =
-          checker
-            ? "#5e5961"
-            : "#716b72";
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          c
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(27,25,30,.32)"
-        );
-
-        strokeLine(
-          px + TILE - 1,
-          py,
-          px + TILE - 1,
-          py + TILE,
-          "rgba(27,25,30,.28)"
-        );
-
-        // 大理石風
-        if (r > 0.77) {
-
-          strokeLine(
-            px + 5,
-            py + 9,
-            px + 17,
-            py + 13,
-            "rgba(255,255,255,.055)"
-          );
-        }
-
-        break;
-      }
-
-
-      default: {
-
-        fillRect(
-          px,
-          py,
-          TILE,
-          TILE,
-          "#514139"
-        );
-
-        strokeLine(
-          px,
-          py + TILE - 1,
-          px + TILE,
-          py + TILE - 1,
-          "rgba(25,18,18,.30)"
-        );
-      }
-    }
-  }
-
-
-  /* =====================================================
-     INTERIOR WALL
-  ===================================================== */
-
-  function drawWallTile(px, py, tx, ty) {
-
-    const theme =
-      getInteriorTheme();
-
-    let base = "#31252a";
-    let trim = "#5d4036";
-
-    if (theme === "hotel") {
-      base = "#34323b";
-      trim = "#716152";
-    }
-
-    if (
-      theme === "convenience"
-    ) {
-      base = "#41484d";
-      trim = "#718087";
-    }
-
-    if (
-      theme === "drink"
-    ) {
-      base = "#29413d";
-      trim = "#547168";
-    }
-
-    if (
-      theme === "culture"
-    ) {
-      base = "#35292a";
-      trim = "#725346";
-    }
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      TILE,
-      base
-    );
-
-    fillRect(
-      px,
-      py + TILE - 8,
-      TILE,
-      8,
-      trim
-    );
-
-    strokeLine(
-      px,
-      py + TILE - 9,
-      px + TILE,
-      py + TILE - 9,
-      "rgba(14,10,12,.45)"
-    );
-
-    if ((tx + ty) % 2 === 0) {
-
-      fillRect(
-        px + 5,
-        py + 6,
-        TILE - 10,
-        2,
-        "rgba(255,255,255,.025)"
-      );
-    }
-  }
-
-
-  /* =====================================================
-     COUNTER
-  ===================================================== */
-
-  function drawCounterTile(px, py) {
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      TILE,
-      "#50342c"
-    );
-
-    fillRect(
-      px,
-      py,
-      TILE,
-      6,
-      "#856047"
-    );
-
-    fillRect(
-      px + 4,
-      py + 8,
-      TILE - 8,
-      TILE - 12,
-      "#493027"
-    );
-
-    strokeLine(
-      px + TILE - 1,
-      py + 7,
-      px + TILE - 1,
-      py + TILE,
-      "rgba(24,15,14,.42)"
-    );
-  }
-
-
-  /* =====================================================
-     MAP DRAW OVERRIDE
-  ===================================================== */
-
-  drawMap = function () {
-
-    const map =
-      getCurrentMap();
-
-    const startX =
-      Math.max(
-        0,
-        Math.floor(camera.x / TILE) - 1
-      );
-
-    const startY =
-      Math.max(
-        0,
-        Math.floor(camera.y / TILE) - 1
-      );
-
-    const endX =
-      Math.min(
-        map.grid[0].length,
-        Math.ceil(
-          (camera.x + canvas.width) /
-          TILE
-        ) + 1
-      );
-
-    const endY =
-      Math.min(
-        map.grid.length,
-        Math.ceil(
-          (camera.y + canvas.height) /
-          TILE
-        ) + 1
-      );
-
-    const time =
-      performance.now();
-
-    // 念のため背景色
-    fillRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-      "#272532"
-    );
-
-    for (
-      let ty = startY;
-      ty < endY;
-      ty++
-    ) {
-
-      for (
-        let tx = startX;
-        tx < endX;
-        tx++
-      ) {
-
-        const tile =
-          map.grid[ty][tx];
-
-        const px =
-          SX(tx * TILE);
-
-        const py =
-          SY(ty * TILE);
-
-
-        if (tile === T.FLOOR) {
-
-          drawFloorTile(
-            px,
-            py,
-            tx,
-            ty
-          );
-
-        }
-
-        else if (
-          tile === T.ROAD
-        ) {
-
-          drawRoadTile(
-            px,
-            py,
-            tx,
-            ty
-          );
-
-        }
-
-        else if (
-          tile === T.PLAZA
-        ) {
-
-          drawPlazaTile(
-            px,
-            py,
-            tx,
-            ty
-          );
-
-        }
-
-        else if (
-          tile === T.WATER
-        ) {
-
-          drawWaterTile(
-            px,
-            py,
-            tx,
-            ty,
-            time
-          );
-
-        }
-
-        else if (
-          tile === T.GRASS
-        ) {
-
-          drawGrassTile(
-            px,
-            py,
-            tx,
-            ty
-          );
-
-        }
-
-        else if (
-          tile === T.INDOOR
-        ) {
-
-          drawIndoorTile(
-            px,
-            py,
-            tx,
-            ty
-          );
-
-        }
-
-        else if (
-          tile === T.WALL
-        ) {
-
-          drawWallTile(
-            px,
-            py,
-            tx,
-            ty
-          );
-
-        }
-
-        else if (
-          tile === T.COUNTER
-        ) {
-
-          drawCounterTile(
-            px,
-            py
-          );
-
-        }
-
-        else {
-
-          // 未知のタイルでも黒くしない
-          drawFloorTile(
-            px,
-            py,
-            tx,
-            ty
-          );
-        }
-      }
-    }
-
-    drawLakeShore(map);
-  };
-
-
-  /* =====================================================
-     BUILDINGS
-  ===================================================== */
-
-  drawBuildings = function () {
-
-    const map =
-      getCurrentMap();
-
-    if (!map.buildings) {
-      return;
-    }
-
-    for (
-      const building of map.buildings
-    ) {
-
-      drawBuilding(
-        building
-      );
-    }
-  };
-
-
-  function drawBuilding(b) {
-
-    const x =
-      SX(b.x * TILE);
-
-    const y =
-      SY(b.y * TILE);
-
-    const w =
-      b.w * TILE;
-
-    const h =
-      b.h * TILE;
-
-    if (
-      x > canvas.width + 80 ||
-      y > canvas.height + 80 ||
-      x + w < -80 ||
-      y + h < -80
-    ) {
-      return;
-    }
-
-    const hotel =
-      b.type === "hotel";
-
-    const floors =
-      hotel
-        ? 3
-        : (
-            b.h >= 9
-              ? 2
-              : 1
-          );
-
-    // 影
-    fillRect(
-      x + 10,
-      y + 13,
-      w,
-      h,
-      "rgba(5,6,13,.40)"
-    );
-
-    // 本体
-    fillRect(
-      x,
-      y + 18,
-      w,
-      h - 18,
-      "#261a1e"
-    );
-
-    fillRect(
-      x + 7,
-      y + 24,
-      w - 14,
-      h - 30,
-      b.color || "#49302d"
-    );
-
-    // 木柱
-    const colCount =
-      Math.max(
-        3,
-        Math.floor(w / 75)
-      );
-
-    for (
-      let i = 0;
-      i <= colCount;
-      i++
-    ) {
-
-      const cx =
-        x +
-        (w / colCount) *
-        i;
-
-      fillRect(
-        cx - 3,
-        y + 20,
-        6,
-        h - 20,
-        "#211519"
-      );
-
-      fillRect(
-        cx,
-        y + 20,
-        2,
-        h - 20,
-        "#704332"
-      );
-    }
-
-    // 屋根
-    drawRoof(
-      x - 8,
-      y,
-      w + 16,
-      35
-    );
-
-    // 上階
-    if (floors >= 2) {
-
-      const windowY =
-        y + 52;
-
-      drawWindowRow(
-        x,
-        windowY,
-        w
-      );
-
-      drawEave(
-        x - 4,
-        y + h * 0.48,
-        w + 8
-      );
-    }
-
-    if (floors >= 3) {
-
-      drawWindowRow(
-        x,
-        y + 105,
-        w
-      );
-    }
-
-    // 一階
-    drawGroundFloor(
-      b,
-      x,
-      y,
-      w,
-      h
-    );
-
-    // 看板
-    drawBuildingSign(
-      b,
-      x,
-      y,
-      w,
-      h
-    );
-  }
-
-
-  function drawRoof(x, y, w, h) {
-
-    ctx.save();
+  if(seed===0){
 
     ctx.fillStyle =
-      "#0d1322";
+      "rgba(10,7,12,.12)";
+
+
+    ctx.fillRect(
+      x+8,
+      y+18,
+      10,
+      1
+    );
+
+  }
+
+
+  if(seed===2){
+
+    ctx.fillStyle =
+      "rgba(180,150,140,.06)";
+
+
+    ctx.fillRect(
+      x+19,
+      y+9,
+      6,
+      1
+    );
+
+  }
+
+}
+
+
+
+// ======================================================
+// PLAZA
+// ======================================================
+
+function drawPlazaStone(
+  x,
+  y,
+  tileX,
+  tileY
+){
+
+  /*
+  参考画像の中央広場に近い
+  やや明るい大型石畳。
+  */
+
+
+  ctx.strokeStyle =
+    "rgba(198,174,166,.13)";
+
+
+  ctx.lineWidth=1;
+
+
+  ctx.strokeRect(
+    x+.5,
+    y+.5,
+    TILE-1,
+    TILE-1
+  );
+
+
+  ctx.fillStyle =
+    "rgba(255,226,203,.025)";
+
+
+  ctx.fillRect(
+    x+2,
+    y+2,
+    TILE-4,
+    2
+  );
+
+
+  /*
+  交互に微妙な色差
+  */
+
+  if(
+    (tileX+tileY)%2===0
+  ){
+
+    ctx.fillStyle =
+      "rgba(122,91,96,.035)";
+
+
+    ctx.fillRect(
+      x+1,
+      y+1,
+      TILE-2,
+      TILE-2
+    );
+
+  }
+
+}
+
+
+
+// ======================================================
+// WEST LAKE WATER
+// ======================================================
+
+function drawWaterTile(
+  x,
+  y,
+  tileX,
+  tileY,
+  time
+){
+
+  /*
+  元の #12364b の水面は消しません。
+  その上に波だけを描きます。
+  */
+
+
+  const wave =
+    Math.sin(
+      time*1.7+
+      tileX*.7+
+      tileY*.45
+    );
+
+
+  /*
+  水面の薄い色差
+  */
+
+  ctx.fillStyle =
+    (
+      (tileX+tileY)%2===0
+    )
+    ? "rgba(32,102,124,.10)"
+    : "rgba(14,72,98,.08)";
+
+
+  ctx.fillRect(
+    x,
+    y,
+    TILE,
+    TILE
+  );
+
+
+  /*
+  波紋1
+  */
+
+  ctx.fillStyle =
+    "rgba(119,186,196,.20)";
+
+
+  ctx.fillRect(
+    x+4,
+    y+9+wave*2,
+    15,
+    1
+  );
+
+
+  /*
+  波紋2
+  */
+
+  ctx.fillStyle =
+    "rgba(84,155,173,.17)";
+
+
+  ctx.fillRect(
+    x+14,
+    y+22-wave,
+    14,
+    1
+  );
+
+
+  /*
+  暗い水の筋
+  */
+
+  ctx.fillStyle =
+    "rgba(3,25,45,.16)";
+
+
+  ctx.fillRect(
+    x+2,
+    y+28,
+    19,
+    1
+  );
+
+}
+
+
+
+// ======================================================
+// GRASS
+// ======================================================
+
+function drawGrassTile(
+  x,
+  y,
+  tileX,
+  tileY
+){
+
+  ctx.fillStyle =
+    "rgba(86,118,75,.10)";
+
+
+  if(
+    (tileX*3+tileY)%4===0
+  ){
+
+    ctx.fillRect(
+      x+8,
+      y+11,
+      2,
+      6
+    );
+
+
+    ctx.fillRect(
+      x+12,
+      y+16,
+      2,
+      5
+    );
+
+  }
+
+
+  ctx.strokeStyle =
+    "rgba(20,47,33,.18)";
+
+
+  ctx.strokeRect(
+    x+.5,
+    y+.5,
+    TILE-1,
+    TILE-1
+  );
+
+}
+
+
+
+// ======================================================
+// INTERIOR FLOOR
+// ======================================================
+
+function drawInteriorFloor(
+  x,
+  y,
+  tileX,
+  tileY,
+  map
+){
+
+  /*
+  店舗テーマによって床模様を変える。
+  元の茶色い室内床をベースにします。
+  */
+
+
+  const theme =
+    map.theme ||
+    map.interiorType ||
+    "";
+
+
+  // ----------------------------------------------------
+  // HOTEL
+  // ----------------------------------------------------
+
+  if(
+    theme==="hotel" ||
+    currentMapId==="wulinHotel" ||
+    currentMapId==="hangzhouHotel"
+  ){
+
+    /*
+    石・大理石風
+    */
+
+    ctx.fillStyle =
+      (
+        (tileX+tileY)%2===0
+      )
+      ? "rgba(209,185,151,.14)"
+      : "rgba(96,70,64,.08)";
+
+
+    ctx.fillRect(
+      x+1,
+      y+1,
+      TILE-2,
+      TILE-2
+    );
+
+
+    ctx.strokeStyle =
+      "rgba(244,215,180,.12)";
+
+
+    ctx.strokeRect(
+      x+.5,
+      y+.5,
+      TILE-1,
+      TILE-1
+    );
+
+
+    return;
+
+  }
+
+
+
+  // ----------------------------------------------------
+  // CONVENIENCE
+  // ----------------------------------------------------
+
+  if(
+    theme==="convenience" ||
+    currentMapId==="convenience" ||
+    currentMapId==="cityStore"
+  ){
+
+    ctx.fillStyle =
+      (
+        (tileX+tileY)%2===0
+      )
+      ? "rgba(188,197,185,.13)"
+      : "rgba(118,137,132,.07)";
+
+
+    ctx.fillRect(
+      x+1,
+      y+1,
+      TILE-2,
+      TILE-2
+    );
+
+
+    ctx.strokeStyle =
+      "rgba(220,228,214,.10)";
+
+
+    ctx.strokeRect(
+      x+.5,
+      y+.5,
+      TILE-1,
+      TILE-1
+    );
+
+
+    return;
+
+  }
+
+
+
+  // ----------------------------------------------------
+  // CULTURE / GIFT
+  // ----------------------------------------------------
+
+  if(
+    theme==="culture" ||
+    currentMapId==="culture" ||
+    currentMapId==="lakeGift"
+  ){
+
+    /*
+    木床
+    */
+
+    ctx.fillStyle =
+      "rgba(103,61,37,.14)";
+
+
+    ctx.fillRect(
+      x,
+      y,
+      TILE,
+      TILE
+    );
+
+
+    ctx.strokeStyle =
+      "rgba(49,28,20,.20)";
+
 
     ctx.beginPath();
 
     ctx.moveTo(
-      x + 9,
-      y + 3
+      x,
+      y+TILE/2
     );
 
     ctx.lineTo(
-      x + w - 9,
-      y + 3
+      x+TILE,
+      y+TILE/2
+    );
+
+    ctx.stroke();
+
+
+    ctx.fillStyle =
+      "rgba(220,171,105,.08)";
+
+
+    ctx.fillRect(
+      x+2,
+      y+2,
+      TILE-4,
+      1
+    );
+
+
+    return;
+
+  }
+
+
+
+  // ----------------------------------------------------
+  // TEA
+  // ----------------------------------------------------
+
+  if(
+    theme==="tea" ||
+    currentMapId==="tea" ||
+    currentMapId==="lakeTea"
+  ){
+
+    ctx.fillStyle =
+      "rgba(88,56,36,.12)";
+
+
+    ctx.fillRect(
+      x,
+      y,
+      TILE,
+      TILE
+    );
+
+
+    /*
+    木板の継ぎ目
+    */
+
+    ctx.strokeStyle =
+      "rgba(42,25,18,.22)";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      x,
+      y+16
     );
 
     ctx.lineTo(
-      x + w + 2,
-      y + h - 7
+      x+32,
+      y+16
     );
 
-    ctx.lineTo(
-      x - 2,
-      y + h - 7
+    ctx.stroke();
+
+
+    ctx.fillStyle =
+      "rgba(220,173,102,.07)";
+
+
+    ctx.fillRect(
+      x+2,
+      y+3,
+      27,
+      1
     );
 
-    ctx.closePath();
 
-    ctx.fill();
+    return;
 
-    fillRect(
-      x + 5,
-      y + 8,
-      w - 10,
-      h - 16,
-      "#18213a"
-    );
-
-    // 瓦
-    for (
-      let xx = x + 7;
-      xx < x + w - 7;
-      xx += 13
-    ) {
-
-      strokeLine(
-        xx,
-        y + 8,
-        xx - 2,
-        y + h - 9,
-        "#090e1b"
-      );
-
-      strokeLine(
-        xx + 2,
-        y + 8,
-        xx,
-        y + h - 9,
-        "rgba(74,88,132,.20)"
-      );
-    }
-
-    // 軒
-    fillRect(
-      x - 5,
-      y + h - 10,
-      w + 10,
-      8,
-      "#090e19"
-    );
-
-    fillRect(
-      x,
-      y + h - 10,
-      w,
-      2,
-      "#2b3653"
-    );
-
-    // 反り
-    fillRect(
-      x - 10,
-      y + h - 13,
-      14,
-      5,
-      "#0a101d"
-    );
-
-    fillRect(
-      x + w - 4,
-      y + h - 13,
-      14,
-      5,
-      "#0a101d"
-    );
-
-    ctx.restore();
   }
 
 
-  function drawEave(
-    x,
-    y,
-    w
-  ) {
 
-    fillRect(
-      x,
-      y,
-      w,
-      11,
-      "#0e1524"
+  // ----------------------------------------------------
+  // RESTAURANT / NOODLE
+  // ----------------------------------------------------
+
+  if(
+    theme==="restaurant" ||
+    theme==="noodle" ||
+    currentMapId==="restaurant" ||
+    currentMapId==="noodle"
+  ){
+
+    ctx.strokeStyle =
+      "rgba(105,65,49,.20)";
+
+
+    ctx.strokeRect(
+      x+.5,
+      y+.5,
+      TILE-1,
+      TILE-1
     );
 
-    fillRect(
-      x + 4,
-      y + 2,
-      w - 8,
-      2,
-      "#2b3650"
+
+    ctx.fillStyle =
+      (
+        (tileX+tileY)%2===0
+      )
+      ? "rgba(119,72,48,.09)"
+      : "rgba(255,204,138,.025)";
+
+
+    ctx.fillRect(
+      x+1,
+      y+1,
+      TILE-2,
+      TILE-2
     );
+
+
+    return;
+
   }
 
 
-  function drawWindowRow(
-    x,
+
+  // ----------------------------------------------------
+  // DEFAULT INTERIOR
+  // ----------------------------------------------------
+
+  ctx.strokeStyle =
+    "rgba(77,47,35,.20)";
+
+
+  ctx.strokeRect(
+    x+.5,
+    y+.5,
+    TILE-1,
+    TILE-1
+  );
+
+
+  ctx.fillStyle =
+    "rgba(221,170,108,.035)";
+
+
+  ctx.fillRect(
+    x+2,
+    y+2,
+    TILE-4,
+    2
+  );
+
+}
+
+
+
+// ======================================================
+// INTERIOR WALL
+// ======================================================
+
+function drawInteriorWall(
+  x,
+  y,
+  tileX,
+  tileY,
+  map
+){
+
+  /*
+  壁の色そのものは game.js に任せる。
+  木組みだけ追加。
+  */
+
+
+  ctx.fillStyle =
+    "rgba(161,103,65,.12)";
+
+
+  ctx.fillRect(
+    x+2,
+    y+5,
+    TILE-4,
+    2
+  );
+
+
+  ctx.fillRect(
+    x+2,
+    y+24,
+    TILE-4,
+    2
+  );
+
+
+  ctx.fillStyle =
+    "rgba(24,14,13,.18)";
+
+
+  ctx.fillRect(
+    x+14,
     y,
-    w
-  ) {
+    3,
+    TILE
+  );
 
-    const spacing = 70;
+}
 
-    for (
-      let wx = x + 25;
-      wx < x + w - 35;
-      wx += spacing
-    ) {
 
-      drawWindow(
-        wx,
-        y,
-        32,
-        29
-      );
-    }
+
+// ======================================================
+// COUNTER
+// ======================================================
+
+function drawCounterTexture(
+  x,
+  y
+){
+
+  ctx.fillStyle =
+    "rgba(225,165,92,.10)";
+
+
+  ctx.fillRect(
+    x+2,
+    y+3,
+    TILE-4,
+    2
+  );
+
+
+  ctx.fillStyle =
+    "rgba(45,25,17,.18)";
+
+
+  ctx.fillRect(
+    x+2,
+    y+16,
+    TILE-4,
+    2
+  );
+
+
+  ctx.strokeStyle =
+    "rgba(35,21,16,.22)";
+
+
+  ctx.strokeRect(
+    x+.5,
+    y+.5,
+    TILE-1,
+    TILE-1
+  );
+
+}
+
+
+
+// ======================================================
+// WATER EDGE
+// ======================================================
+
+/*
+ 西湖と陸地の境界を少し分かりやすくする。
+*/
+
+const originalDrawProps =
+  drawProps;
+
+
+drawProps = function(){
+
+  drawWaterEdge();
+
+  originalDrawProps();
+
+};
+
+
+
+function drawWaterEdge(){
+
+  const map =
+    getCurrentMap();
+
+
+  if(map.ambient!=="lake"){
+    return;
   }
 
 
-  function drawWindow(
-    x,
-    y,
-    w,
-    h
-  ) {
-
-    glow(
-      x + w / 2,
-      y + h / 2,
-      37,
-      "rgba(255,151,54,.95)",
-      0.09
-    );
-
-    fillRect(
-      x - 4,
-      y - 4,
-      w + 8,
-      h + 8,
-      "#1a1318"
-    );
-
-    fillRect(
-      x,
-      y,
-      w,
-      h,
-      "#60371f"
-    );
-
-    fillRect(
-      x + 5,
-      y + 5,
-      w - 10,
-      h - 10,
-      "#e78c35"
-    );
-
-    fillRect(
-      x + 8,
-      y + 7,
-      w - 16,
-      h - 14,
-      "#ffc45b"
-    );
-
-    fillRect(
-      x + w / 2 - 2,
-      y,
-      4,
-      h,
-      "#4b2b22"
-    );
-
-    fillRect(
-      x,
-      y + h / 2 - 2,
-      w,
-      4,
-      "#4b2b22"
-    );
-  }
+  const rows =
+    map.grid.length;
 
 
-  function drawGroundFloor(
-    b,
-    x,
-    y,
-    w,
-    h
-  ) {
+  const cols =
+    map.grid[0].length;
 
-    const bottom =
-      y + h;
 
-    const doorCenter =
-      b.doorX * TILE -
-      camera.x +
-      TILE / 2;
+  ctx.fillStyle =
+    "rgba(181,169,132,.22)";
 
-    const doorX =
-      Math.max(
-        x + 18,
-        Math.min(
-          x + w - 50,
-          doorCenter - 18
-        )
-      );
 
-    for (
-      let wx = x + 20;
-      wx < x + w - 35;
-      wx += 69
-    ) {
+  for(
+    let y=0;
+    y<rows;
+    y++
+  ){
 
-      if (
-        Math.abs(
-          wx + 18 -
-          (doorX + 18)
-        ) < 47
-      ) {
+    for(
+      let x=0;
+      x<cols;
+      x++
+    ){
+
+      if(
+        map.grid[y][x] !==
+        T.WATER
+      ){
         continue;
       }
 
-      drawShopWindow(
-        wx,
-        bottom - 64,
-        38,
-        39
-      );
+
+      /*
+      右側が陸地なら護岸を描画
+      */
+
+      if(
+        x+1<cols &&
+        map.grid[y][x+1] !==
+        T.WATER
+      ){
+
+        const sx =
+          (x+1)*TILE-
+          camera.x;
+
+
+        const sy =
+          y*TILE-
+          camera.y;
+
+
+        ctx.fillRect(
+          sx-3,
+          sy,
+          3,
+          TILE
+        );
+
+      }
+
     }
 
-    drawDoor(
-      doorX,
-      bottom - 61,
-      36,
-      61
-    );
-
-    // 玄関の石段
-    fillRect(
-      doorX - 8,
-      bottom,
-      52,
-      7,
-      "#50474b"
-    );
-
-    fillRect(
-      doorX - 13,
-      bottom + 7,
-      62,
-      5,
-      "#35313a"
-    );
   }
 
-
-  function drawShopWindow(
-    x,
-    y,
-    w,
-    h
-  ) {
-
-    fillRect(
-      x - 3,
-      y - 3,
-      w + 6,
-      h + 6,
-      "#1a1317"
-    );
-
-    fillRect(
-      x,
-      y,
-      w,
-      h,
-      "#63351f"
-    );
-
-    fillRect(
-      x + 5,
-      y + 5,
-      w - 10,
-      h - 10,
-      "#c86d2e"
-    );
-
-    fillRect(
-      x + 8,
-      y + 8,
-      w - 16,
-      h - 16,
-      "#ffb44b"
-    );
-
-    fillRect(
-      x + w / 2 - 2,
-      y + 3,
-      4,
-      h - 6,
-      "#45261f"
-    );
-
-    fillRect(
-      x + 3,
-      y + h / 2 - 2,
-      w - 6,
-      4,
-      "#45261f"
-    );
-
-    glow(
-      x + w / 2,
-      y + h / 2,
-      45,
-      "rgba(255,134,46,.9)",
-      0.065
-    );
-  }
+}
 
 
-  function drawDoor(
-    x,
-    y,
-    w,
-    h
-  ) {
 
-    fillRect(
-      x - 5,
-      y - 5,
-      w + 10,
-      h + 5,
-      "#181217"
-    );
+// ======================================================
+// SCREEN ATMOSPHERE
+// ======================================================
 
-    fillRect(
-      x,
-      y,
-      w,
-      h,
-      "#4c2b22"
-    );
+function drawScreenAtmosphere(time){
 
-    fillRect(
-      x + 5,
-      y + 5,
-      w - 10,
-      h - 5,
-      "#31211e"
-    );
+  /*
+  画面全体を黒くする処理は絶対に行いません。
 
-    fillRect(
-      x + w / 2 - 2,
-      y + 5,
-      4,
-      h - 5,
-      "#774630"
-    );
-
-    fillRect(
-      x + 8,
-      y + 10,
-      3,
-      h - 18,
-      "#67402f"
-    );
-
-    fillRect(
-      x + w - 11,
-      y + 10,
-      3,
-      h - 18,
-      "#67402f"
-    );
-
-    fillRect(
-      x + w / 2 + 5,
-      y + h / 2,
-      3,
-      3,
-      "#e5a247"
-    );
-
-    glow(
-      x + w / 2,
-      y + h - 10,
-      42,
-      "rgba(255,139,47,.9)",
-      0.075
-    );
-  }
+  ごく薄い暖色だけを足します。
+  */
 
 
-  /* =====================================================
-     BUILDING SIGN
-  ===================================================== */
+  const map =
+    getCurrentMap();
 
-  function drawBuildingSign(
-    b,
-    x,
-    y,
-    w,
-    h
-  ) {
 
-    const text =
-      b.name || "";
-
-    if (!text) return;
-
-    const signW =
-      Math.min(
-        w - 30,
-        Math.max(
-          88,
-          text.length * 22 + 26
-        )
-      );
-
-    const signH = 34;
-
-    let signX =
-      x + w / 2 -
-      signW / 2;
-
-    let signY =
-      y + 36;
-
-    if (
-      b.type === "hotel" ||
-      h > TILE * 10
-    ) {
-
-      signX =
-        x + 18;
-
-      signY =
-        y + h * 0.60;
-    }
-
-    fillRect(
-      signX + 4,
-      signY + 5,
-      signW,
-      signH,
-      "rgba(10,7,10,.50)"
-    );
-
-    fillRect(
-      signX,
-      signY,
-      signW,
-      signH,
-      "#742725"
-    );
-
-    fillRect(
-      signX + 3,
-      signY + 3,
-      signW - 6,
-      signH - 6,
-      "#a8382e"
-    );
-
-    fillRect(
-      signX + 5,
-      signY + 5,
-      signW - 10,
-      2,
-      "rgba(255,193,94,.26)"
-    );
-
-    ctx.save();
+  if(map.ambient==="indoor"){
 
     ctx.fillStyle =
-      "#ffd08a";
+      "rgba(255,153,72,.012)";
 
-    ctx.font =
-      "bold 17px serif";
-
-    ctx.textAlign =
-      "center";
-
-    ctx.textBaseline =
-      "middle";
-
-    ctx.fillText(
-      text,
-      signX + signW / 2,
-      signY + signH / 2 + 1
-    );
-
-    ctx.restore();
-
-    drawSmallLantern(
-      signX - 12,
-      signY + 7
-    );
-
-    drawSmallLantern(
-      signX + signW + 4,
-      signY + 7
-    );
   }
 
-
-  function drawSmallLantern(
-    x,
-    y
-  ) {
-
-    glow(
-      x + 5,
-      y + 7,
-      27,
-      "rgba(255,75,35,.9)",
-      0.14
-    );
-
-    fillRect(
-      x + 1,
-      y,
-      8,
-      2,
-      "#65221d"
-    );
-
-    fillRect(
-      x,
-      y + 2,
-      10,
-      14,
-      "#9f3028"
-    );
-
-    fillRect(
-      x + 2,
-      y + 4,
-      6,
-      10,
-      "#ff6840"
-    );
-
-    fillRect(
-      x + 1,
-      y + 16,
-      8,
-      2,
-      "#65221d"
-    );
-  }
-
-
-  /* =====================================================
-     STALL
-
-     map.js は width / sign を使っているので
-     そこへ完全対応
-  ===================================================== */
-
-  drawStalls = function () {
-
-    const map =
-      getCurrentMap();
-
-    if (!map.stalls) {
-      return;
-    }
-
-    for (
-      const stall of map.stalls
-    ) {
-
-      drawStall(
-        stall
-      );
-    }
-  };
-
-
-  function drawStall(stall) {
-
-    const x =
-      SX(stall.x * TILE);
-
-    const y =
-      SY(stall.y * TILE);
-
-    const w =
-      (stall.width || 3) *
-      TILE;
-
-    const h =
-      58;
-
-    if (
-      x > canvas.width + 60 ||
-      y > canvas.height + 60 ||
-      x + w < -60 ||
-      y + h < -60
-    ) {
-      return;
-    }
-
-    // 影
-    fillRect(
-      x + 7,
-      y + 10,
-      w,
-      h,
-      "rgba(4,5,11,.35)"
-    );
-
-    // 支柱
-    fillRect(
-      x + 6,
-      y + 22,
-      5,
-      38,
-      "#38231f"
-    );
-
-    fillRect(
-      x + w - 11,
-      y + 22,
-      5,
-      38,
-      "#38231f"
-    );
-
-    // 台
-    fillRect(
-      x + 4,
-      y + 37,
-      w - 8,
-      22,
-      "#402923"
-    );
-
-    fillRect(
-      x + 2,
-      y + 35,
-      w - 4,
-      5,
-      "#815035"
-    );
-
-    // 屋根
-    fillRect(
-      x,
-      y + 8,
-      w,
-      17,
-      "#6c2225"
-    );
-
-    for (
-      let xx = x + 3;
-      xx < x + w - 5;
-      xx += 18
-    ) {
-
-      fillRect(
-        xx,
-        y + 11,
-        9,
-        11,
-        "#c14332"
-      );
-
-      fillRect(
-        xx + 9,
-        y + 11,
-        9,
-        11,
-        "#85272a"
-      );
-    }
-
-    // 看板
-    const label =
-      stall.sign || "";
-
-    if (label) {
-
-      const sw =
-        Math.min(
-          w - 20,
-          Math.max(
-            50,
-            label.length * 17
-          )
-        );
-
-      fillRect(
-        x + w / 2 - sw / 2,
-        y - 4,
-        sw,
-        18,
-        "#682222"
-      );
-
-      fillRect(
-        x + w / 2 - sw / 2 + 2,
-        y - 2,
-        sw - 4,
-        14,
-        "#953128"
-      );
-
-      ctx.save();
-
-      ctx.fillStyle =
-        "#ffd17b";
-
-      ctx.font =
-        "bold 12px serif";
-
-      ctx.textAlign =
-        "center";
-
-      ctx.textBaseline =
-        "middle";
-
-      ctx.fillText(
-        label,
-        x + w / 2,
-        y + 5
-      );
-
-      ctx.restore();
-    }
-
-    // 商品
-    for (
-      let i = 0;
-      i < 4;
-      i++
-    ) {
-
-      const ix =
-        x +
-        18 +
-        i *
-        ((w - 36) / 4);
-
-      fillRect(
-        ix,
-        y + 43,
-        10,
-        7,
-        i % 2
-          ? "#d98b3d"
-          : "#a54e2d"
-      );
-
-      fillRect(
-        ix + 2,
-        y + 41,
-        6,
-        2,
-        "#f5b65b"
-      );
-    }
-
-    drawSmallLantern(
-      x + 10,
-      y + 24
-    );
-
-    drawSmallLantern(
-      x + w - 20,
-      y + 24
-    );
-  }
-
-
-  /* =====================================================
-     LANTERN ROWS
-
-     map.js の lanternRows をそのまま使用
-  ===================================================== */
-
-  function drawMapLanternRows() {
-
-    const map =
-      getCurrentMap();
-
-    if (
-      !map.lanternRows ||
-      map.lanternRows.length === 0
-    ) {
-      return;
-    }
-
-    for (
-      const row of map.lanternRows
-    ) {
-
-      const y =
-        SY(row.y * TILE);
-
-      const x1 =
-        SX(row.start * TILE);
-
-      const x2 =
-        SX(row.end * TILE);
-
-      strokeLine(
-        x1,
-        y,
-        x2,
-        y,
-        "rgba(23,13,20,.72)"
-      );
-
-      for (
-        let x = x1 + 14;
-        x < x2 - 8;
-        x += 43
-      ) {
-
-        glow(
-          x,
-          y + 7,
-          27,
-          "rgba(255,75,35,.9)",
-          0.105
-        );
-
-        fillRect(
-          x - 4,
-          y + 2,
-          8,
-          13,
-          "#9e3028"
-        );
-
-        fillRect(
-          x - 2,
-          y + 4,
-          4,
-          9,
-          "#ff6941"
-        );
-
-        fillRect(
-          x - 3,
-          y + 15,
-          6,
-          2,
-          "#63211d"
-        );
-      }
-    }
-  }
-
-
-  /* =====================================================
-     LAKE REFLECTION
-
-     西湖をただの青面にしない
-  ===================================================== */
-
-  function drawLakeReflections() {
-
-    if (
-      currentMapId !== "lake"
-    ) {
-      return;
-    }
-
-    const time =
-      performance.now();
-
-    ctx.save();
-
-    ctx.globalAlpha =
-      0.20;
-
-    for (
-      let wy = 4 * TILE;
-      wy < 35 * TILE;
-      wy += 54
-    ) {
-
-      const y =
-        SY(wy);
-
-      const wobble =
-        Math.sin(
-          time * 0.0012 +
-          wy * 0.02
-        ) * 6;
-
-      const x =
-        SX(2 * TILE) +
-        wobble;
-
-      fillRect(
-        x,
-        y,
-        64,
-        2,
-        "rgba(218,162,84,.25)"
-      );
-
-      fillRect(
-        x + 14,
-        y + 6,
-        39,
-        1,
-        "rgba(224,177,96,.20)"
-      );
-
-      fillRect(
-        x - 8,
-        y + 12,
-        79,
-        1,
-        "rgba(123,178,196,.20)"
-      );
-    }
-
-    ctx.restore();
-  }
-
-
-  /* =====================================================
-     LIGHTING
-  ===================================================== */
-
-  drawLighting = function () {
-
-    const map =
-      getCurrentMap();
-
-    ctx.save();
-
-    // 完全な黒ではなく青紫の夜
-    if (
-      map.ambient === "indoor"
-    ) {
-
-      ctx.fillStyle =
-        "rgba(22,13,19,.035)";
-
-    } else if (
-      map.ambient === "lake"
-    ) {
-
-      ctx.fillStyle =
-        "rgba(8,18,34,.075)";
-
-    } else {
-
-      ctx.fillStyle =
-        "rgba(12,11,29,.085)";
-    }
-
-    ctx.fillRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-    ctx.restore();
-
-    // 提灯
-    drawMapLanternRows();
-
-    // 西湖反射
-    drawLakeReflections();
-
-    // 建物入口の光
-    if (
-      map.buildings
-    ) {
-
-      for (
-        const b of map.buildings
-      ) {
-
-        const x =
-          b.doorX * TILE -
-          camera.x +
-          TILE / 2;
-
-        const y =
-          (b.y + b.h) *
-          TILE -
-          camera.y -
-          7;
-
-        glow(
-          x,
-          y,
-          58,
-          "rgba(255,137,47,.9)",
-          0.05
-        );
-      }
-    }
-
-    // 軽いビネット
-    const vignette =
-      ctx.createRadialGradient(
-        canvas.width / 2,
-        canvas.height / 2,
-        canvas.height * 0.18,
-
-        canvas.width / 2,
-        canvas.height / 2,
-        canvas.width * 0.72
-      );
-
-    vignette.addColorStop(
-      0,
-      "rgba(0,0,0,0)"
-    );
-
-    vignette.addColorStop(
-      0.70,
-      "rgba(3,4,12,.025)"
-    );
-
-    vignette.addColorStop(
-      1,
-      "rgba(3,4,12,.20)"
-    );
+  else if(map.ambient==="lake"){
 
     ctx.fillStyle =
-      vignette;
+      "rgba(25,76,102,.012)";
 
-    ctx.fillRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-  };
+  }
+
+  else{
+
+    ctx.fillStyle =
+      "rgba(255,115,52,.009)";
+
+  }
 
 
-  console.log(
-    "武林夜市 Visual Overhaul v2 loaded"
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
   );
 
-})();
+}
