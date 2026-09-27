@@ -2,85 +2,111 @@
 
 
 // ======================================================
-// CANVAS / UI
+// DOM
 // ======================================================
 
-const canvas =
+const canvas=
   document.getElementById("gameCanvas");
 
-const ctx =
+const ctx=
   canvas.getContext("2d");
 
 ctx.imageSmoothingEnabled=false;
 
 
-const areaHeader =
+const areaHeader=
   document.getElementById("areaHeader");
 
-const collectionHeader =
+const rankHeader=
+  document.getElementById("rankHeader");
+
+const collectionHeader=
   document.getElementById("collectionHeader");
 
-const clockElement =
+const clockElement=
   document.getElementById("clock");
 
-const areaBanner =
+
+const areaBanner=
   document.getElementById("areaBanner");
 
-const areaBannerName =
+const areaBannerName=
   document.getElementById("areaBannerName");
 
-const areaBannerSub =
+const areaBannerSub=
   document.getElementById("areaBannerSub");
 
-const interactionHint =
+
+const interactionHint=
   document.getElementById("interactionHint");
 
-const interactionText =
+const interactionText=
   document.getElementById("interactionText");
 
-const dialogueBox =
+
+const dialogueBox=
   document.getElementById("dialogueBox");
 
-const speakerName =
+const speakerName=
   document.getElementById("speakerName");
 
-const dialogueText =
+const dialogueText=
   document.getElementById("dialogueText");
 
-const portraitFace =
+const portraitFace=
   document.getElementById("portraitFace");
 
-const wordGet =
+
+const wordGet=
   document.getElementById("wordGet");
 
-const wordGetChinese =
+const wordGetChinese=
   document.getElementById("wordGetChinese");
 
-const wordGetPinyin =
+const wordGetPinyin=
   document.getElementById("wordGetPinyin");
 
-const wordGetMeaning =
+const wordGetMeaning=
   document.getElementById("wordGetMeaning");
 
-const wordGetCategory =
+const wordGetCategory=
   document.getElementById("wordGetCategory");
 
-const libraryPanel =
+const wordGetProgress=
+  document.getElementById("wordGetProgress");
+
+
+const rankUpPanel=
+  document.getElementById("rankUpPanel");
+
+const newRankName=
+  document.getElementById("newRankName");
+
+
+const completionPanel=
+  document.getElementById("completionPanel");
+
+
+const libraryPanel=
   document.getElementById("libraryPanel");
 
-const libraryTabs =
+const libraryTabs=
   document.getElementById("libraryTabs");
 
-const libraryList =
+const libraryList=
   document.getElementById("libraryList");
 
-const libraryDetail =
+const libraryDetail=
   document.getElementById("libraryDetail");
 
-const libraryProgress =
+const libraryProgress=
   document.getElementById("libraryProgress");
 
-const fadeLayer =
+const libraryRank=
+  document.getElementById("libraryRank");
+
+
+const fadeLayer=
   document.getElementById("fadeLayer");
 
 
@@ -98,11 +124,27 @@ let bannerTimer=0;
 
 let wordGetActive=false;
 
+let rankUpActive=false;
+
+let completionActive=false;
+
 let libraryOpen=false;
 
 let libraryCategoryIndex=0;
 
 let librarySelection=0;
+
+let pendingRank=null;
+
+let pendingCompletion=false;
+
+let previousRank=
+  getRank(
+    collectedVocabulary.length
+  );
+
+let gameCompleted=
+  getCompletionState();
 
 
 // ======================================================
@@ -133,7 +175,7 @@ const camera={
 
 
 // ======================================================
-// INPUT
+// KEYS
 // ======================================================
 
 const keys={};
@@ -147,7 +189,7 @@ window.addEventListener(
       event.key.toLowerCase();
 
 
-    if (
+    if(
       [
         "arrowup",
         "arrowdown",
@@ -155,18 +197,47 @@ window.addEventListener(
         "arrowright",
         " "
       ].includes(key)
-    ) {
-
+    ){
       event.preventDefault();
+    }
+
+
+    if(event.repeat){
+
+      keys[key]=true;
+
+      return;
 
     }
 
 
-    if (
-      event.repeat
-    ) {
+    // COMPLETION
 
-      keys[key]=true;
+    if(completionActive){
+
+      if(
+        key==="e" ||
+        key==="enter"
+      ){
+        closeCompletion();
+      }
+
+      return;
+
+    }
+
+
+    // RANK UP
+
+    if(rankUpActive){
+
+      if(
+        key==="e" ||
+        key==="enter"
+      ){
+        closeRankUp();
+      }
+
       return;
 
     }
@@ -174,17 +245,13 @@ window.addEventListener(
 
     // WORD GET
 
-    if (
-      wordGetActive
-    ) {
+    if(wordGetActive){
 
-      if (
+      if(
         key==="e" ||
         key==="enter"
-      ) {
-
+      ){
         closeWordGet();
-
       }
 
       return;
@@ -194,9 +261,7 @@ window.addEventListener(
 
     // LIBRARY
 
-    if (
-      libraryOpen
-    ) {
+    if(libraryOpen){
 
       handleLibraryInput(key);
 
@@ -205,11 +270,7 @@ window.addEventListener(
     }
 
 
-    // OPEN LIBRARY
-
-    if (
-      key==="l"
-    ) {
+    if(key==="l"){
 
       openLibrary();
 
@@ -220,22 +281,16 @@ window.addEventListener(
 
     // DIALOGUE
 
-    if (
+    if(
       key==="e" ||
       key==="enter"
-    ) {
+    ){
 
-      if (
-        dialogue.active
-      ) {
-
+      if(dialogue.active){
         advanceDialogue();
-
       }
-      else {
-
+      else{
         interact();
-
       }
 
       return;
@@ -266,17 +321,13 @@ window.addEventListener(
 // ======================================================
 
 const dialogue={
-
   active:false,
-
   npc:null,
-
   index:0
-
 };
 
 
-function startDialogue(npc) {
+function startDialogue(npc){
 
   dialogue.active=true;
 
@@ -294,46 +345,36 @@ function startDialogue(npc) {
 
 
   portraitFace.textContent=
-    npc.label;
+    npc.label||"人";
 
 
   portraitFace.style.background=
-    npc.color;
+    npc.color||"#76552f";
 
 
   dialogueBox.classList.remove(
     "hidden"
   );
 
-
-  interactionHint.classList.add(
-    "hidden"
-  );
-
 }
 
 
-function advanceDialogue() {
+function advanceDialogue(){
 
   dialogue.index++;
 
 
-  if (
-    dialogue.index >=
+  if(
+    dialogue.index>=
     dialogue.npc.dialogue.length
-  ) {
+  ){
 
-    const finishedNPC=
+    const npc=
       dialogue.npc;
-
 
     closeDialogue();
 
-
-    giveNPCReward(
-      finishedNPC
-    );
-
+    giveNPCReward(npc);
 
     return;
 
@@ -348,12 +389,11 @@ function advanceDialogue() {
 }
 
 
-function closeDialogue() {
+function closeDialogue(){
 
   dialogue.active=false;
 
   dialogue.npc=null;
-
 
   dialogueBox.classList.add(
     "hidden"
@@ -366,26 +406,16 @@ function closeDialogue() {
 // NPC REWARDS
 // ======================================================
 
-function giveNPCReward(npc) {
+function giveNPCReward(npc){
 
-  if (
-    !npc.rewards ||
-    npc.rewards.length===0
-  ) {
-
+  if(!npc.rewards){
     return;
-
   }
 
 
-  for (
-    const id
-    of npc.rewards
-  ) {
+  for(const id of npc.rewards){
 
-    if (
-      !hasVocabulary(id)
-    ) {
+    if(!hasVocabulary(id)){
 
       obtainWord(id);
 
@@ -399,47 +429,82 @@ function giveNPCReward(npc) {
 
 
 // ======================================================
-// WORD GET
+// WORD
 // ======================================================
 
-function obtainWord(id) {
+function obtainWord(id){
 
   const vocab=
     VOCABULARY[id];
 
 
-  if (!vocab) {
+  if(!vocab){
     return;
   }
+
+
+  const oldCount=
+    collectedVocabulary.length;
+
+  const oldRank=
+    getRank(oldCount);
 
 
   const isNew=
     collectVocabulary(id);
 
 
-  if (!isNew) {
+  if(!isNew){
     return;
   }
+
+
+  const newCount=
+    collectedVocabulary.length;
+
+  const newRank=
+    getRank(newCount);
 
 
   wordGetChinese.textContent=
     vocab.word;
 
-
   wordGetPinyin.textContent=
     vocab.pinyin;
-
 
   wordGetMeaning.textContent=
     vocab.meaning;
 
-
   wordGetCategory.textContent=
     vocab.category;
 
+  wordGetProgress.textContent=
+    `${newCount} / ${getVocabularyCount()}`;
+
+
+  if(
+    newRank!==oldRank &&
+    newCount<100
+  ){
+    pendingRank=newRank;
+  }
+
+
+  if(
+    newCount>=100 &&
+    !gameCompleted
+  ){
+
+    pendingCompletion=true;
+
+    gameCompleted=true;
+
+    saveCompletionState();
+
+  }
+
 
   wordGetActive=true;
-
 
   wordGet.classList.remove(
     "hidden"
@@ -451,12 +516,63 @@ function obtainWord(id) {
 }
 
 
-function closeWordGet() {
+function closeWordGet(){
 
   wordGetActive=false;
 
-
   wordGet.classList.add(
+    "hidden"
+  );
+
+
+  if(pendingCompletion){
+
+    pendingCompletion=false;
+
+    showCompletion();
+
+    return;
+
+  }
+
+
+  if(pendingRank){
+
+    const rank=
+      pendingRank;
+
+    pendingRank=null;
+
+    showRankUp(rank);
+
+  }
+
+}
+
+
+// ======================================================
+// RANK
+// ======================================================
+
+function showRankUp(rank){
+
+  rankUpActive=true;
+
+  newRankName.textContent=
+    `「${rank}」`;
+
+  rankUpPanel.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+function closeRankUp(){
+
+  rankUpActive=false;
+
+  rankUpPanel.classList.add(
     "hidden"
   );
 
@@ -464,19 +580,47 @@ function closeWordGet() {
 
 
 // ======================================================
-// VOCAB LIBRARY
+// COMPLETION
 // ======================================================
 
-function openLibrary() {
+function showCompletion(){
 
-  if (
+  completionActive=true;
+
+  completionPanel.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+function closeCompletion(){
+
+  completionActive=false;
+
+  completionPanel.classList.add(
+    "hidden"
+  );
+
+
+  updateCollectionUI();
+
+}
+
+
+// ======================================================
+// LIBRARY
+// ======================================================
+
+function openLibrary(){
+
+  if(
     dialogue.active ||
     transitionLock ||
-    wordGetActive
-  ) {
-
+    wordGetActive ||
+    completionActive
+  ){
     return;
-
   }
 
 
@@ -484,20 +628,9 @@ function openLibrary() {
 
   librarySelection=0;
 
-
-  keys["w"]=false;
-  keys["a"]=false;
-  keys["s"]=false;
-  keys["d"]=false;
-
-  keys["arrowup"]=false;
-  keys["arrowdown"]=false;
-  keys["arrowleft"]=false;
-  keys["arrowright"]=false;
-
+  clearMovementKeys();
 
   renderLibrary();
-
 
   libraryPanel.classList.remove(
     "hidden"
@@ -506,10 +639,9 @@ function openLibrary() {
 }
 
 
-function closeLibrary() {
+function closeLibrary(){
 
   libraryOpen=false;
-
 
   libraryPanel.classList.add(
     "hidden"
@@ -518,12 +650,27 @@ function closeLibrary() {
 }
 
 
-function handleLibraryInput(key) {
+function clearMovementKeys(){
 
-  if (
+  [
+    "w","a","s","d",
+    "arrowup",
+    "arrowdown",
+    "arrowleft",
+    "arrowright"
+  ].forEach(
+    key=>keys[key]=false
+  );
+
+}
+
+
+function handleLibraryInput(key){
+
+  if(
     key==="l" ||
     key==="escape"
-  ) {
+  ){
 
     closeLibrary();
 
@@ -532,23 +679,19 @@ function handleLibraryInput(key) {
   }
 
 
-  if (
+  if(
     key==="arrowleft" ||
     key==="a"
-  ) {
+  ){
 
     libraryCategoryIndex--;
 
-
-    if (
-      libraryCategoryIndex<0
-    ) {
+    if(libraryCategoryIndex<0){
 
       libraryCategoryIndex=
         VOCAB_CATEGORIES.length-1;
 
     }
-
 
     librarySelection=0;
 
@@ -559,23 +702,19 @@ function handleLibraryInput(key) {
   }
 
 
-  if (
+  if(
     key==="arrowright" ||
     key==="d"
-  ) {
+  ){
 
     libraryCategoryIndex++;
 
-
-    if (
+    if(
       libraryCategoryIndex>=
       VOCAB_CATEGORIES.length
-    ) {
-
+    ){
       libraryCategoryIndex=0;
-
     }
-
 
     librarySelection=0;
 
@@ -590,10 +729,10 @@ function handleLibraryInput(key) {
     getLibraryWords();
 
 
-  if (
+  if(
     key==="arrowup" ||
     key==="w"
-  ) {
+  ){
 
     librarySelection=
       Math.max(
@@ -601,23 +740,21 @@ function handleLibraryInput(key) {
         librarySelection-1
       );
 
-
     renderLibrary();
 
   }
 
 
-  if (
+  if(
     key==="arrowdown" ||
     key==="s"
-  ) {
+  ){
 
     librarySelection=
       Math.min(
         words.length-1,
         librarySelection+1
       );
-
 
     renderLibrary();
 
@@ -626,7 +763,7 @@ function handleLibraryInput(key) {
 }
 
 
-function getLibraryWords() {
+function getLibraryWords(){
 
   const category=
     VOCAB_CATEGORIES[
@@ -645,7 +782,7 @@ function getLibraryWords() {
 }
 
 
-function renderLibrary() {
+function renderLibrary(){
 
   renderLibraryTabs();
 
@@ -654,17 +791,15 @@ function renderLibrary() {
     getLibraryWords();
 
 
-  if (
+  if(
     librarySelection>=
     words.length
-  ) {
-
+  ){
     librarySelection=
       Math.max(
         0,
         words.length-1
       );
-
   }
 
 
@@ -688,23 +823,19 @@ function renderLibrary() {
         "library-entry";
 
 
-      if (
+      if(
         index===librarySelection
-      ) {
-
+      ){
         item.classList.add(
           "active"
         );
-
       }
 
 
-      if (!collected) {
-
+      if(!collected){
         item.classList.add(
           "locked"
         );
-
       }
 
 
@@ -737,18 +868,14 @@ function renderLibrary() {
   );
 
 
-  if (
-    words.length>0
-  ) {
+  if(words.length){
+
+    const selected=
+      words[librarySelection];
 
     renderLibraryDetail(
-      words[
-        librarySelection
-      ][0],
-
-      words[
-        librarySelection
-      ][1]
+      selected[0],
+      selected[1]
     );
 
   }
@@ -757,10 +884,14 @@ function renderLibrary() {
   libraryProgress.textContent=
     `${collectedVocabulary.length} / ${getVocabularyCount()} WORDS`;
 
+
+  libraryRank.textContent=
+    `称号：${getRank(collectedVocabulary.length)}`;
+
 }
 
 
-function renderLibraryTabs() {
+function renderLibraryTabs(){
 
   libraryTabs.innerHTML="";
 
@@ -778,43 +909,35 @@ function renderLibraryTabs() {
         "library-tab";
 
 
-      if (
+      if(
         index===
         libraryCategoryIndex
-      ) {
-
+      ){
         tab.classList.add(
           "active"
         );
-
       }
 
 
-      const total=
-        Object.values(
-          VOCABULARY
-        ).filter(
-          data=>
-            category==="すべて" ||
-            data.category===category
-        ).length;
-
-
-      const obtained=
+      const entries=
         Object.entries(
           VOCABULARY
         ).filter(
           ([id,data])=>
-            (
-              category==="すべて" ||
-              data.category===category
-            ) &&
+            category==="すべて" ||
+            data.category===category
+        );
+
+
+      const obtained=
+        entries.filter(
+          ([id])=>
             hasVocabulary(id)
         ).length;
 
 
       tab.textContent=
-        `${category} ${obtained}/${total}`;
+        `${category} ${obtained}/${entries.length}`;
 
 
       libraryTabs.appendChild(
@@ -827,14 +950,9 @@ function renderLibraryTabs() {
 }
 
 
-function renderLibraryDetail(
-  id,
-  data
-) {
+function renderLibraryDetail(id,data){
 
-  if (
-    !hasVocabulary(id)
-  ) {
+  if(!hasVocabulary(id)){
 
     libraryDetail.innerHTML=`
 
@@ -844,8 +962,10 @@ function renderLibraryDetail(
           ？
         </div>
 
-        まだ発見していない言葉です。<br>
-        杭州の街を探索してみましょう。
+        まだ発見していない言葉です。<br><br>
+
+        NPCと話したり、<br>
+        街の気になる物を調べてみましょう。
 
       </div>
 
@@ -907,22 +1027,11 @@ function renderLibraryDetail(
 }
 
 
-function updateCollectionUI() {
-
-  collectionHeader.textContent=
-    `词语 ${collectedVocabulary.length} / ${getVocabularyCount()}`;
-
-}
-
-
 // ======================================================
-// NPC INIT
+// NPC
 // ======================================================
 
-for (
-  const npc
-  of NPCS
-) {
+for(const npc of NPCS){
 
   npc.homeX=npc.x;
   npc.homeY=npc.y;
@@ -936,18 +1045,16 @@ for (
 }
 
 
-function getCurrentNPCs() {
+function getCurrentNPCs(){
 
   return NPCS.filter(
-    npc=>
-      npc.map===
-      currentMapId
+    npc=>npc.map===currentMapId
   );
 
 }
 
 
-function getNearbyNPC() {
+function getNearbyNPC(){
 
   const px=
     player.x+
@@ -959,30 +1066,20 @@ function getNearbyNPC() {
 
 
   let nearest=null;
+  let best=55;
 
-  let bestDistance=55;
 
+  for(const npc of getCurrentNPCs()){
 
-  for (
-    const npc
-    of getCurrentNPCs()
-  ) {
-
-    const distance=
+    const d=
       Math.hypot(
         npc.x+11-px,
         npc.y+14-py
       );
 
+    if(d<best){
 
-    if (
-      distance<
-      bestDistance
-    ) {
-
-      bestDistance=
-        distance;
-
+      best=d;
       nearest=npc;
 
     }
@@ -995,30 +1092,22 @@ function getNearbyNPC() {
 }
 
 
-// ======================================================
-// NPC MOVEMENT
-// ======================================================
+function updateNPCs(dt){
 
-function updateNPCs(dt) {
-
-  if (
+  if(
     dialogue.active ||
     transitionLock ||
     libraryOpen ||
-    wordGetActive
-  ) {
-
+    wordGetActive ||
+    completionActive
+  ){
     return;
-
   }
 
 
-  for (
-    const npc
-    of getCurrentNPCs()
-  ) {
+  for(const npc of getCurrentNPCs()){
 
-    if (!npc.wander) {
+    if(!npc.wander){
       continue;
     }
 
@@ -1026,9 +1115,7 @@ function updateNPCs(dt) {
     npc.moveTimer-=dt;
 
 
-    if (
-      npc.moveTimer<=0
-    ) {
+    if(npc.moveTimer<=0){
 
       npc.moveTimer=
         1+
@@ -1045,22 +1132,22 @@ function updateNPCs(dt) {
       npc.moveY=0;
 
 
-      if (choice===0) {
+      if(choice===0){
         npc.moveX=1;
         npc.direction="right";
       }
 
-      else if (choice===1) {
+      else if(choice===1){
         npc.moveX=-1;
         npc.direction="left";
       }
 
-      else if (choice===2) {
+      else if(choice===2){
         npc.moveY=1;
         npc.direction="down";
       }
 
-      else if (choice===3) {
+      else if(choice===3){
         npc.moveY=-1;
         npc.direction="up";
       }
@@ -1073,28 +1160,23 @@ function updateNPCs(dt) {
 
     const nx=
       npc.x+
-      npc.moveX*
-      speed*
-      dt;
-
+      npc.moveX*speed*dt;
 
     const ny=
       npc.y+
-      npc.moveY*
-      speed*
-      dt;
+      npc.moveY*speed*dt;
 
 
     const range=
       npc.range||60;
 
 
-    if (
+    if(
       Math.hypot(
         nx-npc.homeX,
         ny-npc.homeY
       )>range
-    ) {
+    ){
 
       npc.moveX=0;
       npc.moveY=0;
@@ -1104,21 +1186,15 @@ function updateNPCs(dt) {
     }
 
 
-    if (
+    if(
       !isSolidAtPixel(
         nx+11,
         ny+14
       )
-    ) {
+    ){
 
       npc.x=nx;
       npc.y=ny;
-
-    }
-    else {
-
-      npc.moveX=0;
-      npc.moveY=0;
 
     }
 
@@ -1128,22 +1204,17 @@ function updateNPCs(dt) {
 
 
 // ======================================================
-// BUILDING INTERACTION
+// INTERACTION SEARCH
 // ======================================================
 
-function getNearbyBuilding() {
+function getNearbyBuilding(){
 
   const map=
     getCurrentMap();
 
 
-  if (
-    !map.buildings ||
-    map.buildings.length===0
-  ) {
-
+  if(!map.buildings){
     return null;
-
   }
 
 
@@ -1151,48 +1222,40 @@ function getNearbyBuilding() {
     player.x+
     player.width/2;
 
-
   const py=
     player.y+
     player.height/2;
 
 
   let nearest=null;
+  let best=58;
 
-  let bestDistance=58;
 
+  for(const b of map.buildings){
 
-  for (
-    const building
-    of map.buildings
-  ) {
+    if(!b.target){
+      continue;
+    }
+
 
     const bx=
-      (building.doorX+.5)*
-      TILE;
-
+      (b.doorX+.5)*TILE;
 
     const by=
-      (
-        building.y+
-        building.h
-      )*TILE;
+      (b.y+b.h)*TILE;
 
 
-    const distance=
+    const d=
       Math.hypot(
         bx-px,
         by-py
       );
 
 
-    if (
-      distance<
-      bestDistance
-    ) {
+    if(d<best){
 
-      bestDistance=distance;
-      nearest=building;
+      best=d;
+      nearest=b;
 
     }
 
@@ -1204,22 +1267,14 @@ function getNearbyBuilding() {
 }
 
 
-// ======================================================
-// OBJECT INTERACTION
-// ======================================================
-
-function getNearbyInteractable() {
+function getNearbyInteractable(){
 
   const map=
     getCurrentMap();
 
 
-  if (
-    !map.interactables
-  ) {
-
+  if(!map.interactables){
     return null;
-
   }
 
 
@@ -1227,46 +1282,35 @@ function getNearbyInteractable() {
     player.x+
     player.width/2;
 
-
   const py=
     player.y+
     player.height/2;
 
 
   let nearest=null;
+  let best=53;
 
-  let bestDistance=52;
 
-
-  for (
-    const object
-    of map.interactables
-  ) {
+  for(const obj of map.interactables){
 
     const ox=
-      (object.x+.5)*
-      TILE;
-
+      (obj.x+.5)*TILE;
 
     const oy=
-      (object.y+.5)*
-      TILE;
+      (obj.y+.5)*TILE;
 
 
-    const distance=
+    const d=
       Math.hypot(
         ox-px,
         oy-py
       );
 
 
-    if (
-      distance<
-      bestDistance
-    ) {
+    if(d<best){
 
-      bestDistance=distance;
-      nearest=object;
+      best=d;
+      nearest=obj;
 
     }
 
@@ -1282,13 +1326,13 @@ function getNearbyInteractable() {
 // INTERACT
 // ======================================================
 
-function interact() {
+function interact(){
 
   const npc=
     getNearbyNPC();
 
 
-  if (npc) {
+  if(npc){
 
     startDialogue(npc);
 
@@ -1301,13 +1345,13 @@ function interact() {
     getNearbyInteractable();
 
 
-  if (object) {
+  if(object){
 
-    if (
+    if(
       hasVocabulary(
         object.word
       )
-    ) {
+    ){
 
       const vocab=
         VOCABULARY[
@@ -1315,13 +1359,25 @@ function interact() {
         ];
 
 
-      startObjectDialogue(
-        object.label,
-        `${vocab.word}（${vocab.pinyin}）―― ${vocab.meaning}`
-      );
+      startDialogue({
+
+        name:object.label,
+
+        label:"物",
+
+        color:"#76552f",
+
+        dialogue:[
+          `${vocab.word}（${vocab.pinyin}）`,
+          vocab.meaning,
+          vocab.example
+        ]
+
+      });
 
     }
-    else {
+
+    else{
 
       obtainWord(
         object.word
@@ -1338,7 +1394,7 @@ function interact() {
     getNearbyBuilding();
 
 
-  if (building) {
+  if(building){
 
     changeMap(
       building.target,
@@ -1355,45 +1411,14 @@ function interact() {
 }
 
 
-function startObjectDialogue(
-  name,
-  text
-) {
-
-  const objectNPC={
-
-    name:name,
-
-    label:"物",
-
-    color:"#76552f",
-
-    dialogue:[
-      text
-    ]
-
-  };
-
-
-  startDialogue(
-    objectNPC
-  );
-
-}
-
-
 // ======================================================
 // EXIT
 // ======================================================
 
-function getActiveExit() {
+function getActiveExit(){
 
-  if (
-    exitCooldown>0
-  ) {
-
+  if(exitCooldown>0){
     return null;
-
   }
 
 
@@ -1405,27 +1430,21 @@ function getActiveExit() {
     player.x+
     player.width/2;
 
-
   const py=
     player.y+
     player.height/2;
 
 
-  for (
-    const exit
-    of map.exits
-  ) {
+  for(const exit of map.exits){
 
-    if (
+    if(
       isInsideRect(
         px,
         py,
         exit
       )
-    ) {
-
+    ){
       return exit;
-
     }
 
   }
@@ -1436,18 +1455,17 @@ function getActiveExit() {
 }
 
 
-function checkExitZones() {
+function checkExitZones(){
 
-  if (
+  if(
     transitionLock ||
     dialogue.active ||
     exitCooldown>0 ||
     libraryOpen ||
-    wordGetActive
-  ) {
-
+    wordGetActive ||
+    completionActive
+  ){
     return;
-
   }
 
 
@@ -1455,36 +1473,31 @@ function checkExitZones() {
     getActiveExit();
 
 
-  if (!exit) {
-    return;
+  if(exit){
+
+    changeMap(
+      exit.target,
+      exit.targetX,
+      exit.targetY
+    );
+
   }
-
-
-  changeMap(
-    exit.target,
-    exit.targetX,
-    exit.targetY
-  );
 
 }
 
 
 // ======================================================
-// CHANGE MAP
+// MAP CHANGE
 // ======================================================
 
 function changeMap(
   target,
   targetX,
   targetY
-) {
+){
 
-  if (
-    transitionLock
-  ) {
-
+  if(transitionLock){
     return;
-
   }
 
 
@@ -1501,29 +1514,23 @@ function changeMap(
 
       currentMapId=target;
 
-
       player.x=
         targetX*TILE;
 
       player.y=
         targetY*TILE;
 
-
       player.moving=false;
 
-
       exitCooldown=.9;
-
 
       camera.x=
         player.x-
         canvas.width/2;
 
-
       camera.y=
         player.y-
         canvas.height/2;
-
 
       clampCamera();
 
@@ -1540,15 +1547,13 @@ function changeMap(
 
           setTimeout(
             ()=>{
-
               transitionLock=false;
-
             },
             320
           );
 
         },
-        150
+        140
       );
 
     },
@@ -1562,49 +1567,34 @@ function changeMap(
 // COLLISION
 // ======================================================
 
-function playerCollides(
-  x,
-  y
-) {
+function playerCollides(x,y){
 
   const left=x+4;
   const right=x+player.width-4;
+
   const top=y+7;
   const bottom=y+player.height-2;
 
 
-  if (
+  if(
     isSolidAtPixel(left,top) ||
     isSolidAtPixel(right,top) ||
     isSolidAtPixel(left,bottom) ||
     isSolidAtPixel(right,bottom)
-  ) {
-
+  ){
     return true;
-
   }
 
 
-  for (
-    const npc
-    of getCurrentNPCs()
-  ) {
+  for(const npc of getCurrentNPCs()){
 
-    const nl=npc.x+4;
-    const nr=npc.x+27;
-    const nt=npc.y+5;
-    const nb=npc.y+29;
-
-
-    if (
-      right>nl &&
-      left<nr &&
-      bottom>nt &&
-      top<nb
-    ) {
-
+    if(
+      right>npc.x+4 &&
+      left<npc.x+27 &&
+      bottom>npc.y+5 &&
+      top<npc.y+29
+    ){
       return true;
-
     }
 
   }
@@ -1619,23 +1609,21 @@ function playerCollides(
 // PLAYER
 // ======================================================
 
-function updatePlayer(dt) {
+function updatePlayer(dt){
 
-  if (
-    exitCooldown>0
-  ) {
-
+  if(exitCooldown>0){
     exitCooldown-=dt;
-
   }
 
 
-  if (
+  if(
     dialogue.active ||
     transitionLock ||
     libraryOpen ||
-    wordGetActive
-  ) {
+    wordGetActive ||
+    rankUpActive ||
+    completionActive
+  ){
 
     player.moving=false;
 
@@ -1648,10 +1636,10 @@ function updatePlayer(dt) {
   let dy=0;
 
 
-  if (
+  if(
     keys["w"] ||
     keys["arrowup"]
-  ) {
+  ){
 
     dy--;
     player.direction="up";
@@ -1659,10 +1647,10 @@ function updatePlayer(dt) {
   }
 
 
-  if (
+  if(
     keys["s"] ||
     keys["arrowdown"]
-  ) {
+  ){
 
     dy++;
     player.direction="down";
@@ -1670,10 +1658,10 @@ function updatePlayer(dt) {
   }
 
 
-  if (
+  if(
     keys["a"] ||
     keys["arrowleft"]
-  ) {
+  ){
 
     dx--;
     player.direction="left";
@@ -1681,10 +1669,10 @@ function updatePlayer(dt) {
   }
 
 
-  if (
+  if(
     keys["d"] ||
     keys["arrowright"]
-  ) {
+  ){
 
     dx++;
     player.direction="right";
@@ -1692,59 +1680,48 @@ function updatePlayer(dt) {
   }
 
 
-  if (
-    dx!==0 ||
-    dy!==0
-  ) {
+  if(dx||dy){
 
     player.moving=true;
 
 
-    const length=
+    const len=
       Math.hypot(dx,dy);
 
 
-    dx/=length;
-    dy/=length;
+    dx/=len;
+    dy/=len;
 
 
     const mx=
-      dx*
-      player.speed*
-      dt;
-
+      dx*player.speed*dt;
 
     const my=
-      dy*
-      player.speed*
-      dt;
+      dy*player.speed*dt;
 
 
-    if (
+    if(
       !playerCollides(
         player.x+mx,
         player.y
       )
-    ) {
-
+    ){
       player.x+=mx;
-
     }
 
 
-    if (
+    if(
       !playerCollides(
         player.x,
         player.y+my
       )
-    ) {
-
+    ){
       player.y+=my;
-
     }
 
   }
-  else {
+
+  else{
 
     player.moving=false;
 
@@ -1760,20 +1737,17 @@ function updatePlayer(dt) {
 // CAMERA
 // ======================================================
 
-function clampCamera() {
+function clampCamera(){
 
   const map=
     getCurrentMap();
 
 
   const width=
-    map.grid[0].length*
-    TILE;
-
+    map.grid[0].length*TILE;
 
   const height=
-    map.grid.length*
-    TILE;
+    map.grid.length*TILE;
 
 
   camera.x=
@@ -1804,24 +1778,22 @@ function clampCamera() {
 }
 
 
-function updateCamera() {
-
-  const targetX=
-    player.x-
-    canvas.width/2;
-
-
-  const targetY=
-    player.y-
-    canvas.height/2;
-
+function updateCamera(){
 
   camera.x+=
-    (targetX-camera.x)*.09;
+    (
+      player.x-
+      canvas.width/2-
+      camera.x
+    )*.09;
 
 
   camera.y+=
-    (targetY-camera.y)*.09;
+    (
+      player.y-
+      canvas.height/2-
+      camera.y
+    )*.09;
 
 
   clampCamera();
@@ -1830,32 +1802,31 @@ function updateCamera() {
 
 
 // ======================================================
-// TILE DRAWING
+// DRAW MAP
 // ======================================================
 
-function drawMap(time) {
+function drawMap(time){
 
   const map=
     getCurrentMap();
 
 
-  for (
+  for(
     let y=0;
     y<map.grid.length;
     y++
-  ) {
+  ){
 
-    for (
+    for(
       let x=0;
       x<map.grid[0].length;
       x++
-    ) {
+    ){
 
       const sx=
         Math.floor(
           x*TILE-camera.x
         );
-
 
       const sy=
         Math.floor(
@@ -1867,76 +1838,42 @@ function drawMap(time) {
         map.grid[y][x];
 
 
-      if (
-        tile===T.FLOOR
-      ) {
-
-        ctx.fillStyle="#37323a";
-
+      if(tile===T.FLOOR){
+        ctx.fillStyle="#383239";
       }
 
-      else if (
-        tile===T.ROAD
-      ) {
-
+      else if(tile===T.ROAD){
         ctx.fillStyle="#302e35";
-
       }
 
-      else if (
-        tile===T.PLAZA
-      ) {
-
-        ctx.fillStyle="#4b464b";
-
+      else if(tile===T.PLAZA){
+        ctx.fillStyle="#49444a";
       }
 
-      else if (
-        tile===T.WATER
-      ) {
-
-        ctx.fillStyle="#14364a";
-
+      else if(tile===T.WATER){
+        ctx.fillStyle="#12364b";
       }
 
-      else if (
-        tile===T.GRASS
-      ) {
-
-        ctx.fillStyle="#294434";
-
+      else if(tile===T.GRASS){
+        ctx.fillStyle="#294535";
       }
 
-      else if (
-        tile===T.INDOOR
-      ) {
-
+      else if(tile===T.INDOOR){
         ctx.fillStyle="#6c4c37";
-
       }
 
-      else if (
-        tile===T.WALL
-      ) {
-
-        ctx.fillStyle="#3b2923";
-
+      else if(tile===T.WALL){
+        ctx.fillStyle="#392822";
       }
 
-      else if (
-        tile===T.COUNTER
-      ) {
-
+      else if(tile===T.COUNTER){
         ctx.fillStyle="#70472e";
-
       }
 
 
       ctx.fillRect(
-        sx,
-        sy,
-        TILE,
-        TILE
+        sx,sy,
+        TILE,TILE
       );
 
 
@@ -1955,6 +1892,31 @@ function drawMap(time) {
 
   }
 
+
+  // road markings
+
+  if(
+    currentMapId==="food" ||
+    currentMapId==="market"
+  ){
+
+    ctx.fillStyle=
+      "rgba(200,190,170,.10)";
+
+
+    for(let y=80;y<1200;y+=110){
+
+      ctx.fillRect(
+        26*TILE-camera.x,
+        y-camera.y,
+        3,
+        35
+      );
+
+    }
+
+  }
+
 }
 
 
@@ -1962,21 +1924,18 @@ function drawMap(time) {
 // BUILDINGS
 // ======================================================
 
-function drawBuildings() {
+function drawBuildings(){
 
   const map=
     getCurrentMap();
 
 
-  if (!map.buildings) {
+  if(!map.buildings){
     return;
   }
 
 
-  for (
-    const b
-    of map.buildings
-  ) {
+  for(const b of map.buildings){
 
     const x=
       b.x*TILE-camera.x;
@@ -1984,20 +1943,16 @@ function drawBuildings() {
     const y=
       b.y*TILE-camera.y;
 
-    const w=
-      b.w*TILE;
-
-    const h=
-      b.h*TILE;
+    const w=b.w*TILE;
+    const h=b.h*TILE;
 
 
     ctx.fillStyle=
-      "rgba(0,0,0,.4)";
-
+      "rgba(0,0,0,.38)";
 
     ctx.fillRect(
       x+12,
-      y+18,
+      y+17,
       w,
       h
     );
@@ -2006,93 +1961,60 @@ function drawBuildings() {
     ctx.fillStyle=
       b.color;
 
-
     ctx.fillRect(
-      x+6,
+      x+5,
       y+28,
-      w-12,
+      w-10,
       h-28
     );
 
 
-    // roof
-
-    if (
+    if(
       b.type==="traditional"
-    ) {
+    ){
 
-      ctx.fillStyle="#282a29";
+      ctx.fillStyle="#252725";
 
       ctx.fillRect(
-        x-12,
-        y+18,
-        w+24,
-        17
+        x-11,
+        y+17,
+        w+22,
+        18
       );
 
-      ctx.fillStyle="#45443d";
+      ctx.fillStyle="#49453c";
 
       ctx.fillRect(
         x,
-        y+10,
+        y+9,
         w,
         13
       );
 
     }
 
-    else if (
+    else if(
       b.type==="hotel"
-    ) {
+    ){
 
       ctx.fillStyle="#202733";
 
       ctx.fillRect(
-        x+10,
-        y+8,
-        w-20,
-        h-8
+        x+9,
+        y+7,
+        w-18,
+        h-7
       );
-
-
-      for (
-        let yy=35;
-        yy<h-65;
-        yy+=48
-      ) {
-
-        for (
-          let xx=28;
-          xx<w-30;
-          xx+=70
-        ) {
-
-          ctx.fillStyle=
-            (xx+yy)%3===0
-            ? "#d09b53"
-            : "#4e5967";
-
-
-          ctx.fillRect(
-            x+xx,
-            y+yy,
-            32,
-            21
-          );
-
-        }
-
-      }
 
     }
 
-    else {
+    else{
 
-      ctx.fillStyle="#382a29";
+      ctx.fillStyle="#352726";
 
       ctx.fillRect(
         x,
-        y+18,
+        y+17,
         w,
         22
       );
@@ -2104,37 +2026,37 @@ function drawBuildings() {
 
     const signWidth=
       Math.min(
-        w-35,
+        w-30,
         Math.max(
-          110,
-          b.name.length*23
+          100,
+          b.name.length*22
         )
       );
 
 
-    ctx.fillStyle="#291a18";
+    ctx.fillStyle="#261817";
 
     ctx.fillRect(
       x+w/2-signWidth/2-3,
-      y+35,
+      y+36,
       signWidth+6,
-      31
+      30
     );
 
 
-    ctx.fillStyle="#833a31";
+    ctx.fillStyle="#843b31";
 
     ctx.fillRect(
       x+w/2-signWidth/2,
-      y+38,
+      y+39,
       signWidth,
-      25
+      24
     );
 
 
-    ctx.fillStyle="#f5d08a";
+    ctx.fillStyle="#f6d28a";
 
-    ctx.font="bold 15px sans-serif";
+    ctx.font="bold 14px sans-serif";
 
     ctx.textAlign="center";
 
@@ -2147,29 +2069,29 @@ function drawBuildings() {
 
     // windows
 
-    for (
-      let wx=35;
+    for(
+      let wx=34;
       wx<w-35;
-      wx+=65
-    ) {
+      wx+=64
+    ){
 
-      ctx.fillStyle="#342c2c";
+      ctx.fillStyle="#30282b";
 
       ctx.fillRect(
         x+wx,
-        y+82,
+        y+81,
         30,
-        30
+        29
       );
 
 
-      ctx.fillStyle="#d19a55";
+      ctx.fillStyle="#ca9250";
 
       ctx.fillRect(
         x+wx+4,
-        y+86,
+        y+85,
         22,
-        22
+        21
       );
 
     }
@@ -2178,33 +2100,130 @@ function drawBuildings() {
     // door
 
     const dx=
-      b.doorX*TILE-
-      camera.x;
+      b.doorX*TILE-camera.x;
 
 
-    ctx.fillStyle="#25191a";
+    ctx.fillStyle="#241819";
 
     ctx.fillRect(
       dx-5,
-      y+h-50,
+      y+h-51,
       TILE+10,
-      50
+      51
     );
 
 
-    ctx.fillStyle=
-      b.type==="hotel" ||
-      b.type==="convenience"
-      ? "#365668"
-      : "#75452d";
-
+    ctx.fillStyle="#72442d";
 
     ctx.fillRect(
       dx,
-      y+h-45,
+      y+h-46,
       TILE,
-      45
+      46
     );
+
+  }
+
+}
+
+
+// ======================================================
+// LANTERNS
+// ======================================================
+
+function drawLanternRows(time){
+
+  const rows=
+    getCurrentMap().lanternRows||[];
+
+
+  for(const row of rows){
+
+    const y=
+      row.y*TILE-
+      camera.y;
+
+
+    const start=
+      row.start*TILE-
+      camera.x;
+
+    const end=
+      row.end*TILE-
+      camera.x;
+
+
+    ctx.strokeStyle="#302123";
+
+    ctx.lineWidth=2;
+
+    ctx.beginPath();
+
+    ctx.moveTo(start,y);
+
+    ctx.lineTo(end,y+4);
+
+    ctx.stroke();
+
+
+    for(
+      let x=start+25;
+      x<end;
+      x+=58
+    ){
+
+      const sway=
+        Math.sin(
+          time*2+x*.02
+        )*1.5;
+
+
+      ctx.fillStyle=
+        "rgba(255,128,48,.10)";
+
+      ctx.beginPath();
+
+      ctx.arc(
+        x,
+        y+15,
+        20,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fill();
+
+
+      ctx.fillStyle="#a83b32";
+
+      ctx.fillRect(
+        x-6+sway,
+        y+5,
+        12,
+        15
+      );
+
+
+      ctx.fillStyle="#ed9850";
+
+      ctx.fillRect(
+        x-3+sway,
+        y+7,
+        6,
+        10
+      );
+
+
+      ctx.fillStyle="#e7b65d";
+
+      ctx.fillRect(
+        x-5+sway,
+        y+20,
+        10,
+        2
+      );
+
+    }
 
   }
 
@@ -2215,50 +2234,44 @@ function drawBuildings() {
 // STALLS
 // ======================================================
 
-function drawStalls(time) {
+function drawStalls(time){
 
   const map=
     getCurrentMap();
 
 
-  for (
-    const stall
-    of map.stalls
-  ) {
+  for(const stall of map.stalls){
 
     const x=
       stall.x*TILE-
       camera.x;
 
-
     const y=
       stall.y*TILE-
       camera.y;
-
 
     const width=
       stall.width*TILE;
 
 
-    ctx.fillStyle="#543529";
+    ctx.fillStyle="#533428";
 
     ctx.fillRect(
       x+4,
-      y+12,
+      y+11,
       5,
-      24
+      27
     );
-
 
     ctx.fillRect(
       x+width-9,
-      y+12,
+      y+11,
       5,
-      24
+      27
     );
 
 
-    ctx.fillStyle="#a73e35";
+    ctx.fillStyle="#aa4036";
 
     ctx.fillRect(
       x,
@@ -2268,17 +2281,16 @@ function drawStalls(time) {
     );
 
 
-    for (
+    for(
       let i=0;
       i<width;
       i+=16
-    ) {
+    ){
 
       ctx.fillStyle=
         i%32===0
-        ? "#d25344"
-        : "#e4b15e";
-
+        ? "#d65547"
+        : "#e0aa58";
 
       ctx.fillRect(
         x+i,
@@ -2290,22 +2302,21 @@ function drawStalls(time) {
     }
 
 
-    ctx.fillStyle="#351717";
+    ctx.fillStyle="#321717";
 
     ctx.fillRect(
-      x+10,
+      x+8,
       y+2,
-      width-20,
+      width-16,
       11
     );
 
 
-    ctx.fillStyle="#ffd478";
+    ctx.fillStyle="#ffd477";
 
     ctx.font="bold 12px sans-serif";
 
     ctx.textAlign="center";
-
 
     ctx.fillText(
       stall.sign,
@@ -2314,24 +2325,24 @@ function drawStalls(time) {
     );
 
 
-    ctx.fillStyle="#71462e";
+    ctx.fillStyle="#74482e";
 
     ctx.fillRect(
       x+5,
       y+27,
       width-10,
-      10
+      11
     );
 
 
-    if (
+    if(
       stall.type==="shaokao" ||
-      stall.type==="xiaolongbao"
-    ) {
+      stall.type==="food"
+    ){
 
       drawSteam(
         x+width/2,
-        y+22,
+        y+23,
         time
       );
 
@@ -2342,11 +2353,7 @@ function drawStalls(time) {
 }
 
 
-function drawSteam(
-  x,
-  y,
-  time
-) {
+function drawSteam(x,y,time){
 
   const offset=
     (time*12)%14;
@@ -2362,13 +2369,11 @@ function drawSteam(
     2,5
   );
 
-
   ctx.fillRect(
     x,
     y-6-offset*.7,
     2,5
   );
-
 
   ctx.fillRect(
     x+8,
@@ -2380,24 +2385,20 @@ function drawSteam(
 
 
 // ======================================================
-// PROPS — UNIQUE INTERIORS
+// PROPS
 // ======================================================
 
-function drawProps() {
+function drawProps(){
 
   const map=
     getCurrentMap();
 
 
-  for (
-    const prop
-    of map.props
-  ) {
+  for(const prop of map.props){
 
     const x=
       prop.x*TILE-
       camera.x;
-
 
     const y=
       prop.y*TILE-
@@ -2405,7 +2406,7 @@ function drawProps() {
 
 
     drawProp(
-      prop.type,
+      prop,
       x,
       y
     );
@@ -2415,19 +2416,239 @@ function drawProps() {
 }
 
 
-function drawProp(
-  type,
-  x,
-  y
-) {
+function drawProp(prop,x,y){
 
-  // ----------------------------------
-  // TEA TABLE
-  // ----------------------------------
+  const type=prop.type;
 
-  if (
+
+  if(type==="plasticStool"){
+
+    ctx.fillStyle="#d55243";
+
+    ctx.fillRect(
+      x+7,
+      y+13,
+      18,
+      8
+    );
+
+    ctx.fillRect(
+      x+9,
+      y+21,
+      3,
+      8
+    );
+
+    ctx.fillRect(
+      x+20,
+      y+21,
+      3,
+      8
+    );
+
+  }
+
+
+  else if(type==="streetTable"){
+
+    ctx.fillStyle="#70503a";
+
+    ctx.fillRect(
+      x,
+      y+12,
+      32,
+      8
+    );
+
+    ctx.fillRect(
+      x+4,
+      y+20,
+      4,
+      10
+    );
+
+    ctx.fillRect(
+      x+24,
+      y+20,
+      4,
+      10
+    );
+
+  }
+
+
+  else if(type==="priceBoard"){
+
+    ctx.fillStyle="#2d201c";
+
+    ctx.fillRect(
+      x+5,
+      y+3,
+      22,
+      25
+    );
+
+    ctx.fillStyle="#e1c57e";
+
+    ctx.fillRect(
+      x+9,
+      y+8,
+      14,
+      2
+    );
+
+    ctx.fillRect(
+      x+9,
+      y+14,
+      10,
+      2
+    );
+
+    ctx.fillRect(
+      x+9,
+      y+20,
+      13,
+      2
+    );
+
+  }
+
+
+  else if(type==="crate"){
+
+    ctx.fillStyle="#765039";
+
+    ctx.fillRect(
+      x+3,
+      y+10,
+      27,
+      19
+    );
+
+    ctx.strokeStyle="#a2734b";
+
+    ctx.strokeRect(
+      x+6,
+      y+13,
+      21,
+      13
+    );
+
+  }
+
+
+  else if(type==="verticalSign"){
+
+    ctx.fillStyle="#8d332d";
+
+    ctx.fillRect(
+      x+8,
+      y,
+      17,
+      32
+    );
+
+    ctx.fillStyle="#f1cb78";
+
+    ctx.font="10px sans-serif";
+
+    ctx.textAlign="center";
+
+    ctx.fillText(
+      prop.text||"店",
+      x+16,
+      y+18
+    );
+
+  }
+
+
+  else if(type==="deliveryBox"){
+
+    ctx.fillStyle="#d5a62f";
+
+    ctx.fillRect(
+      x+5,
+      y+9,
+      22,
+      19
+    );
+
+    ctx.fillStyle="#4a3b24";
+
+    ctx.fillRect(
+      x+9,
+      y+13,
+      14,
+      4
+    );
+
+  }
+
+
+  else if(type==="manhole"){
+
+    ctx.fillStyle="#222329";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x+16,
+      y+19,
+      10,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.strokeStyle="#48484b";
+
+    ctx.stroke();
+
+  }
+
+
+  else if(type==="willow"){
+
+    ctx.fillStyle="#493326";
+
+    ctx.fillRect(
+      x+14,
+      y+9,
+      5,
+      23
+    );
+
+    ctx.fillStyle="#315b3d";
+
+    ctx.fillRect(
+      x+3,
+      y,
+      26,
+      12
+    );
+
+    ctx.fillRect(
+      x+4,
+      y+8,
+      5,
+      20
+    );
+
+    ctx.fillRect(
+      x+23,
+      y+8,
+      5,
+      19
+    );
+
+  }
+
+
+  else if(
     type==="teaTable"
-  ) {
+  ){
 
     ctx.fillStyle="#4c3023";
 
@@ -2437,7 +2658,6 @@ function drawProp(
       32,12
     );
 
-
     ctx.fillStyle="#8b5d39";
 
     ctx.fillRect(
@@ -2446,8 +2666,7 @@ function drawProp(
       38,8
     );
 
-
-    ctx.fillStyle="#c4a66a";
+    ctx.fillStyle="#d6bb79";
 
     ctx.fillRect(
       x+12,
@@ -2455,146 +2674,85 @@ function drawProp(
       8,6
     );
 
-
-    ctx.fillStyle="#e0c987";
-
-    ctx.fillRect(
-      x+5,
-      y+5,
-      4,4
-    );
-
-
-    ctx.fillRect(
-      x+23,
-      y+5,
-      4,4
-    );
-
   }
 
 
-  // ----------------------------------
-  // TEA SHELF
-  // ----------------------------------
-
-  else if (
-    type==="teaShelf"
-  ) {
+  else if(type==="teaShelf"){
 
     ctx.fillStyle="#3d291f";
 
     ctx.fillRect(
-      x+3,
-      y,
+      x+3,y,
       26,31
     );
-
 
     ctx.fillStyle="#795038";
 
     ctx.fillRect(
-      x+5,
-      y+4,
+      x+5,y+5,
       22,4
     );
-
 
     ctx.fillRect(
-      x+5,
-      y+15,
+      x+5,y+16,
       22,4
     );
-
 
     ctx.fillRect(
-      x+5,
-      y+26,
-      22,4
+      x+5,y+27,
+      22,3
     );
-
 
     ctx.fillStyle="#718254";
 
     ctx.fillRect(
-      x+8,
-      y+8,
-      6,6
+      x+8,y+9,
+      7,6
     );
-
 
     ctx.fillStyle="#a88552";
 
     ctx.fillRect(
-      x+18,
-      y+8,
+      x+18,y+9,
       6,6
-    );
-
-
-    ctx.fillStyle="#526b4d";
-
-    ctx.fillRect(
-      x+11,
-      y+20,
-      8,6
     );
 
   }
 
 
-  // ----------------------------------
-  // SCROLL
-  // ----------------------------------
-
-  else if (
-    type==="scroll"
-  ) {
+  else if(type==="scroll"){
 
     ctx.fillStyle="#e0d1ad";
 
     ctx.fillRect(
-      x+9,
-      y,
+      x+9,y,
       15,29
     );
-
 
     ctx.fillStyle="#34231f";
 
     ctx.fillRect(
-      x+7,
-      y,
+      x+7,y,
       19,3
     );
 
-
     ctx.fillRect(
-      x+7,
-      y+27,
+      x+7,y+27,
       19,3
     );
 
-
-    ctx.fillStyle="#654334";
-
     ctx.fillRect(
-      x+15,
-      y+7,
+      x+15,y+7,
       2,14
     );
 
   }
 
 
-  // ----------------------------------
-  // NOODLE TABLE
-  // ----------------------------------
-
-  else if (
+  else if(
     type==="noodleTable" ||
     type==="diningTable"
-  ) {
+  ){
 
     ctx.fillStyle="#68432c";
 
@@ -2604,7 +2762,6 @@ function drawProp(
       32,10
     );
 
-
     ctx.fillStyle="#98613b";
 
     ctx.fillRect(
@@ -2612,7 +2769,6 @@ function drawProp(
       y+7,
       36,7
     );
-
 
     ctx.fillStyle="#e0c99a";
 
@@ -2622,34 +2778,18 @@ function drawProp(
       11,6
     );
 
-
-    ctx.fillStyle="#7d4d32";
-
-    ctx.fillRect(
-      x+14,
-      y+3,
-      5,3
-    );
-
   }
 
 
-  // ----------------------------------
-  // STEAM POT
-  // ----------------------------------
+  else if(type==="steamPot"){
 
-  else if (
-    type==="steamPot"
-  ) {
-
-    ctx.fillStyle="#5f6264";
+    ctx.fillStyle="#626567";
 
     ctx.fillRect(
       x+5,
       y+13,
       22,13
     );
-
 
     ctx.fillStyle="#aaa8a0";
 
@@ -2659,7 +2799,6 @@ function drawProp(
       26,5
     );
 
-
     ctx.fillStyle="#ddd0b0";
 
     ctx.fillRect(
@@ -2668,65 +2807,39 @@ function drawProp(
       3,6
     );
 
-
-    ctx.fillRect(
-      x+19,
-      y,
-      2,8
-    );
-
   }
 
 
-  // ----------------------------------
-  // MENU
-  // ----------------------------------
-
-  else if (
-    type==="menuBoard"
-  ) {
+  else if(type==="menuBoard"){
 
     ctx.fillStyle="#2d201d";
 
     ctx.fillRect(
-      x+2,
-      y,
+      x+2,y,
       28,30
     );
-
 
     ctx.fillStyle="#e1c985";
 
     ctx.fillRect(
-      x+7,
-      y+6,
+      x+7,y+6,
       18,2
     );
 
-
     ctx.fillRect(
-      x+7,
-      y+12,
+      x+7,y+12,
       14,2
     );
 
-
     ctx.fillRect(
-      x+7,
-      y+18,
+      x+7,y+18,
       17,2
     );
 
   }
 
 
-  // ----------------------------------
-  // CONDIMENTS
-  // ----------------------------------
-
-  else if (
-    type==="condiments"
-  ) {
+  else if(type==="condiments"){
 
     ctx.fillStyle="#70462d";
 
@@ -2736,7 +2849,6 @@ function drawProp(
       32,8
     );
 
-
     ctx.fillStyle="#b54338";
 
     ctx.fillRect(
@@ -2744,7 +2856,6 @@ function drawProp(
       y+8,
       5,10
     );
-
 
     ctx.fillStyle="#c39b51";
 
@@ -2754,34 +2865,17 @@ function drawProp(
       5,12
     );
 
-
-    ctx.fillStyle="#5c493b";
-
-    ctx.fillRect(
-      x+23,
-      y+9,
-      5,9
-    );
-
   }
 
 
-  // ----------------------------------
-  // FRIDGE
-  // ----------------------------------
-
-  else if (
-    type==="fridge"
-  ) {
+  else if(type==="fridge"){
 
     ctx.fillStyle="#c5d0cf";
 
     ctx.fillRect(
-      x+2,
-      y,
+      x+2,y,
       28,31
     );
-
 
     ctx.fillStyle="#355664";
 
@@ -2791,7 +2885,6 @@ function drawProp(
       22,23
     );
 
-
     ctx.fillStyle="#7fb0b3";
 
     ctx.fillRect(
@@ -2799,7 +2892,6 @@ function drawProp(
       y+7,
       7,17
     );
-
 
     ctx.fillRect(
       x+17,
@@ -2810,83 +2902,39 @@ function drawProp(
   }
 
 
-  // ----------------------------------
-  // SHOP SHELF
-  // ----------------------------------
-
-  else if (
+  else if(
     type==="shopShelf" ||
     type==="cultureShelf"
-  ) {
+  ){
 
     ctx.fillStyle="#55382c";
 
     ctx.fillRect(
-      x+3,
-      y,
+      x+3,y,
       26,30
     );
-
 
     ctx.fillStyle="#93613d";
 
     ctx.fillRect(
-      x+5,
-      y+6,
+      x+5,y+6,
       22,3
     );
-
 
     ctx.fillRect(
-      x+5,
-      y+16,
+      x+5,y+16,
       22,3
     );
-
 
     ctx.fillRect(
-      x+5,
-      y+26,
+      x+5,y+26,
       22,3
     );
-
-
-    const colors=[
-      "#c15d54",
-      "#6d895f",
-      "#d0a654",
-      "#665b8b"
-    ];
-
-
-    for (
-      let i=0;
-      i<4;
-      i++
-    ) {
-
-      ctx.fillStyle=
-        colors[i];
-
-
-      ctx.fillRect(
-        x+7+i*5,
-        y+10,
-        4,6
-      );
-
-    }
 
   }
 
 
-  // ----------------------------------
-  // CASHIER
-  // ----------------------------------
-
-  else if (
-    type==="cashier"
-  ) {
+  else if(type==="cashier"){
 
     ctx.fillStyle="#456069";
 
@@ -2896,7 +2944,6 @@ function drawProp(
       32,14
     );
 
-
     ctx.fillStyle="#1d2c31";
 
     ctx.fillRect(
@@ -2905,84 +2952,48 @@ function drawProp(
       16,12
     );
 
-
-    ctx.fillStyle="#8fd1c4";
-
-    ctx.fillRect(
-      x+11,
-      y+8,
-      10,6
-    );
-
   }
 
 
-  // ----------------------------------
-  // CLOTHES
-  // ----------------------------------
-
-  else if (
-    type==="clothesRack"
-  ) {
+  else if(type==="clothesRack"){
 
     ctx.fillStyle="#433630";
 
     ctx.fillRect(
-      x+4,
-      y+3,
+      x+4,y+3,
       3,28
     );
 
-
     ctx.fillRect(
-      x+25,
-      y+3,
+      x+25,y+3,
       3,28
     );
 
-
     ctx.fillRect(
-      x+4,
-      y+4,
+      x+4,y+4,
       24,3
     );
 
+    ctx.fillStyle="#a34f5d";
 
-    const colors=[
-      "#a34f5d",
-      "#527291",
-      "#b58a49"
-    ];
+    ctx.fillRect(
+      x+8,
+      y+10,
+      6,13
+    );
 
+    ctx.fillStyle="#527291";
 
-    for (
-      let i=0;
-      i<3;
-      i++
-    ) {
-
-      ctx.fillStyle=
-        colors[i];
-
-
-      ctx.fillRect(
-        x+8+i*6,
-        y+10,
-        6,13
-      );
-
-    }
+    ctx.fillRect(
+      x+14,
+      y+10,
+      6,13
+    );
 
   }
 
 
-  // ----------------------------------
-  // JADE DISPLAY
-  // ----------------------------------
-
-  else if (
-    type==="jadeDisplay"
-  ) {
+  else if(type==="jadeDisplay"){
 
     ctx.fillStyle="#55392b";
 
@@ -2992,16 +3003,6 @@ function drawProp(
       32,12
     );
 
-
-    ctx.fillStyle="#8b6041";
-
-    ctx.fillRect(
-      x-2,
-      y+14,
-      36,6
-    );
-
-
     ctx.fillStyle="#668978";
 
     ctx.fillRect(
@@ -3009,7 +3010,6 @@ function drawProp(
       y+4,
       12,10
     );
-
 
     ctx.fillStyle="#293f38";
 
@@ -3022,13 +3022,7 @@ function drawProp(
   }
 
 
-  // ----------------------------------
-  // JEWELRY
-  // ----------------------------------
-
-  else if (
-    type==="jewelry"
-  ) {
+  else if(type==="jewelry"){
 
     ctx.fillStyle="#5c3d45";
 
@@ -3038,7 +3032,6 @@ function drawProp(
       32,13
     );
 
-
     ctx.fillStyle="#d0a96c";
 
     ctx.fillRect(
@@ -3047,34 +3040,18 @@ function drawProp(
       5,5
     );
 
-
     ctx.fillStyle="#b45d77";
 
     ctx.fillRect(
-      x+14,
-      y+4,
-      5,8
-    );
-
-
-    ctx.fillStyle="#7390a3";
-
-    ctx.fillRect(
-      x+23,
-      y+6,
-      5,6
+      x+16,
+      y+5,
+      5,7
     );
 
   }
 
 
-  // ----------------------------------
-  // DRINK COUNTER
-  // ----------------------------------
-
-  else if (
-    type==="drinkCounter"
-  ) {
+  else if(type==="drinkCounter"){
 
     ctx.fillStyle="#38584f";
 
@@ -3084,7 +3061,6 @@ function drawProp(
       32,14
     );
 
-
     ctx.fillStyle="#81a37f";
 
     ctx.fillRect(
@@ -3092,7 +3068,6 @@ function drawProp(
       y+6,
       6,9
     );
-
 
     ctx.fillStyle="#d4b168";
 
@@ -3102,21 +3077,10 @@ function drawProp(
       6,11
     );
 
-
-    ctx.fillStyle="#b66b76";
-
-    ctx.fillRect(
-      x+23,
-      y+7,
-      5,8
-    );
-
   }
 
 
-  else if (
-    type==="teaCanister"
-  ) {
+  else if(type==="teaCanister"){
 
     ctx.fillStyle="#6d8158";
 
@@ -3126,7 +3090,6 @@ function drawProp(
       7,18
     );
 
-
     ctx.fillStyle="#b19453";
 
     ctx.fillRect(
@@ -3134,7 +3097,6 @@ function drawProp(
       y+4,
       7,21
     );
-
 
     ctx.fillStyle="#75566d";
 
@@ -3147,13 +3109,7 @@ function drawProp(
   }
 
 
-  // ----------------------------------
-  // HOTEL
-  // ----------------------------------
-
-  else if (
-    type==="hotelDesk"
-  ) {
+  else if(type==="hotelDesk"){
 
     ctx.fillStyle="#574132";
 
@@ -3162,7 +3118,6 @@ function drawProp(
       y+12,
       92,17
     );
-
 
     ctx.fillStyle="#a17b51";
 
@@ -3175,9 +3130,7 @@ function drawProp(
   }
 
 
-  else if (
-    type==="hotelSofa"
-  ) {
+  else if(type==="hotelSofa"){
 
     ctx.fillStyle="#51475b";
 
@@ -3186,7 +3139,6 @@ function drawProp(
       y+11,
       40,18
     );
-
 
     ctx.fillStyle="#766881";
 
@@ -3199,9 +3151,7 @@ function drawProp(
   }
 
 
-  else if (
-    type==="luggage"
-  ) {
+  else if(type==="luggage"){
 
     ctx.fillStyle="#624538";
 
@@ -3211,77 +3161,34 @@ function drawProp(
       20,21
     );
 
-
-    ctx.strokeStyle="#8d765f";
-
-    ctx.strokeRect(
-      x+11,
-      y+2,
-      10,8
-    );
-
   }
 
 
-  else if (
-    type==="chandelier"
-  ) {
+  else if(type==="chandelier"){
 
     ctx.fillStyle="#d8b35f";
 
     ctx.fillRect(
-      x+15,
-      y,
+      x+15,y,
       2,9
     );
 
-
     ctx.fillRect(
-      x+5,
-      y+9,
+      x+5,y+9,
       22,3
-    );
-
-
-    ctx.fillRect(
-      x+4,
-      y+12,
-      5,6
-    );
-
-
-    ctx.fillRect(
-      x+14,
-      y+12,
-      5,6
-    );
-
-
-    ctx.fillRect(
-      x+24,
-      y+12,
-      5,6
     );
 
   }
 
 
-  // ----------------------------------
-  // LAKE WINDOW
-  // ----------------------------------
-
-  else if (
-    type==="windowLake"
-  ) {
+  else if(type==="windowLake"){
 
     ctx.fillStyle="#332824";
 
     ctx.fillRect(
-      x,
-      y,
+      x,y,
       32,30
     );
-
 
     ctx.fillStyle="#193d52";
 
@@ -3291,7 +3198,6 @@ function drawProp(
       24,22
     );
 
-
     ctx.fillStyle="#37748b";
 
     ctx.fillRect(
@@ -3300,25 +3206,10 @@ function drawProp(
       20,3
     );
 
-
-    ctx.fillStyle="#d9af5d";
-
-    ctx.fillRect(
-      x+20,
-      y+7,
-      4,4
-    );
-
   }
 
 
-  // ----------------------------------
-  // POSTCARD
-  // ----------------------------------
-
-  else if (
-    type==="postcard"
-  ) {
+  else if(type==="postcard"){
 
     ctx.fillStyle="#604333";
 
@@ -3328,7 +3219,6 @@ function drawProp(
       32,12
     );
 
-
     ctx.fillStyle="#d5c69f";
 
     ctx.fillRect(
@@ -3336,7 +3226,6 @@ function drawProp(
       y+2,
       12,12
     );
-
 
     ctx.fillStyle="#6a8793";
 
@@ -3349,28 +3238,57 @@ function drawProp(
   }
 
 
-  // ----------------------------------
-  // GENERIC PROPS
-  // ----------------------------------
+  else if(type==="book"){
 
-  else if (
-    type==="table"
-  ) {
-
-    ctx.fillStyle="#765039";
+    ctx.fillStyle="#7c3f37";
 
     ctx.fillRect(
-      x,
+      x+4,
       y+10,
-      32,13
+      24,15
+    );
+
+    ctx.fillStyle="#d3b57a";
+
+    ctx.fillRect(
+      x+15,
+      y+10,
+      2,15
     );
 
   }
 
 
-  else if (
-    type==="bench"
-  ) {
+  else if(type==="silk"){
+
+    ctx.fillStyle="#b46d77";
+
+    ctx.fillRect(
+      x+3,
+      y+5,
+      26,6
+    );
+
+    ctx.fillStyle="#638095";
+
+    ctx.fillRect(
+      x+3,
+      y+13,
+      26,6
+    );
+
+    ctx.fillStyle="#c69b52";
+
+    ctx.fillRect(
+      x+3,
+      y+21,
+      26,6
+    );
+
+  }
+
+
+  else if(type==="bench"){
 
     ctx.fillStyle="#70452d";
 
@@ -3379,7 +3297,6 @@ function drawProp(
       y+10,
       27,5
     );
-
 
     ctx.fillRect(
       x+3,
@@ -3390,9 +3307,7 @@ function drawProp(
   }
 
 
-  else if (
-    type==="plant"
-  ) {
+  else if(type==="plant"){
 
     ctx.fillStyle="#805138";
 
@@ -3401,7 +3316,6 @@ function drawProp(
       y+20,
       13,10
     );
-
 
     ctx.fillStyle="#376044";
 
@@ -3414,9 +3328,7 @@ function drawProp(
   }
 
 
-  else if (
-    type==="tree"
-  ) {
+  else if(type==="tree"){
 
     ctx.fillStyle="#493427";
 
@@ -3425,7 +3337,6 @@ function drawProp(
       y+15,
       5,17
     );
-
 
     ctx.fillStyle="#315642";
 
@@ -3438,9 +3349,7 @@ function drawProp(
   }
 
 
-  else if (
-    type==="streetlight"
-  ) {
+  else if(type==="streetlight"){
 
     ctx.fillStyle="#29282c";
 
@@ -3449,7 +3358,6 @@ function drawProp(
       y+8,
       3,23
     );
-
 
     ctx.fillStyle="#f4c76b";
 
@@ -3462,23 +3370,21 @@ function drawProp(
   }
 
 
-  else if (
+  else if(
     type==="taxi" ||
     type==="car"
-  ) {
+  ){
 
     ctx.fillStyle=
       type==="taxi"
       ? "#c99a39"
       : "#3b4b64";
 
-
     ctx.fillRect(
       x,
       y+11,
       54,16
     );
-
 
     ctx.fillRect(
       x+12,
@@ -3489,9 +3395,7 @@ function drawProp(
   }
 
 
-  else if (
-    type==="bike"
-  ) {
+  else if(type==="bike"){
 
     ctx.strokeStyle="#b8a58c";
 
@@ -3526,9 +3430,7 @@ function drawProp(
   }
 
 
-  else if (
-    type==="scooter"
-  ) {
+  else if(type==="scooter"){
 
     ctx.fillStyle="#8d3436";
 
@@ -3538,12 +3440,24 @@ function drawProp(
       15,16
     );
 
+    ctx.fillStyle="#27272b";
+
+    ctx.fillRect(
+      x+7,
+      y+24,
+      6,5
+    );
+
+    ctx.fillRect(
+      x+21,
+      y+24,
+      6,5
+    );
+
   }
 
 
-  else if (
-    type==="trash"
-  ) {
+  else if(type==="trash"){
 
     ctx.fillStyle="#45585a";
 
@@ -3556,7 +3470,7 @@ function drawProp(
   }
 
 
-  else {
+  else{
 
     ctx.fillStyle="#765039";
 
@@ -3572,67 +3486,52 @@ function drawProp(
 
 
 // ======================================================
-// INTERACTABLE SPARKLE
+// INTERACTABLE MARKER
 // ======================================================
 
-function drawInteractables(time) {
+function drawInteractables(time){
 
   const map=
     getCurrentMap();
 
 
-  if (!map.interactables) {
+  if(!map.interactables){
     return;
   }
 
 
-  for (
-    const object
-    of map.interactables
-  ) {
+  for(const obj of map.interactables){
 
-    if (
-      hasVocabulary(
-        object.word
-      )
-    ) {
-
+    if(hasVocabulary(obj.word)){
       continue;
-
     }
 
 
     const x=
-      (object.x+.5)*TILE-
+      (obj.x+.5)*TILE-
       camera.x;
 
-
     const y=
-      object.y*TILE-
-      camera.y-4;
+      obj.y*TILE-
+      camera.y-5;
 
 
     const pulse=
-      Math.sin(
-        time*4
-      );
+      Math.sin(time*4)*2;
 
 
-    ctx.fillStyle=
-      "#f4d17a";
-
+    ctx.fillStyle="#f6d37c";
 
     ctx.fillRect(
       x-1,
-      y-5-pulse*2,
-      3,8
+      y-6-pulse,
+      3,9
     );
 
-
     ctx.fillRect(
-      x-4,
-      y-2-pulse*2,
-      9,2
+      x-5,
+      y-2-pulse,
+      11,2
     );
 
   }
@@ -3641,57 +3540,50 @@ function drawInteractables(time) {
 
 
 // ======================================================
-// EXITS
+// EXIT
 // ======================================================
 
-function drawExits(time) {
+function drawExits(time){
 
   const map=
     getCurrentMap();
 
 
-  for (
-    const exit
-    of map.exits
-  ) {
+  for(const exit of map.exits){
 
     const x=
       exit.x*TILE-
       camera.x;
 
-
     const y=
       exit.y*TILE-
       camera.y;
 
-
-    const width=
+    const w=
       exit.width*TILE;
 
-
-    const height=
+    const h=
       exit.height*TILE;
 
 
     ctx.fillStyle=
       `rgba(224,174,82,${
-        .08+
+        .07+
         Math.sin(time*3)*.02
       })`;
 
 
     ctx.fillRect(
-      x,y,
-      width,height
+      x,y,w,h
     );
 
 
     ctx.fillStyle="#704a30";
 
     ctx.fillRect(
-      x+width/2-80,
-      y+height/2-10,
-      160,
+      x+w/2-75,
+      y+h/2-10,
+      150,
       22
     );
 
@@ -3702,11 +3594,10 @@ function drawExits(time) {
 
     ctx.textAlign="center";
 
-
     ctx.fillText(
       exit.label,
-      x+width/2,
-      y+height/2+5
+      x+w/2,
+      y+h/2+5
     );
 
   }
@@ -3715,16 +3606,15 @@ function drawExits(time) {
 
 
 // ======================================================
-// CHARACTER
+// PERSON
 // ======================================================
 
 function drawPerson(
-  x,
-  y,
+  x,y,
   data,
   moving,
   time
-) {
+){
 
   const step=
     moving &&
@@ -3735,7 +3625,6 @@ function drawPerson(
 
   ctx.fillStyle=
     "rgba(0,0,0,.35)";
-
 
   ctx.fillRect(
     x+3,
@@ -3751,7 +3640,6 @@ function drawPerson(
     y+19+step,
     5,7
   );
-
 
   ctx.fillRect(
     x+12,
@@ -3787,19 +3675,15 @@ function drawPerson(
   );
 
 
-  ctx.fillStyle="#251d1d";
+  if(data.direction==="down"){
 
-
-  if (
-    data.direction==="down"
-  ) {
+    ctx.fillStyle="#251d1d";
 
     ctx.fillRect(
       x+8,
       y+6,
       2,2
     );
-
 
     ctx.fillRect(
       x+14,
@@ -3816,15 +3700,12 @@ function drawPerson(
 // ENTITIES
 // ======================================================
 
-function drawEntities(time) {
+function drawEntities(time){
 
   const entities=[];
 
 
-  for (
-    const npc
-    of getCurrentNPCs()
-  ) {
+  for(const npc of getCurrentNPCs()){
 
     entities.push({
 
@@ -3851,6 +3732,7 @@ function drawEntities(time) {
           ),
 
           time
+
         );
 
       }
@@ -3886,6 +3768,7 @@ function drawEntities(time) {
         player.moving,
 
         time
+
       );
 
     }
@@ -3898,13 +3781,8 @@ function drawEntities(time) {
   );
 
 
-  for (
-    const entity
-    of entities
-  ) {
-
+  for(const entity of entities){
     entity.draw();
-
   }
 
 }
@@ -3914,31 +3792,27 @@ function drawEntities(time) {
 // LIGHT
 // ======================================================
 
-function drawLighting() {
+function drawLighting(){
 
   const ambient=
     getCurrentMap().ambient;
 
 
-  if (
-    ambient==="indoor"
-  ) {
+  if(ambient==="indoor"){
 
     ctx.fillStyle=
-      "rgba(92,46,15,.05)";
+      "rgba(92,46,15,.045)";
 
   }
 
-  else if (
-    ambient==="lake"
-  ) {
+  else if(ambient==="lake"){
 
     ctx.fillStyle=
       "rgba(4,20,43,.18)";
 
   }
 
-  else {
+  else{
 
     ctx.fillStyle=
       "rgba(15,8,31,.14)";
@@ -3959,7 +3833,23 @@ function drawLighting() {
 // UI
 // ======================================================
 
-function showAreaBanner() {
+function updateCollectionUI(){
+
+  const count=
+    collectedVocabulary.length;
+
+
+  collectionHeader.textContent=
+    `词语 ${count} / ${getVocabularyCount()}`;
+
+
+  rankHeader.textContent=
+    getRank(count);
+
+}
+
+
+function showAreaBanner(){
 
   const map=
     getCurrentMap();
@@ -3987,23 +3877,17 @@ function showAreaBanner() {
 }
 
 
-function updateBanner(dt) {
+function updateBanner(dt){
 
-  if (
-    bannerTimer<=0
-  ) {
-
+  if(bannerTimer<=0){
     return;
-
   }
 
 
   bannerTimer-=dt;
 
 
-  if (
-    bannerTimer<=0
-  ) {
+  if(bannerTimer<=0){
 
     areaBanner.classList.add(
       "hidden"
@@ -4014,14 +3898,16 @@ function updateBanner(dt) {
 }
 
 
-function updateInteractionHint() {
+function updateInteractionHint(){
 
-  if (
+  if(
     dialogue.active ||
     transitionLock ||
     wordGetActive ||
+    rankUpActive ||
+    completionActive ||
     libraryOpen
-  ) {
+  ){
 
     interactionHint.classList.add(
       "hidden"
@@ -4036,11 +3922,10 @@ function updateInteractionHint() {
     getNearbyNPC();
 
 
-  if (npc) {
+  if(npc){
 
     interactionText.textContent=
       "話す";
-
 
     interactionHint.classList.remove(
       "hidden"
@@ -4051,15 +3936,14 @@ function updateInteractionHint() {
   }
 
 
-  const object=
+  const obj=
     getNearbyInteractable();
 
 
-  if (object) {
+  if(obj){
 
     interactionText.textContent=
-      object.label;
-
+      obj.label;
 
     interactionHint.classList.remove(
       "hidden"
@@ -4074,11 +3958,10 @@ function updateInteractionHint() {
     getNearbyBuilding();
 
 
-  if (building) {
+  if(building){
 
     interactionText.textContent=
       `${building.name}に入る`;
-
 
     interactionHint.classList.remove(
       "hidden"
@@ -4104,16 +3987,13 @@ let fakeMinutes=
   19*60+42;
 
 
-function updateClock(dt) {
+function updateClock(dt){
 
-  fakeMinutes+=
-    dt*.15;
+  fakeMinutes+=dt*.15;
 
 
   const total=
-    Math.floor(
-      fakeMinutes
-    );
+    Math.floor(fakeMinutes);
 
 
   const hour=
@@ -4136,7 +4016,7 @@ function updateClock(dt) {
 // DRAW
 // ======================================================
 
-function draw(time) {
+function draw(time){
 
   ctx.fillStyle="#100d14";
 
@@ -4150,6 +4030,8 @@ function draw(time) {
   drawMap(time);
 
   drawBuildings();
+
+  drawLanternRows(time);
 
   drawStalls(time);
 
@@ -4174,7 +4056,7 @@ let previousTime=
   performance.now();
 
 
-function gameLoop(now) {
+function gameLoop(now){
 
   let dt=
     (now-previousTime)/1000;
@@ -4219,6 +4101,11 @@ function gameLoop(now) {
 // ======================================================
 // START
 // ======================================================
+
+console.log(
+  "Vocabulary:",
+  getVocabularyCount()
+);
 
 updateCollectionUI();
 
